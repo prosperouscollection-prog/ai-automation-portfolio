@@ -1,0 +1,342 @@
+{
+  "name": "AI Video Automation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "video-automation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "92a36e39-1ee6-4f88-b928-8f77f0d0c2ab",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "d7357bea-c5b1-460a-90fc-1d7cebb6f1df"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [ { role: 'user', content: 'You are an expert short-form video scriptwriter for local businesses.\\n\\nCreate a 60-second vertical video script for this topic: \"' + $node[\"Webhook\"].json[\"query\"][\"topic\"] + '\"\\n\\nRequirements:\\n- Write for a dental office audience\\n- Keep the tone clear, modern, helpful, and conversion-focused\\n- Include:\\n  1. Hook\\n  2. Body\\n  3. CTA\\n- Make the hook strong enough to stop the scroll\\n- Make the body easy to speak on camera\\n- Make the CTA invite the viewer to book, call, or message\\n- Return plain text only in this format:\\n\\nHook: ...\\nBody: ...\\nCTA: ...' } ], max_tokens: 500 } }}"
+      },
+      "id": "dc8c2b79-f6de-4f39-a01d-1d67f03338f2",
+      "name": "OpenAI - Generate Script",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [ { role: 'user', content: 'You are an expert social media copywriter for local businesses.\\n\\nCreate 5 short-form social media captions for this topic: \"' + $node[\"Webhook\"].json[\"query\"][\"topic\"] + '\"\\n\\nRequirements:\\n- Write for Instagram, TikTok, and Facebook\\n- Keep each caption engaging and easy to skim\\n- Use a friendly, local-business tone\\n- Include subtle calls to action where appropriate\\n- Return plain text only\\n- Number each caption from 1 to 5' } ], max_tokens: 700 } }}"
+      },
+      "id": "509a4de6-a937-4df4-9087-e09c4a0e9a1d",
+      "name": "OpenAI - Generate Captions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [ { role: 'user', content: 'You are an expert social media strategist for local businesses.\\n\\nGenerate 10 relevant hashtags for this topic: \"' + $node[\"Webhook\"].json[\"query\"][\"topic\"] + '\"\\n\\nRequirements:\\n- Focus on discoverability and local-business relevance\\n- Include hashtags related to dentistry, Invisalign, smile transformation, and oral health when relevant\\n- Return plain text only\\n- Output exactly 10 hashtags in one line separated by spaces' } ], max_tokens: 200 } }}"
+      },
+      "id": "fae5f3d6-a52f-47c3-bd78-f2be63c62ef0",
+      "name": "OpenAI - Generate Hashtags",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ 'Bearer ' + $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [ { role: 'user', content: 'You are an expert short-form video creative strategist.\\n\\nGenerate one thumbnail text overlay for this topic: \"' + $node[\"Webhook\"].json[\"query\"][\"topic\"] + '\"\\n\\nRequirements:\\n- Keep it punchy\\n- Maximum 6 words\\n- Make it attention-grabbing\\n- Return plain text only\\n- Do not include quotation marks' } ], max_tokens: 60 } }}"
+      },
+      "id": "70bfafc5-103a-473d-b21b-c9dfe664d0f6",
+      "name": "OpenAI - Generate Thumbnail Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "cachedResultUrl": "",
+          "cachedResultName": "AI Video Content Log"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Topic": "={{ $node[\"Webhook\"].json[\"query\"][\"topic\"] }}",
+            "Script": "={{ $node[\"OpenAI - Generate Script\"].json[\"choices\"][0][\"message\"][\"content\"] }}",
+            "Captions": "={{ $node[\"OpenAI - Generate Captions\"].json[\"choices\"][0][\"message\"][\"content\"] }}",
+            "Hashtags": "={{ $node[\"OpenAI - Generate Hashtags\"].json[\"choices\"][0][\"message\"][\"content\"] }}",
+            "Thumbnail Text": "={{ $node[\"OpenAI - Generate Thumbnail Text\"].json[\"choices\"][0][\"message\"][\"content\"] }}",
+            "Timestamp": "={{ new Date().toISOString() }}"
+          },
+          "schema": [
+            {
+              "id": "Topic",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Topic",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Script",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Script",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Captions",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Captions",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hashtags",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Hashtags",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Thumbnail Text",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Thumbnail Text",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Timestamp",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "639ebc87-e6f3-4cee-95ad-39d16ffb4d2a",
+      "name": "Google Sheets - Append Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1660,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ ({ success: true, topic: $node[\"Webhook\"].json[\"query\"][\"topic\"], script: $node[\"OpenAI - Generate Script\"].json[\"choices\"][0][\"message\"][\"content\"], captions: $node[\"OpenAI - Generate Captions\"].json[\"choices\"][0][\"message\"][\"content\"], hashtags: $node[\"OpenAI - Generate Hashtags\"].json[\"choices\"][0][\"message\"][\"content\"], thumbnail_text: $node[\"OpenAI - Generate Thumbnail Text\"].json[\"choices\"][0][\"message\"][\"content\"], timestamp: new Date().toISOString() }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "9566da4e-b04a-45e7-a045-f0db55bec2cc",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Script",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Script": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Captions": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Hashtags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Hashtags": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Generate Thumbnail Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Generate Thumbnail Text": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Append Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Append Row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "portfolio-demo-project7-video-automation"
+  },
+  "versionId": "9e5714f5-4d4f-4ef2-961d-2e0c04b529f9",
+  "tags": []
+}
