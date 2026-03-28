@@ -52,6 +52,7 @@ const corsOptions = {
 };
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '2mb' }));
@@ -86,15 +87,37 @@ function errorResponse(message, info) {
   return standardResponse({ success: false, error: message, ...info });
 }
 
+function getPublicOrigin(req) {
+  return process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+function normalizeScore(score) {
+  if (typeof score === 'number') {
+    if (score >= 80) return 'High';
+    if (score >= 50) return 'Medium';
+    return 'Low';
+  }
+  if (typeof score === 'string' && score.trim()) {
+    const normalized = score.trim().toLowerCase();
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+  return 'Medium';
+}
+
 // ---- DEMO ENDPOINTS ----
 
 // 1. Lead Capture + AI Scoring Demo
-app.post('/api/demo/lead-capture', async (req, res) => {
+app.post(['/api/demo/lead-capture', '/demo/lead-capture'], async (req, res) => {
   try {
-    const { message, name, email, phone } = req.body;
+    const {
+      message,
+      name = 'Demo Visitor',
+      email = 'info@genesisai.systems',
+      phone = '(313) 400-2575'
+    } = req.body || {};
 
-    if (!message || !name || !email || !phone) {
-      return res.status(400).json(errorResponse('Missing required fields.'));
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json(errorResponse('Missing required message.'));
     }
 
     // Proxy to n8n production webhook
@@ -104,12 +127,12 @@ app.post('/api/demo/lead-capture', async (req, res) => {
     const n8nResp = await axios.post(n8nURL, n8nPayload, { timeout: 10000 });
 
     // Expect: { ai_response: string, score: number }
-    const { ai_response, score } = n8nResp.data;
+    const { ai_response, response, score } = n8nResp.data || {};
     const data = {
       success: true,
       message: 'Lead captured and scored.',
-      ai_response,
-      score,
+      response: ai_response || response || 'Your lead has been captured successfully.',
+      score: normalizeScore(score),
       google_sheet: 'Logged to Google Sheets ✅',
       label: 'Live — saved to a real Google Sheet',
     };
@@ -122,7 +145,7 @@ app.post('/api/demo/lead-capture', async (req, res) => {
 });
 
 // 2. Voice Agent (Riley) Demo — provides token for frontend Vapi SDK
-app.post('/api/demo/voice-agent-token', async (req, res) => {
+app.all(['/api/demo/voice-agent-token', '/demo/voice-agent-token'], async (req, res) => {
   try {
     // In production, provide a short-lived Vapi public key/token only
     const vapiPublicKey = process.env.VAPI_PUBLIC_KEY || null;
@@ -130,7 +153,13 @@ app.post('/api/demo/voice-agent-token', async (req, res) => {
       return res.status(500).json(errorResponse('Voice agent not ready.'));
     }
     logUsage(req, { demo: 'voice-agent-token' });
-    res.json(standardResponse({ success: true, vapi_public_key: vapiPublicKey }));
+    res.json(
+      standardResponse({
+        success: true,
+        vapi_public_key: vapiPublicKey,
+        assistant_id: process.env.VAPI_ASSISTANT_ID || null,
+      })
+    );
   } catch (err) {
     logUsage(req, { error: err.message, demo: 'voice-agent-token' });
     res.status(500).json(errorResponse('Failed to provide voice agent token.'));
@@ -138,14 +167,14 @@ app.post('/api/demo/voice-agent-token', async (req, res) => {
 });
 
 // 3. RAG Knowledge Base Chatbot Demo (proxy Claude API)
-app.post('/api/demo/rag-chatbot', async (req, res) => {
+app.post(['/api/demo/rag-chatbot', '/demo/rag-chatbot'], async (req, res) => {
   try {
     const { question } = req.body;
     if (!question || typeof question !== 'string') {
       return res.status(400).json(errorResponse('Missing or invalid question.'));
     }
     // Claude API/Anthropic via proxy, includes genesis_ai_systems_faq.md
-    const CLAUDE_KEY = process.env.CLAUDE_API_KEY;
+    const CLAUDE_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
     if (!CLAUDE_KEY) {
       return res.status(500).json(errorResponse('Claude API key missing.'));
     }
@@ -195,21 +224,25 @@ app.post('/api/demo/rag-chatbot', async (req, res) => {
 });
 
 // 4. Workflow Automation + Email Demo (proxy n8n)
-app.post('/api/demo/workflow-automation', async (req, res) => {
+app.post(['/api/demo/workflow-automation', '/demo/workflow'], async (req, res) => {
   try {
-    const { message, name, email } = req.body;
-    if (!message || !name || !email) {
-      return res.status(400).json(errorResponse('Missing required fields.'));
+    const {
+      message,
+      name = 'Workflow Demo',
+      email = 'info@genesisai.systems'
+    } = req.body || {};
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json(errorResponse('Missing required message.'));
     }
     const n8nURL = 'https://n8n.genesisai.systems/webhook/workflow-demo';
     const n8nPayload = { name, email, message };
     const n8nResp = await axios.post(n8nURL, n8nPayload, { timeout: 10000 });
-    const { pipeline, score, response } = n8nResp.data;
+    const { pipeline, score, response } = n8nResp.data || {};
     const data = {
       success: true,
       pipeline,
-      score,
-      response,
+      score: normalizeScore(score),
+      response: response || 'Workflow completed successfully.',
       label: 'Full automation in under 5 seconds'
     };
     logUsage(req, { demo: 'workflow-automation', name, email, score });
@@ -221,7 +254,7 @@ app.post('/api/demo/workflow-automation', async (req, res) => {
 });
 
 // 5. AI Chat Widget Demo (OpenAI GPT proxy)
-app.post('/api/demo/chat-widget', async (req, res) => {
+app.post(['/api/demo/chat-widget', '/demo/chat-widget'], async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== 'string') {
@@ -259,11 +292,11 @@ app.post('/api/demo/chat-widget', async (req, res) => {
 });
 
 // 6. Fine-tuned AI Model Demo (compare base vs fine-tuned; proxy OpenAI)
-app.post('/api/demo/fine-tuning', async (req, res) => {
+app.post(['/api/demo/fine-tuning', '/demo/fine-tuning'], async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json(errorResponse('Missing or invalid message.'));
+    const question = req.body?.question || req.body?.message;
+    if (!question || typeof question !== 'string') {
+      return res.status(400).json(errorResponse('Missing or invalid question.'));
     }
     const OPENAI_KEY = process.env.OPENAI_API_KEY;
     if (!OPENAI_KEY) {
@@ -279,7 +312,7 @@ app.post('/api/demo/fine-tuning', async (req, res) => {
         },
         {
           role: 'user',
-          content: message
+          content: question
         }
       ],
       max_tokens: 250,
@@ -317,10 +350,12 @@ app.post('/api/demo/fine-tuning', async (req, res) => {
       fineResp.data.choices && fineResp.data.choices[0] && fineResp.data.choices[0].message.content
         ? fineResp.data.choices[0].message.content.trim()
         : 'No reply.';
-    logUsage(req, { demo: 'fine-tuning', message });
+    logUsage(req, { demo: 'fine-tuning', question });
     res.json(
       standardResponse({
         success: true,
+        base_response: baseReply,
+        trained_response: fineReply,
         base_gpt: baseReply,
         genesis_ai_trained: fineReply,
         label: 'See the difference training makes',
@@ -333,7 +368,7 @@ app.post('/api/demo/fine-tuning', async (req, res) => {
 });
 
 // 7. Video Automation Demo
-app.post('/api/demo/video-automation', async (req, res) => {
+app.post(['/api/demo/video-automation', '/demo/video-automation'], async (req, res) => {
   try {
     const { topic } = req.body;
     if (!topic || typeof topic !== 'string') {
@@ -363,7 +398,7 @@ app.post('/api/demo/video-automation', async (req, res) => {
 });
 
 // 8. Self-Healing Agent System Demo
-app.get('/api/demo/agent-status', async (req, res) => {
+app.get(['/api/demo/agent-status', '/demo/agent-status'], async (req, res) => {
   try {
     // Proxy to GitHub API for workflow status (repo: prosperouscollection-prog/ai-automation-portfolio)
     const REPO = 'prosperouscollection-prog/ai-automation-portfolio';
@@ -412,8 +447,49 @@ app.get('/api/demo/agent-status', async (req, res) => {
 });
 
 // Healthcheck
-app.get('/api/demo/health', (req, res) => {
+app.get(['/api/demo/health', '/demo/health'], (req, res) => {
   res.json(standardResponse({ success: true, status: 'ok' }));
+});
+
+app.get('/widget-preview', (req, res) => {
+  try {
+    const widgetPath = path.join(__dirname, '../project5-chat-widget/index.html');
+    const widgetHtml = fs.readFileSync(widgetPath, 'utf8');
+    const origin = getPublicOrigin(req);
+    const updatedHtml = widgetHtml.replace(
+      "apiEndpoint: 'https://genesisai-chat-proxy-production.up.railway.app/chat'",
+      `apiEndpoint: '${origin}/api/demo/chat-widget'`
+    );
+    logUsage(req, { demo: 'widget-preview' });
+    res.type('html').send(updatedHtml);
+  } catch (err) {
+    logUsage(req, { error: err.message, demo: 'widget-preview' });
+    res.status(500).type('html').send('<p>Widget preview unavailable.</p>');
+  }
+});
+
+app.get('/widget.js', (req, res) => {
+  const origin = getPublicOrigin(req);
+  const script = `
+(function () {
+  const target = document.currentScript && document.currentScript.getAttribute('data-target');
+  const host = target ? document.querySelector(target) : document.body;
+  if (!host) return;
+  const iframe = document.createElement('iframe');
+  iframe.src = '${origin}/widget-preview';
+  iframe.title = 'Genesis AI Systems Chat Widget';
+  iframe.loading = 'lazy';
+  iframe.style.width = '100%';
+  iframe.style.maxWidth = '420px';
+  iframe.style.height = '640px';
+  iframe.style.border = '0';
+  iframe.style.borderRadius = '18px';
+  iframe.style.background = '#0f172a';
+  host.appendChild(iframe);
+}());
+  `.trim();
+  logUsage(req, { demo: 'widget.js' });
+  res.type('application/javascript').send(script);
 });
 
 // 404 fallback
