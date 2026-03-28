@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Demo backend server for Genesis AI Systems portfolio live demos. Proxies requests to OpenAI, Claude, n8n, and Vapi. Enforces production-level rate limiting and CORS.",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
