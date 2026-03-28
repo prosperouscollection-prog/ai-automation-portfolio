@@ -1809,7 +1809,7 @@
       msgs.scrollTop = msgs.scrollHeight;
 
       try {
-        const res = await fetch(demoUrl("/demo/rag-chatbot"), {
+        const res = await fetch("https://genesis-ai-systems-demo.onrender.com/demo/rag-chatbot", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: text })
@@ -1859,7 +1859,7 @@
         `Phone: ${phone}. Message: ${message}`;
 
       try {
-        const res = await fetch(demoUrl("/demo/lead-capture"), {
+        const res = await fetch("https://genesis-ai-systems-demo.onrender.com/demo/lead-capture", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
