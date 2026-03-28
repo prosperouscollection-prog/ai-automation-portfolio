@@ -46,6 +46,6 @@ A dental office missing just 8 emergency or new-patient calls per month can lose
 Ready to implement this system for your business?
 [Schedule a free 15-minute call](#) — we'll show you a live demo and tell you exactly what it would cost to build this for you.
 
-**[Your Name] | AI Automation Engineer**
+**[Your Name] | AI Automation Engineer, Genesis AI Systems**
 📧 [your@email.com]
 🔗 [linkedin.com/in/yourprofile]

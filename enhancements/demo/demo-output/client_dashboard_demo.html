@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genesis AI Systems Dashboard Demo</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #16213b;
+      --panel-border: #2f4774;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --shadow: 0 16px 32px rgba(2, 6, 23, 0.32);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 28%),
+        linear-gradient(180deg, #0b1222 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .page { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 3rem; }
+    .hero, .panel-header { display: flex; justify-content: space-between; gap: 1rem; }
+    .hero { align-items: flex-end; margin-bottom: 1.5rem; }
+    h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; }
+    p { margin: 0.5rem 0 0; }
+    .muted { color: var(--muted); }
+    .status-chip {
+      display: inline-flex; align-items: center; padding: 0.65rem 0.9rem; border-radius: 999px;
+      background: rgba(37, 99, 235, 0.16); border: 1px solid rgba(96, 165, 250, 0.42); color: #dbeafe;
+    }
+    .grid { display: grid; gap: 1rem; }
+    .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 1rem; }
+    .secondary-grid { grid-template-columns: 1.2fr 0.8fr; margin-bottom: 1rem; }
+    .panel {
+      background: linear-gradient(180deg, rgba(22, 33, 59, 0.96), rgba(14, 24, 44, 0.96));
+      border: 1px solid var(--panel-border); border-radius: 1.25rem; box-shadow: var(--shadow); padding: 1.2rem;
+    }
+    .metric-card h2 { margin: 0 0 0.35rem; font-size: 0.95rem; color: var(--muted); }
+    .metric-value { margin: 0; font-size: 2rem; font-weight: 700; }
+    .score-high { color: #86efac; }
+    .score-medium { color: #fcd34d; }
+    .score-low { color: #fda4af; }
+    .metrics-table { width: 100%; border-collapse: collapse; }
+    .metrics-table th, .metrics-table td {
+      padding: 0.8rem 0.65rem; border-bottom: 1px solid rgba(203, 213, 225, 0.12); text-align: left; vertical-align: top;
+    }
+    .table-scroll { overflow-x: auto; }
+    .score-pill {
+      display: inline-flex; align-items: center; justify-content: center; min-width: 5.5rem;
+      border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.84rem; font-weight: 700;
+    }
+    .score-pill.high { background: rgba(22, 163, 74, 0.2); color: #bbf7d0; }
+    .score-pill.medium { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+    .score-pill.low { background: rgba(239, 68, 68, 0.2); color: #fecdd3; }
+    .pie-wrap { display: grid; place-items: center; gap: 1rem; padding-top: 0.6rem; }
+    .pie-chart {
+      width: min(260px, 70vw); aspect-ratio: 1 / 1; border-radius: 50%;
+      background:
+        conic-gradient(
+          var(--green) 0 calc(var(--high-stop) * 1%),
+          var(--amber) calc(var(--high-stop) * 1%) calc(var(--medium-stop) * 1%),
+          var(--red) calc(var(--medium-stop) * 1%) 100%
+        );
+      border: 10px solid rgba(15, 23, 42, 0.8);
+      box-shadow: inset 0 0 0 1px rgba(203, 213, 225, 0.12);
+    }
+    .legend { display: grid; gap: 0.55rem; width: 100%; }
+    .legend-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .legend-label { display: inline-flex; align-items: center; gap: 0.55rem; }
+    .dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; }
+    .dot.high { background: var(--green); }
+    .dot.medium { background: var(--amber); }
+    .dot.low { background: var(--red); }
+    .log-message, .log-response { max-width: 28rem; }
+    @media (max-width: 920px) {
+      .stats-grid, .secondary-grid { grid-template-columns: 1fr; }
+      .hero { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 1rem, 1180px); padding-top: 1rem; }
+      .panel { padding: 1rem; }
+      .metric-value { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="dashboard-title">
+      <div>
+        <h1 id="dashboard-title">Genesis AI Systems Lead Dashboard Demo</h1>
+        <p class="muted">Static portfolio preview using Smile Dental demo data. The live client version refreshes from Google Sheets every 60 seconds and is typically sold for <strong>+$500-$1,000 setup</strong> and <strong>+$100/month</strong>.</p>
+      </div>
+      <div class="status-chip">Last updated: March 28, 2026 04:30 PM UTC</div>
+    </section>
+
+    <section class="grid stats-grid" aria-label="Lead score summary">
+      <article class="panel metric-card"><h2>Total Leads</h2><p class="metric-value">42</p><p class="muted">All captured leads in the demo month.</p></article>
+      <article class="panel metric-card"><h2>High Priority</h2><p class="metric-value score-high">18</p><p class="muted">Best leads for immediate follow-up.</p></article>
+      <article class="panel metric-card"><h2>Medium Priority</h2><p class="metric-value score-medium">15</p><p class="muted">Qualified leads that still need same-day attention.</p></article>
+      <article class="panel metric-card"><h2>Low Priority</h2><p class="metric-value score-low">9</p><p class="muted">Lower urgency leads for nurture sequences.</p></article>
+    </section>
+
+    <section class="grid secondary-grid" aria-label="Lead metrics and chart">
+      <article class="panel">
+        <div class="panel-header"><div><h2>Lead Volume Snapshot</h2><p class="muted">Today, this week, and this month using the demo lead feed.</p></div></div>
+        <div class="table-scroll">
+          <table class="metrics-table">
+            <thead><tr><th scope="col">Window</th><th scope="col">Total</th><th scope="col">High</th><th scope="col">Medium</th><th scope="col">Low</th></tr></thead>
+            <tbody>
+              <tr><th scope='row'>Today</th><td>2</td><td>2</td><td>0</td><td>0</td></tr>
+              <tr><th scope='row'>This Week</th><td>14</td><td>6</td><td>5</td><td>3</td></tr>
+              <tr><th scope='row'>This Month</th><td>42</td><td>18</td><td>15</td><td>9</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+      <article class="panel">
+        <div class="panel-header"><div><h2>Lead Score Distribution</h2><p class="muted">Generated from the same lead feed used in the ROI demo.</p></div></div>
+        <div class="pie-wrap">
+          <div class="pie-chart" style="--high:42.9;--medium:35.7;--low:21.4;--high-stop:42.9;--medium-stop:78.6;" aria-label="Lead score distribution chart"></div>
+          <div class="legend">
+            <div class="legend-row"><span class="legend-label"><span class="dot high"></span>High</span><strong>42.9%</strong></div>
+            <div class="legend-row"><span class="legend-label"><span class="dot medium"></span>Medium</span><strong>35.7%</strong></div>
+            <div class="legend-row"><span class="legend-label"><span class="dot low"></span>Low</span><strong>21.4%</strong></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="response-log-title">
+      <div class="panel-header">
+        <div>
+          <h2 id="response-log-title">AI Response Log</h2>
+          <p class="muted">Last 10 demo leads showing the exact client-facing narrative this enhancement makes visible.</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="metrics-table">
+          <thead><tr><th scope="col">Timestamp</th><th scope="col">Lead Message</th><th scope="col">AI Response</th><th scope="col">Score</th></tr></thead>
+          <tbody><tr><td>Mar 28, 2026 01:07 PM UTC</td><td class='log-message'>Do you accept Delta Dental for Invisalign consults?</td><td class='log-response'>Yes, we can review Delta Dental benefits during your Invisalign consultation and explain your options clearly.</td><td><span class='score-pill high'>HIGH</span></td></tr><tr><td>Mar 28, 2026 08:00 AM UTC</td><td class='log-message'>I have a toothache and need to come in today if possible.</td><td class='log-response'>We can help with that. Our team can prioritize same-day emergency visits when availability opens up.</td><td><span class='score-pill high'>HIGH</span></td></tr><tr><td>Mar 27, 2026 03:21 PM UTC</td><td class='log-message'>Can I book whitening for next Friday afternoon?</td><td class='log-response'>Absolutely. We can help you find a whitening appointment that fits your Friday schedule.</td><td><span class='score-pill medium'>MEDIUM</span></td></tr><tr><td>Mar 27, 2026 10:14 AM UTC</td><td class='log-message'>How much is a cleaning without insurance?</td><td class='log-response'>Our team can quote current self-pay pricing and help you schedule a cleaning at the location closest to you.</td><td><span class='score-pill medium'>MEDIUM</span></td></tr><tr><td>Mar 26, 2026 12:35 PM UTC</td><td class='log-message'>What time do you open on Saturdays?</td><td class='log-response'>Saturday availability can vary by location, and we can confirm the soonest opening for you right away.</td><td><span class='score-pill low'>LOW</span></td></tr><tr><td>Mar 26, 2026 09:28 AM UTC</td><td class='log-message'>Do you see kids for first dental visits?</td><td class='log-response'>Yes, we welcome pediatric patients and can help you choose the best first-visit time for your child.</td><td><span class='score-pill high'>HIGH</span></td></tr><tr><td>Mar 25, 2026 04:49 PM UTC</td><td class='log-message'>Can someone call me back about implants?</td><td class='log-response'>Absolutely. We can have the office follow up with implant information and next-step scheduling options.</td><td><span class='score-pill medium'>MEDIUM</span></td></tr><tr><td>Mar 25, 2026 11:42 AM UTC</td><td class='log-message'>I chipped a crown and want to know if you take emergencies.</td><td class='log-response'>Yes, emergency dental concerns like chipped crowns can be prioritized. We can collect a few details and get you routed correctly.</td><td><span class='score-pill high'>HIGH</span></td></tr><tr><td>Mar 24, 2026 05:03 PM UTC</td><td class='log-message'>Need to reschedule my hygiene appointment.</td><td class='log-response'>No problem. We can help you move your hygiene visit to a better time.</td><td><span class='score-pill low'>LOW</span></td></tr><tr><td>Mar 24, 2026 02:56 PM UTC</td><td class='log-message'>Do you offer payment plans for braces?</td><td class='log-response'>Yes, we can review financing and payment plan options for orthodontic treatment.</td><td><span class='score-pill medium'>MEDIUM</span></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

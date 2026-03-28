@@ -1,0 +1,52 @@
+Q: How do I get started with the Claude API Phone Access setup?
+
+A: Here's the quick start:
+
+1. Get your Claude API key from console.anthropic.com
+2. Navigate to the backend folder
+3. Create a virtual environment: python3 -m venv venv
+4. Activate it: source venv/bin/activate
+5. Install dependencies: pip install -r requirements.txt
+6. Add your API key to .env file
+7. Start the server: python app.py
+8. Access from phone: http://<your-mac-ip>:5000
+
+That's it! You're now running Claude on your API credits.
+
+Q: Can I use this from anywhere or just my local network?
+
+A: Both! 
+- Same WiFi: Use your Mac's local IP (192.168.x.x)
+- Remote: Use ngrok for free tunnel access
+- With ngrok: ngrok http 5000 and use the generated URL
+
+The ngrok URL works from anywhere in the world.
+
+Q: How much will this cost from my $25 credit?
+
+A: Very little! Here's the pricing:
+- Short responses: $0.01-0.05 each
+- Average conversation: $0.50
+- You'll get ~50 detailed conversations from $25
+- Monitor usage at console.anthropic.com/account/usage
+
+It's incredibly affordable compared to web hosting or subscription services.
+
+Q: What happens if my Mac mini goes to sleep?
+
+A: The server stops responding. Solution:
+1. Set Mac to never sleep: System Preferences > Energy Saver
+2. Disable display sleep separately from computer sleep
+3. Consider using a UPS backup power
+
+Your Mac mini should stay on 24/7 for best experience.
+
+Q: Can I set up multiple conversations?
+
+A: Yes! The system automatically separates conversations. 
+- Each has its own ID
+- History is saved automatically
+- You can keep dozens of different conversation threads
+- Clear individual chats or all at once
+
+All stored locally on your Mac.

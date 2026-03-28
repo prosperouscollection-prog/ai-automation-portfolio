@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>$business_name Appointment Confirmation</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f8fafc; color:#0f172a; font-family:Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px; background-color:#ffffff; border-radius:18px; overflow:hidden; border:1px solid #dbeafe;">
+          <tr>
+            <td style="background-color:$accent_color; padding:28px 32px;">
+              <p style="margin:0; color:#dbeafe; font-size:13px; letter-spacing:0.08em; text-transform:uppercase;">Genesis AI Systems Appointment Flow</p>
+              <h1 style="margin:10px 0 0; color:#ffffff; font-size:30px; line-height:1.15;">Your appointment is confirmed</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 18px; font-size:17px; line-height:1.6;">Hello $client_name,</p>
+              <p style="margin:0 0 22px; font-size:16px; line-height:1.7; color:#334155;">
+                Thank you for booking with <strong>$business_name</strong>. We have your visit reserved and everything below is ready for you.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px; background-color:#eff6ff; border:1px solid #bfdbfe; border-radius:16px;">
+                    <p style="margin:0 0 10px; font-size:14px; color:#1d4ed8; font-weight:bold; text-transform:uppercase; letter-spacing:0.05em;">Appointment Details</p>
+                    <p style="margin:0 0 8px; font-size:16px;"><strong>Service:</strong> $service_name</p>
+                    <p style="margin:0 0 8px; font-size:16px;"><strong>Date:</strong> $appointment_date</p>
+                    <p style="margin:0 0 8px; font-size:16px;"><strong>Time:</strong> $appointment_time to $appointment_end_time</p>
+                    <p style="margin:0 0 8px; font-size:16px;"><strong>Location:</strong> $location_name</p>
+                    <p style="margin:0; font-size:16px;"><strong>Address:</strong> $location_address</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="padding:18px; border:1px solid #e2e8f0; border-radius:16px;">
+                    <p style="margin:0 0 10px; font-size:14px; color:#475569; font-weight:bold; text-transform:uppercase; letter-spacing:0.05em;">Before You Arrive</p>
+                    <p style="margin:0 0 8px; font-size:15px; line-height:1.7; color:#334155;">If you need directions, use this link: <a href="$directions_url" style="color:$primary_color;">Open directions</a></p>
+                    <p style="margin:0 0 8px; font-size:15px; line-height:1.7; color:#334155;">Questions before your visit? Call us at <strong>$business_phone</strong> or reply to this email.</p>
+                    <p style="margin:0; font-size:15px; line-height:1.7; color:#334155;"><strong>Cancellation policy:</strong> $cancellation_policy</p>
+                  </td>
+                </tr>
+              </table>
+
+              <a href="mailto:$support_email" style="display:inline-block; padding:14px 22px; border-radius:999px; background-color:$primary_color; color:#ffffff; font-size:15px; font-weight:bold; text-decoration:none;">Contact $business_name</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px; background-color:#f1f5f9;">
+              <p style="margin:0; color:#475569; font-size:13px; line-height:1.6;">
+                This confirmation email was sent automatically by Genesis AI Systems for $business_name.<br>
+                Need help? Email <a href="mailto:$support_email" style="color:$primary_color;">$support_email</a>.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROI Report Demo</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 2rem; }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    .panel { background: #16213b; border: 1px solid #2f4774; border-radius: 20px; padding: 1.5rem; margin-bottom: 1rem; }
+    .hero-number { font-size: 2rem; font-weight: 700; color: #93c5fd; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.75rem; border-bottom: 1px solid rgba(203, 213, 225, 0.16); text-align: left; vertical-align: top; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <h1>Your AI worked 10.5 hours this month so you didn't have to</h1>
+      <p>Demo ROI preview. When ReportLab is available, this dataset also exports as a client-ready monthly PDF.</p>
+    </div>
+    <div class="grid">
+      <div class="panel"><div class="hero-number">42</div><div>Total leads captured</div></div>
+      <div class="panel"><div class="hero-number">$8,100</div><div>Estimated revenue influenced</div></div>
+      <div class="panel"><div class="hero-number">99.57%</div><div>System uptime</div></div>
+    </div>
+    <div class="panel">
+      <h2>Before Genesis AI Systems vs After Genesis AI Systems</h2>
+      <table>
+        <thead><tr><th>Metric</th><th>Before Genesis AI Systems</th><th>After Genesis AI Systems</th></tr></thead>
+        <tbody><tr><td>Lead handling</td><td>Manual and inconsistent</td><td>42 leads tracked automatically</td></tr><tr><td>Follow-up</td><td>Delayed or forgotten</td><td>42 AI responses sent</td></tr><tr><td>After-hours coverage</td><td>Usually none</td><td>29 calls handled by AI</td></tr><tr><td>Reporting</td><td>Manual guesswork</td><td>Monthly ROI report with hard numbers</td></tr></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>System Metrics</h2>
+      <ul>
+        <li>Lead score mix: 18 HIGH, 15 MEDIUM, 9 LOW</li>
+        <li>Voice calls handled: 29</li>
+        <li>Automated emails sent: 37</li>
+        <li>Top themes: invisalign, braces, insurance, dental, veneers</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>Next Month Recommendations</h2>
+      <ul><li>Double down on follow-up speed around the 18 HIGH leads generated this month.</li><li>Use messaging around invisalign, braces, insurance in next month’s scripts and content.</li><li>Review staffing and escalation coverage so the system maintains at least 99.6% uptime next month.</li></ul>
+    </div>
+  </div>
+</body>
+</html>

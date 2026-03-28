@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Genesis AI Systems Client Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #16213b;
+      --panel-border: #2f4774;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --blue: #2563eb;
+      --blue-soft: #60a5fa;
+      --green: #16a34a;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --focus: #93c5fd;
+      --shadow: 0 16px 32px rgba(2, 6, 23, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 28%),
+        linear-gradient(180deg, #0b1222 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--blue-soft);
+    }
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2rem 0 3rem;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      max-width: 50rem;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.42);
+      color: #dbeafe;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 1rem;
+    }
+
+    .secondary-grid {
+      grid-template-columns: 1.2fr 0.8fr;
+      margin-bottom: 1rem;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(22, 33, 59, 0.96), rgba(14, 24, 44, 0.96));
+      border: 1px solid var(--panel-border);
+      border-radius: 1.25rem;
+      box-shadow: var(--shadow);
+      padding: 1.2rem;
+    }
+
+    .metric-card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .metric-note {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .score-high { color: #86efac; }
+    .score-medium { color: #fcd34d; }
+    .score-low { color: #fda4af; }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .metrics-table th,
+    .metrics-table td {
+      padding: 0.8rem 0.65rem;
+      border-bottom: 1px solid rgba(203, 213, 225, 0.12);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .metrics-table th {
+      color: #dbeafe;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 5.5rem;
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .score-pill.high { background: rgba(22, 163, 74, 0.2); color: #bbf7d0; }
+    .score-pill.medium { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+    .score-pill.low { background: rgba(239, 68, 68, 0.2); color: #fecdd3; }
+
+    .log-message,
+    .log-response {
+      max-width: 28rem;
+    }
+
+    .footer-note {
+      margin-top: 1rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--muted);
+    }
+
+    .loading::before {
+      content: "";
+      width: 0.9rem;
+      height: 0.9rem;
+      border-radius: 999px;
+      border: 2px solid rgba(219, 234, 254, 0.22);
+      border-top-color: var(--blue-soft);
+      animation: spin 0.9s linear infinite;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 920px) {
+      .stats-grid,
+      .secondary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 1rem, 1180px);
+        padding-top: 1rem;
+      }
+
+      .panel {
+        padding: 1rem;
+      }
+
+      .metric-value {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero" aria-labelledby="dashboard-title">
+      <div>
+        <h1 id="dashboard-title">Genesis AI Systems Lead Dashboard</h1>
+        <p>Live visibility into lead flow, AI responses, and conversion-critical lead scores. This enhancement is typically sold for <strong>+$500-$1,000 setup</strong> and <strong>+$100/month</strong>.</p>
+      </div>
+      <div class="status-chip" id="last-updated-chip" aria-live="polite">Last updated: waiting for first sync</div>
+    </section>
+
+    <section class="grid stats-grid" aria-label="Lead score summary">
+      <article class="panel metric-card">
+        <h2>Total Leads</h2>
+        <p class="metric-value" id="metric-total">0</p>
+        <p class="metric-note">All captured leads currently in the worksheet.</p>
+      </article>
+      <article class="panel metric-card">
+        <h2>High Priority</h2>
+        <p class="metric-value score-high" id="metric-high">0</p>
+        <p class="metric-note">Best leads for immediate follow-up.</p>
+      </article>
+      <article class="panel metric-card">
+        <h2>Medium Priority</h2>
+        <p class="metric-value score-medium" id="metric-medium">0</p>
+        <p class="metric-note">Qualified leads that still need attention today.</p>
+      </article>
+      <article class="panel metric-card">
+        <h2>Low Priority</h2>
+        <p class="metric-value score-low" id="metric-low">0</p>
+        <p class="metric-note">Lower urgency leads for later nurturing.</p>
+      </article>
+    </section>
+
+    <section class="grid secondary-grid" aria-label="Lead metrics and chart">
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Lead Volume Snapshot</h2>
+            <p class="subtle">Today, this week, and this month based on timestamped worksheet entries.</p>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th scope="col">Window</th>
+                <th scope="col">Total</th>
+                <th scope="col">High</th>
+                <th scope="col">Medium</th>
+                <th scope="col">Low</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body">
+              <tr><td colspan="5"><span class="loading">Loading metrics from Google Sheets</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Lead Score Distribution</h2>
+            <p class="subtle">Live pie chart based on the current worksheet.</p>
+          </div>
+        </div>
+        <canvas id="score-chart" aria-label="Lead score distribution chart" role="img"></canvas>
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="response-log-title">
+      <div class="panel-header">
+        <div>
+          <h2 id="response-log-title">AI Response Log</h2>
+          <p class="subtle">Last 10 lead interactions pulled from the sheet. Expected columns: Timestamp, Message, Response, Score.</p>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Lead Message</th>
+              <th scope="col">AI Response</th>
+              <th scope="col">Score</th>
+            </tr>
+          </thead>
+          <tbody id="response-log-body">
+            <tr><td colspan="4"><span class="loading">Loading response log</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="footer-note">Refresh interval: every 60 seconds. For private sheets, proxy this request through a secure backend instead of exposing an API key in production.</p>
+    </section>
+  </main>
+
+  <script>
+    const DASHBOARD_CONFIG = {
+      spreadsheetId: "YOUR_GOOGLE_SHEETS_ID",
+      worksheetRange: "Leads!A:F",
+      apiKey: "YOUR_GOOGLE_SHEETS_API_KEY",
+      refreshMs: 60000
+    };
+
+    const els = {
+      metricTotal: document.getElementById("metric-total"),
+      metricHigh: document.getElementById("metric-high"),
+      metricMedium: document.getElementById("metric-medium"),
+      metricLow: document.getElementById("metric-low"),
+      summaryTableBody: document.getElementById("summary-table-body"),
+      responseLogBody: document.getElementById("response-log-body"),
+      lastUpdatedChip: document.getElementById("last-updated-chip")
+    };
+
+    const scoreColors = ["#16a34a", "#f59e0b", "#ef4444"];
+    let scoreChart;
+
+    function parseLeadRecord(row, headers) {
+      const normalized = {};
+      headers.forEach((header, index) => {
+        normalized[header.toLowerCase().trim()] = row[index] || "";
+      });
+
+      const timestampRaw = normalized.timestamp || normalized.created_at || normalized.date || "";
+      const timestamp = timestampRaw ? new Date(timestampRaw) : null;
+
+      return {
+        timestampRaw,
+        timestamp,
+        message: normalized.message || normalized.lead_message || normalized.question || "",
+        response: normalized.response || normalized.ai_response || "",
+        score: (normalized.score || normalized.lead_score || "LOW").toUpperCase()
+      };
+    }
+
+    function countByScore(records) {
+      return records.reduce((acc, record) => {
+        const score = ["HIGH", "MEDIUM", "LOW"].includes(record.score) ? record.score : "LOW";
+        acc.total += 1;
+        acc[score] += 1;
+        return acc;
+      }, { total: 0, HIGH: 0, MEDIUM: 0, LOW: 0 });
+    }
+
+    function summarizeWindow(records, predicate) {
+      return countByScore(records.filter(predicate));
+    }
+
+    function sameDay(left, right) {
+      return left.getFullYear() === right.getFullYear()
+        && left.getMonth() === right.getMonth()
+        && left.getDate() === right.getDate();
+    }
+
+    function withinDays(recordDate, now, days) {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - (days - 1));
+      return recordDate >= start && recordDate <= now;
+    }
+
+    function renderSummaryTable(records) {
+      const now = new Date();
+      const today = summarizeWindow(records, record => record.timestamp && sameDay(record.timestamp, now));
+      const week = summarizeWindow(records, record => record.timestamp && withinDays(record.timestamp, now, 7));
+      const month = summarizeWindow(records, record => record.timestamp && record.timestamp.getMonth() === now.getMonth() && record.timestamp.getFullYear() === now.getFullYear());
+
+      const rows = [
+        ["Today", today],
+        ["This Week", week],
+        ["This Month", month]
+      ];
+
+      els.summaryTableBody.innerHTML = rows.map(([label, metrics]) => `
+        <tr>
+          <th scope="row">${label}</th>
+          <td>${metrics.total}</td>
+          <td>${metrics.HIGH}</td>
+          <td>${metrics.MEDIUM}</td>
+          <td>${metrics.LOW}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderResponseLog(records) {
+      const latest = [...records]
+        .sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0))
+        .slice(0, 10);
+
+      if (!latest.length) {
+        els.responseLogBody.innerHTML = "<tr><td colspan='4'>No lead records found in the selected sheet range.</td></tr>";
+        return;
+      }
+
+      els.responseLogBody.innerHTML = latest.map(record => {
+        const scoreClass = record.score === "HIGH" ? "high" : record.score === "MEDIUM" ? "medium" : "low";
+        const safeTime = record.timestamp ? record.timestamp.toLocaleString() : (record.timestampRaw || "Unknown");
+        return `
+          <tr>
+            <td>${safeTime}</td>
+            <td class="log-message">${record.message || "No message provided"}</td>
+            <td class="log-response">${record.response || "No AI response logged"}</td>
+            <td><span class="score-pill ${scoreClass}">${record.score}</span></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function updateScoreChart(counts) {
+      const context = document.getElementById("score-chart");
+
+      if (!scoreChart) {
+        scoreChart = new Chart(context, {
+          type: "pie",
+          data: {
+            labels: ["High", "Medium", "Low"],
+            datasets: [{
+              data: [counts.HIGH, counts.MEDIUM, counts.LOW],
+              backgroundColor: scoreColors,
+              borderColor: "#0f172a",
+              borderWidth: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: "#f8fafc"
+                }
+              },
+              tooltip: {
+                bodyColor: "#f8fafc",
+                titleColor: "#f8fafc"
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      scoreChart.data.datasets[0].data = [counts.HIGH, counts.MEDIUM, counts.LOW];
+      scoreChart.update();
+    }
+
+    function updateHeadlineMetrics(counts) {
+      els.metricTotal.textContent = counts.total;
+      els.metricHigh.textContent = counts.HIGH;
+      els.metricMedium.textContent = counts.MEDIUM;
+      els.metricLow.textContent = counts.LOW;
+    }
+
+    function updateLastUpdated() {
+      els.lastUpdatedChip.textContent = `Last updated: ${new Date().toLocaleString()}`;
+    }
+
+    async function fetchSheetRows() {
+      const url = new URL(`https://sheets.googleapis.com/v4/spreadsheets/${DASHBOARD_CONFIG.spreadsheetId}/values/${DASHBOARD_CONFIG.worksheetRange}`);
+      url.searchParams.set("key", DASHBOARD_CONFIG.apiKey);
+
+      const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+      if (!response.ok) {
+        throw new Error(`Google Sheets API returned ${response.status}`);
+      }
+
+      const payload = await response.json();
+      return payload.values || [];
+    }
+
+    async function loadDashboard() {
+      try {
+        const rows = await fetchSheetRows();
+        if (!rows.length) {
+          throw new Error("The configured worksheet range returned no rows.");
+        }
+
+        const [headers, ...dataRows] = rows;
+        const records = dataRows.map(row => parseLeadRecord(row, headers));
+        const counts = countByScore(records);
+
+        updateHeadlineMetrics(counts);
+        renderSummaryTable(records);
+        renderResponseLog(records);
+        updateScoreChart(counts);
+        updateLastUpdated();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown dashboard error";
+        els.summaryTableBody.innerHTML = `<tr><td colspan="5">Unable to load dashboard data: ${message}</td></tr>`;
+        els.responseLogBody.innerHTML = `<tr><td colspan="4">Unable to load response log: ${message}</td></tr>`;
+        els.lastUpdatedChip.textContent = `Last updated: failed sync at ${new Date().toLocaleTimeString()}`;
+      }
+    }
+
+    loadDashboard();
+    window.setInterval(loadDashboard, DASHBOARD_CONFIG.refreshMs);
+  </script>
+</body>
+</html>

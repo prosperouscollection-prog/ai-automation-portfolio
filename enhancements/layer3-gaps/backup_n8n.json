@@ -1,0 +1,51 @@
+{
+  "name": "Genesis AI Systems Daily Backup",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "backup-trigger",
+      "name": "Daily 2AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "command": "cd /Users/genesisai/portfolio/enhancements/layer3-gaps && python backup_system.py"
+      },
+      "id": "backup-command",
+      "name": "Run Backup System",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        520,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Daily 2AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run Backup System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

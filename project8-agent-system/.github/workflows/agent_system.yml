@@ -1,0 +1,66 @@
+name: project8-agent-system
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Trigger source label
+        required: false
+        default: workflow_dispatch
+  repository_dispatch:
+    types: [manual-agent-run]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  run-agent-system:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r project8-agent-system/requirements.txt
+
+      - name: Run agent system
+        working-directory: project8-agent-system
+        env:
+          RUN_SOURCE: ${{ github.event.inputs.source || github.event.client_payload.source || github.event_name }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_MODEL: ${{ secrets.CLAUDE_MODEL }}
+          CREWAI_MODEL: ${{ secrets.CREWAI_MODEL }}
+          TARGET_REPO_PATH: ${{ github.workspace }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+          GOOGLE_SHEETS_WORKSHEET: ${{ secrets.GOOGLE_SHEETS_WORKSHEET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+          DEPLOY_WORKFLOW_FILE: agent_system.yml
+          GMAIL_SMTP_USERNAME: ${{ secrets.GMAIL_SMTP_USERNAME }}
+          GMAIL_SMTP_PASSWORD: ${{ secrets.GMAIL_SMTP_PASSWORD }}
+          GMAIL_TO: ${{ secrets.GMAIL_TO }}
+          WEBHOOK_URLS: ${{ secrets.WEBHOOK_URLS }}
+          OPENAI_CHANGELOG_RSS_URL: https://openai.com/news/rss.xml
+          ANTHROPIC_CHANGELOG_RSS_URL: https://www.anthropic.com/news/rss.xml
+          SEMGREP_CONFIG: auto
+          ALLOW_AUTO_FIX_LOW: "true"
+          ALLOW_AUTO_DEPLOY: "true"
+          EVOLUTION_AUTO_APPLY: "false"
+          DEPLOY_POLL_SECONDS: "20"
+          DEPLOY_TIMEOUT_MINUTES: "20"
+        run: |
+          python main.py --source "${RUN_SOURCE}" --json

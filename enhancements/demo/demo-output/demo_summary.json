@@ -1,0 +1,14 @@
+{
+  "generated_at": "2026-03-28T16:30:00+00:00",
+  "business_name": "Smile Dental",
+  "lead_count": 42,
+  "high_count": 18,
+  "medium_count": 15,
+  "low_count": 9,
+  "files": {
+    "client_dashboard": "/Users/genesisai/portfolio/enhancements/demo/demo-output/client_dashboard_demo.html",
+    "weekly_preview": "/Users/genesisai/portfolio/enhancements/demo/demo-output/weekly_report_demo.html",
+    "roi_preview": "/Users/genesisai/portfolio/enhancements/demo/demo-output/roi_report_demo.html",
+    "uptime_dashboard": "/Users/genesisai/portfolio/enhancements/demo/demo-output/uptime_dashboard_demo.html"
+  }
+}

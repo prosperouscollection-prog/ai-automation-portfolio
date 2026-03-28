@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""
+Claude Chat - Simple Terminal Interface
+Works reliably without any AppleScript issues
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+
+class ClaudeChatSimple:
+    """Simple Claude chat interface"""
+    
+    def __init__(self):
+        self.api_url = "http://localhost:8000/api/chat"
+        self.conversation_id = "terminal_chat"
+        self.history_file = Path.home() / ".claude_chat_history.json"
+    
+    def ask_claude(self, message):
+        """Ask Claude a question"""
+        try:
+            response = requests.post(
+                self.api_url,
+                json={
+                    "message": message,
+                    "conversation_id": self.conversation_id
+                },
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data.get('response', 'No response received')
+            else:
+                return f"Error: {response.status_code}"
+        
+        except requests.exceptions.Timeout:
+            return "⏱️  Request timed out - Claude took too long to respond"
+        except Exception as e:
+            return f"❌ Error: {str(e)}"
+    
+    def save_message(self, role, content):
+        """Save message to local history"""
+        try:
+            history = {}
+            if self.history_file.exists():
+                history = json.load(open(self.history_file))
+            
+            if "messages" not in history:
+                history["messages"] = []
+            
+            history["messages"].append({
+                "role": role,
+                "content": content,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            with open(self.history_file, 'w') as f:
+                json.dump(history, f, indent=2)
+        except:
+            pass
+    
+    def run(self):
+        """Main chat loop"""
+        print("\n" + "="*60)
+        print("  Claude AI Chat - Terminal Interface")
+        print("="*60)
+        print("\nClaude is ready! Type your messages below.")
+        print("Type 'quit' or 'exit' to stop.\n")
+        
+        # Check server
+        try:
+            r = requests.get("http://localhost:8000/api/status", timeout=2)
+            if r.status_code == 200:
+                print("✅ Claude Server: ONLINE\n")
+        except:
+            print("⚠️  Warning: Claude server might not be running\n")
+        
+        while True:
+            try:
+                user_input = input("You: ").strip()
+                
+                if not user_input:
+                    continue
+                
+                if user_input.lower() in ['quit', 'exit']:
+                    print("\n👋 Goodbye!")
+                    break
+                
+                # Special commands
+                if user_input.startswith('/'):
+                    if user_input == '/help':
+                        print("""
+Commands:
+  /help   - Show this help
+  /status - Check if Claude is online
+  /clear  - Clear conversation
+  quit/exit - Exit chat
+""")
+                    elif user_input == '/status':
+                        try:
+                            r = requests.get("http://localhost:8000/api/status", timeout=2)
+                            print("✅ Claude is online!")
+                        except:
+                            print("❌ Claude is offline")
+                    elif user_input == '/clear':
+                        self.conversation_id = f"terminal_chat_{datetime.now().timestamp()}"
+                        print("✅ Conversation cleared")
+                    continue
+                
+                # Ask Claude
+                print("\n⏳ Claude is thinking...")
+                response = self.ask_claude(user_input)
+                
+                # Show response
+                print(f"\nClaude: {response}\n")
+                
+                # Save to history
+                self.save_message("user", user_input)
+                self.save_message("assistant", response)
+                
+            except KeyboardInterrupt:
+                print("\n\n👋 Chat ended")
+                break
+            except Exception as e:
+                print(f"\n❌ Error: {e}\n")
+
+def main():
+    chat = ClaudeChatSimple()
+    chat.run()
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,19 @@
+#!/bin/bash
+# Start Claude Chat via iMessage
+
+if [ -z "$1" ]; then
+    echo "Usage: imessage-chat '+1YOUR_PHONE_NUMBER'"
+    echo ""
+    echo "Example:"
+    echo "  imessage-chat '+14155552671'"
+    echo ""
+    echo "Make sure to include:"
+    echo "  - Plus sign (+)"
+    echo "  - Country code (1 for US)"
+    echo "  - Full phone number"
+    exit 1
+fi
+
+cd "$(dirname "$0")"
+source ../backend/venv/bin/activate
+python imessage_chat.py "$1"

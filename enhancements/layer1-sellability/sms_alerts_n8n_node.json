@@ -1,0 +1,42 @@
+{
+  "name": "Twilio High Lead SMS",
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4.2,
+  "position": [
+    860,
+    320
+  ],
+  "parameters": {
+    "method": "POST",
+    "url": "=https://api.twilio.com/2010-04-01/Accounts/{{$env.TWILIO_ACCOUNT_SID}}/Messages.json",
+    "authentication": "predefinedCredentialType",
+    "nodeCredentialType": "httpBasicAuth",
+    "sendHeaders": true,
+    "headerParameters": {
+      "parameters": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ]
+    },
+    "sendBody": true,
+    "contentType": "form-urlencoded",
+    "bodyParameters": {
+      "parameters": [
+        {
+          "name": "From",
+          "value": "={{$env.TWILIO_FROM_NUMBER}}"
+        },
+        {
+          "name": "To",
+          "value": "={{$env.TWILIO_TO_NUMBER}}"
+        },
+        {
+          "name": "Body",
+          "value": "=🔥 HIGH LEAD - Genesis AI Systems Alert\\nMessage: {{$json[\"message\"]}}\\nScore: HIGH\\nTime: {{$json[\"timestamp\"]}}\\nReply STOP to unsubscribe"
+        }
+      ]
+    }
+  }
+}
