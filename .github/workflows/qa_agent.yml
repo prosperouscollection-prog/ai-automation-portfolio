@@ -28,6 +28,7 @@ env:
   CALENDLY_URL: ${{ secrets.CALENDLY_URL }}
   NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
   ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+  RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
   DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   BRAND_OWNER: "Trendell Fordham"

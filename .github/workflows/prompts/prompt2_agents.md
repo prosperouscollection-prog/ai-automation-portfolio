@@ -200,7 +200,7 @@ Abstract base class: `BaseNotifier`
   - `INFO`
 
 Concrete classes:
-- `EmailNotifier` using SendGrid
+- `EmailNotifier` using Resend
 - `SMSNotifier` using Twilio
 - `SlackNotifier` using webhook
 - `GitHubNotifier` using issues
@@ -273,7 +273,7 @@ Also create:
   - `anthropic`
   - `openai`
   - `twilio`
-  - `sendgrid`
+  - `resend`
   - `requests`
   - `beautifulsoup4`
   - `lxml`
@@ -328,17 +328,15 @@ Collect:
 - `TWILIO_FROM_NUMBER`
 - `ALERT_PHONE_NUMBER: +13134002575`
 
-#### Section 2: SendGrid Setup
-- `sendgrid.com` → free account with `100/day` free
-- Verify `info@genesisai.systems`
-- Create API key with Mail Send scope
-- Add DNS to Cloudflare
-- Cost: `Free`
+#### Section 2: Resend Setup
+- `resend.com` → sign up with `info@genesisai.systems`
+- Create API key named `genesis-ai-systems`
+- Permission: `Full Access`
+- No DNS records needed to get started
+- Cost: `Free (3,000 emails/month)`
 
 Collect:
-- `SENDGRID_API_KEY`
-- `SENDGRID_FROM_EMAIL: info@genesisai.systems`
-- `SENDGRID_FROM_NAME: Genesis AI Systems`
+- `RESEND_API_KEY`
 
 #### Section 3: Slack Setup (optional)
 - Create workspace: `Genesis AI Systems`
@@ -381,9 +379,7 @@ Add all secrets:
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_FROM_NUMBER`
 - `ALERT_PHONE_NUMBER (+13134002575)`
-- `SENDGRID_API_KEY`
-- `SENDGRID_FROM_EMAIL (info@genesisai.systems)`
-- `SENDGRID_FROM_NAME (Genesis AI Systems)`
+- `RESEND_API_KEY`
 - `SLACK_WEBHOOK_URL (optional)`
 - `SITE_URL (https://genesisai.systems)`
 - `CALENDLY_URL (full Calendly URL)`
@@ -421,7 +417,7 @@ python .github/workflows/scripts/notify.py --test-slack
 #### Section 10: Monthly Costs
 - GitHub Actions: `$0`
 - Twilio: about `$1/month`
-- SendGrid: `$0`
+- Resend: `$0`
 - Slack: `$0`
 - Anthropic: about `$5–10/month`
 - OpenAI: about `$5–10/month`
@@ -453,9 +449,7 @@ Required:
 - [ ] `TWILIO_AUTH_TOKEN`
 - [ ] `TWILIO_FROM_NUMBER`
 - [ ] `ALERT_PHONE_NUMBER`
-- [ ] `SENDGRID_API_KEY`
-- [ ] `SENDGRID_FROM_EMAIL`
-- [ ] `SENDGRID_FROM_NAME`
+- [ ] `RESEND_API_KEY`
 - [ ] `SITE_URL`
 - [ ] `NOTIFICATION_EMAIL`
 - [ ] `CALENDLY_URL`

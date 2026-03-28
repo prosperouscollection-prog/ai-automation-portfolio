@@ -28,7 +28,7 @@ def main() -> int:
         twilio_token=os.getenv("TWILIO_AUTH_TOKEN"),
         twilio_from=os.getenv("TWILIO_FROM_NUMBER"),
         alert_phone=os.getenv("ALERT_PHONE_NUMBER"),
-        sendgrid_key=os.getenv("SENDGRID_API_KEY"),
+        resend_key=os.getenv("RESEND_API_KEY"),
         notification_email=os.getenv("NOTIFICATION_EMAIL", "info@genesisai.systems"),
     )
     tracker = CostTracker(

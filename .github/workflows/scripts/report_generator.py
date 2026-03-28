@@ -62,7 +62,7 @@ def html_report_email(subject: str, summary: str, details: Union[str, List[Dict[
         extra_lines: Optional lines to display after table
         timestamp: Optional override timestamp
     Returns:
-        HTML string (safe for SendGrid emails)
+        HTML string for branded notification emails
     """
     if not timestamp:
         timestamp = now_ts()

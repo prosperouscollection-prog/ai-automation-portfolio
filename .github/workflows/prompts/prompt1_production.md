@@ -188,7 +188,7 @@ Directory: `/Users/genesisai/portfolio/project4-workflow-automation/`
 
 Fix these issues:
 - Webhook URL must point to `https://n8n.genesisai.systems`
-- Gmail must send as `info@genesisai.systems` through SendGrid
+- Gmail must send as `info@genesisai.systems` through Resend
 - Google Sheets must use the production sheet
 - Add `PRODUCTION_CHECKLIST.md`
 
@@ -291,7 +291,7 @@ Create or update this file with:
 
 ## Project 4
 - [ ] Webhook → n8n.genesisai.systems
-- [ ] SendGrid connected
+- [ ] Resend connected
 - [ ] Full pipeline tested
 
 ## Project 5

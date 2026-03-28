@@ -1,6 +1,6 @@
 # Genesis AI Systems — Comprehensive Setup Guide
 
-Welcome to the setup guide for the Genesis AI Systems agent automation and monitoring platform. This document will take you step-by-step through the setup of all required integrations (Twilio, SendGrid, Slack, Anthropic, OpenAI, GitHub Secrets, DigitalOcean n8n, Railway demo server), environment variables, local testing commands, and cost estimates.
+Welcome to the setup guide for the Genesis AI Systems agent automation and monitoring platform. This document will take you step-by-step through the setup of all required integrations (Twilio, Resend, Slack, Anthropic, OpenAI, GitHub Secrets, DigitalOcean n8n, Railway demo server), environment variables, local testing commands, and cost estimates.
 
 **Founding Contact:**
 - Name: Trendell Fordham
@@ -31,21 +31,24 @@ Twilio is used to send real-time SMS notifications for critical events and agent
 
 ---
 
-## Section 2: SendGrid Setup (Email Alerts)
+## Section 2: Resend Setup (Email Alerts)
 
-SendGrid is used for branded transactional and notification emails sent by the agents.
+Resend is used for branded transactional and notification emails sent by the agents. It is much simpler than SendGrid and works immediately after signup.
 
 **Steps:**
-1. Create a free account at [sendgrid.com](https://sendgrid.com). The free plan allows **100 emails/day**.
-2. Verify your sending email: `info@genesisai.systems` (Add in SendGrid → Sender Authentication).
-3. Go to **Settings → API Keys** and create a new API key (select "Mail Send" only).
-4. At DNS provider (e.g. Cloudflare), add the DNS records shown in SendGrid for domain verification.
-5. Save the following:
-   - `SENDGRID_API_KEY`
-   - `SENDGRID_FROM_EMAIL: info@genesisai.systems`
-   - `SENDGRID_FROM_NAME: Genesis AI Systems`
+1. Go to [resend.com](https://resend.com).
+2. Sign up with `info@genesisai.systems`.
+3. Click **API Keys → Create API Key**.
+4. Name the key: `genesis-ai-systems`.
+5. Set permission to **Full Access**.
+6. Copy the key immediately and store it securely.
+7. Save the following:
+   - `RESEND_API_KEY`
 
-*Reference: [Verify Domain - SendGrid Docs](https://docs.sendgrid.com/ui/account-and-settings/how-to-set-up-domain-authentication)*
+**Notes:**
+- Cost: Free for up to **3,000 emails/month**
+- No DNS records are needed to get started
+- Works immediately after signup
 
 ---
 
@@ -110,9 +113,7 @@ github.com/prosperouscollection-prog/ai-automation-portfolio/settings/secrets/ac
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_FROM_NUMBER`
 - `ALERT_PHONE_NUMBER` *(+13134002575)*
-- `SENDGRID_API_KEY`
-- `SENDGRID_FROM_EMAIL` *(info@genesisai.systems)*
-- `SENDGRID_FROM_NAME` *(Genesis AI Systems)*
+- `RESEND_API_KEY`
 - `SLACK_WEBHOOK_URL` *(optional)*
 - `SITE_URL` *(https://genesisai.systems)*
 - `CALENDLY_URL` *(full Calendly URL, e.g. https://calendly.com/genesisai-info-ptmt/free-ai-demo-call)*
@@ -204,7 +205,7 @@ Railway is used for hosting the live backend demo server.
 |-----------------|--------------|
 | GitHub Actions  | $0           |
 | Twilio          | ~$1          |
-| SendGrid        | $0           |
+| Resend          | $0           |
 | Slack           | $0           |
 | Anthropic       | $5–10        |
 | OpenAI          | $5–10        |

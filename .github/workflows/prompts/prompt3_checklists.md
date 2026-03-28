@@ -43,7 +43,7 @@ Create the file with exactly this structure and checklist content:
 
 ## Phase 2 — Services
 - [ ] Twilio account + number
-- [ ] SendGrid account + sender verified
+- [ ] Resend account active + API key saved
 - [ ] Slack workspace (optional)
 - [ ] Anthropic API key
 - [ ] OpenAI API key
@@ -57,7 +57,7 @@ Create the file with exactly this structure and checklist content:
 - [ ] Project 1 → n8n.genesisai.systems
 - [ ] Project 2 → Riley branded + production
 - [ ] Project 3 → FAQ loaded + API ready
-- [ ] Project 4 → n8n + SendGrid production
+- [ ] Project 4 → n8n + Resend production
 - [ ] Project 5 → backend proxy live
 - [ ] Project 6 → fine-tuning completed
 - [ ] Project 7 → n8n production
@@ -166,7 +166,7 @@ Live website: https://genesisai.systems
 Hosting: GitHub Pages + Cloudflare
 n8n: n8n.genesisai.systems (DigitalOcean)
 Demo server: Railway
-Email: info@genesisai.systems (SendGrid)
+Email: info@genesisai.systems (Resend)
 SMS: Twilio → (313) 400-2575
 Voice: Vapi (Riley)
 Booking: Calendly
@@ -216,7 +216,7 @@ ROI: 59,900%–119,900%
 
 This week:
 1. Set up Twilio
-2. Set up SendGrid
+2. Set up Resend
 3. Add GitHub secrets
 4. Deploy n8n to DigitalOcean
 5. Deploy demo server to Railway

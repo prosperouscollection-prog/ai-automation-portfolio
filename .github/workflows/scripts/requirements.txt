@@ -7,7 +7,7 @@ anthropic==0.20.1
 openai==1.30.5
 
 # Notification & Communication
-sendgrid==6.11.0
+resend>=0.7.0
 twilio==8.10.0
 
 # HTTP and parsing

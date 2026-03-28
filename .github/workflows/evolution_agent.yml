@@ -25,6 +25,7 @@ jobs:
       CALENDLY_URL: ${{ secrets.CALENDLY_URL }}
       ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
       NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
 
     steps:
       - name: Genesis AI Systems Branding

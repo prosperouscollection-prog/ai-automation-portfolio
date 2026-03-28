@@ -11,6 +11,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from html import escape
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -27,11 +28,9 @@ from rich.progress import (
 )
 
 try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail
+    import resend
 except ImportError:  # pragma: no cover - handled at runtime
-    SendGridAPIClient = None
-    Mail = None
+    resend = None
 
 try:
     from twilio.rest import Client as TwilioClient
@@ -612,16 +611,16 @@ class NotificationSender:
         twilio_token: str | None = None,
         twilio_from: str | None = None,
         alert_phone: str | None = None,
-        sendgrid_key: str | None = None,
+        resend_key: str | None = None,
         notification_email: str | None = None,
     ) -> None:
         """Initialize SMS and email notification clients."""
         self.console = console
         self.twilio_from = twilio_from
         self.alert_phone = alert_phone
-        self.notification_email = notification_email
+        self.notification_email = notification_email or "info@genesisai.systems"
+        self.resend_api_key = resend_key or os.getenv("RESEND_API_KEY")
         self.twilio_client = None
-        self.sendgrid_client = None
 
         if twilio_sid and twilio_token and TwilioClient is not None:
             try:
@@ -629,11 +628,11 @@ class NotificationSender:
             except Exception as exc:  # pragma: no cover - network auth
                 self.console.print(f"[yellow]Twilio init warning:[/yellow] {exc}")
 
-        if sendgrid_key and SendGridAPIClient is not None:
+        if self.resend_api_key and resend is not None:
             try:
-                self.sendgrid_client = SendGridAPIClient(sendgrid_key)
+                resend.api_key = self.resend_api_key
             except Exception as exc:  # pragma: no cover - network auth
-                self.console.print(f"[yellow]SendGrid init warning:[/yellow] {exc}")
+                self.console.print(f"[yellow]Resend init warning:[/yellow] {exc}")
 
     def send(self, subject: str, message: str, priority: str = "INFO") -> None:
         """Send a message over all configured notification channels."""
@@ -662,20 +661,23 @@ class NotificationSender:
             self.console.print(f"[yellow]SMS notification warning:[/yellow] {exc}")
 
     def send_email(self, subject: str, message: str, priority: str = "INFO") -> None:
-        """Send an email notification via SendGrid if configured."""
-        if not all([self.sendgrid_client, self.notification_email, Mail]):
+        """Send an email notification via Resend if configured."""
+        if not self.resend_api_key or resend is None:
             return
 
-        html_message = self._wrap_html_email(subject=subject, message=message, priority=priority)
-        mail = Mail(
-            from_email="info@genesisai.systems",
-            to_emails=self.notification_email,
-            subject=subject,
-            plain_text_content=message,
-            html_content=html_message,
-        )
         try:
-            self.sendgrid_client.send(mail)
+            resend.Emails.send(
+                {
+                    "from": "Genesis AI Systems <info@genesisai.systems>",
+                    "to": [self.notification_email],
+                    "subject": subject,
+                    "html": self._wrap_html_email(
+                        subject=subject,
+                        message=message,
+                        priority=priority,
+                    ),
+                }
+            )
         except Exception as exc:  # pragma: no cover - external network
             self.console.print(f"[yellow]Email notification warning:[/yellow] {exc}")
 
@@ -714,25 +716,36 @@ class NotificationSender:
 
     def _wrap_html_email(self, subject: str, message: str, priority: str) -> str:
         """Render a simple branded HTML email."""
-        safe_lines = "".join(f"<p>{line}</p>" for line in message.splitlines() if line.strip())
+        color = {
+            "CRITICAL": "#ef4444",
+            "HIGH": "#f97316",
+            "MEDIUM": "#2563eb",
+            "LOW": "#22c55e",
+            "INFO": "#94a3b8",
+        }.get(priority, "#2563eb")
+        safe_message = escape(message)
         return f"""
-        <html>
-          <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
-            <div style="max-width:640px;margin:24px auto;background:#ffffff;border:1px solid #dbeafe;border-radius:16px;overflow:hidden;">
-              <div style="background:#0f172a;padding:24px;">
-                <h1 style="margin:0;color:#ffffff;font-size:24px;">Genesis AI Systems</h1>
-                <p style="margin:8px 0 0;color:#bfdbfe;">{subject}</p>
-              </div>
-              <div style="padding:24px;color:#0f172a;">
-                <p><strong>Priority:</strong> {priority}</p>
-                {safe_lines}
-              </div>
-              <div style="padding:20px 24px;border-top:1px solid #dbeafe;color:#475569;font-size:14px;">
-                genesisai.systems | info@genesisai.systems | (313) 400-2575
-              </div>
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">Genesis AI Systems</h1>
+            <p style="color: #94a3b8; margin: 4px 0 0;">{escape(subject)}</p>
+          </div>
+          <div style="background: #f8fafc; padding: 24px; border-left: 4px solid {color};">
+            <div style="background: {color}; color: white; padding: 4px 12px; border-radius: 4px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 16px;">
+              {priority}
             </div>
-          </body>
-        </html>
+            <div style="color: #1e293b; line-height: 1.6; white-space: pre-wrap;">
+              {safe_message}
+            </div>
+          </div>
+          <div style="background: #0f172a; padding: 16px 24px; border-radius: 0 0 8px 8px; text-align: center;">
+            <p style="color: #475569; font-size: 12px; margin: 0;">
+              Trendell Fordham | Genesis AI Systems<br>
+              info@genesisai.systems |
+              (313) 400-2575 | genesisai.systems
+            </p>
+          </div>
+        </div>
         """
 
 
@@ -1462,7 +1475,7 @@ class PromptOrchestrator:
         twilio_token: str | None = None,
         twilio_from: str | None = None,
         alert_phone: str | None = None,
-        sendgrid_key: str | None = None,
+        resend_key: str | None = None,
         notification_email: str | None = None,
     ) -> None:
         """Initialize the prompt orchestrator and its collaborators."""
@@ -1479,7 +1492,7 @@ class PromptOrchestrator:
             twilio_token=twilio_token,
             twilio_from=twilio_from,
             alert_phone=alert_phone,
-            sendgrid_key=sendgrid_key,
+            resend_key=resend_key,
             notification_email=notification_email,
         )
         self.cost_tracker = CostTracker(

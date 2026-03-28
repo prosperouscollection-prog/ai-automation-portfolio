@@ -19,6 +19,7 @@ concurrency:
 env:
   ALERT_PHONE_NUMBER: '+13134002575'
   NOTIFICATION_EMAIL: 'info@genesisai.systems'
+  RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
   SITE_URL: 'https://genesisai.systems'
   BRAND_NAVY: '#0f172a'
   BRAND_ELECTRIC: '#2563eb'

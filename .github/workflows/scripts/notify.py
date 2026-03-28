@@ -1,406 +1,686 @@
 #!/usr/bin/env python3
-"""
-Genesis AI Systems — Notifier Module
+"""Genesis AI Systems notification module with Resend email delivery."""
 
-Provides notification utilities (Email, SMS, Slack, GitHub) for agent alerting,
-following SOLID principles and supporting all required notification priorities.
+from __future__ import annotations
 
-Trendell Fordham, Founder — genesisai.systems
-"""
+import argparse
+import datetime as dt
+import enum
+import json
+import logging
 import os
 import sys
-import enum
-import logging
-import datetime
-import json
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
-
-# Optional imports
-try:
-    from sendgrid import SendGridAPIClient
-    from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
-except ImportError:
-    SendGridAPIClient = None
+from html import escape
+from pathlib import Path
+from typing import Any, Optional
 
 try:
-    from twilio.rest import Client as TwilioClient
-except ImportError:
-    TwilioClient = None
+    import resend
+except ImportError:  # pragma: no cover - runtime dependency
+    resend = None
 
 try:
     import requests
-except ImportError:
+except ImportError:  # pragma: no cover - runtime dependency
     requests = None
 
-# Constants (branding)
+try:
+    from twilio.rest import Client as TwilioClient
+except ImportError:  # pragma: no cover - runtime dependency
+    TwilioClient = None
+
+
 BRAND_NAME = "Genesis AI Systems"
 BRAND_WEBSITE = "https://genesisai.systems"
 BRAND_EMAIL = "info@genesisai.systems"
 BRAND_PHONE = "(313) 400-2575"
 BRAND_PHONE_INTL = "+13134002575"
+FOUNDER = "Trendell Fordham"
 NAVY = "#0f172a"
 ELECTRIC_BLUE = "#2563eb"
-FOUNDER = "Trendell Fordham"
-GITHUB_REPO = "prosperouscollection-prog/ai-automation-portfolio"
-GITHUB_BASE_URL = f"https://github.com/{GITHUB_REPO}"
-ISSUES_URL = f"{GITHUB_BASE_URL}/issues"
-ACTIONS_URL = f"{GITHUB_BASE_URL}/actions"
+REPO_SLUG = "prosperouscollection-prog/ai-automation-portfolio"
+ACTIONS_URL = f"https://github.com/{REPO_SLUG}/actions"
 
-# Logging
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="[%(asctime)s] %(levelname)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
-# Priority Enum
+
 class NotificationPriority(enum.Enum):
+    """Priority levels supported by the Genesis AI notification system."""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
     INFO = "INFO"
 
-# Abstract Base Notifier (SOLID: Single + Open/Closed + Liskov + Interface)
+
+PriorityEnum = NotificationPriority
+
+
 class BaseNotifier(ABC):
-    """Abstract base class for all notifiers."""
+    """Abstract base class for notification channels."""
 
     @abstractmethod
-    def send(self, subject: str, message: str, priority: NotificationPriority, **kwargs) -> bool:
-        """Send a notification through the channel."""
-        pass
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> bool:
+        """Send a notification through this channel."""
 
     @staticmethod
-    def power_footer() -> Dict[str, str]:
-        return {
-            "powered_by": BRAND_NAME,
-            "website": BRAND_WEBSITE,
-            "contact": BRAND_EMAIL
-        }
+    def normalize_priority(priority: NotificationPriority | str) -> NotificationPriority:
+        """Convert a string or enum into a NotificationPriority."""
+        if isinstance(priority, NotificationPriority):
+            return priority
+        try:
+            return NotificationPriority[str(priority).upper()]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported priority: {priority}") from exc
 
     @staticmethod
     def now() -> str:
-        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        """Return the current local timestamp string."""
+        return dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# Email Notifier (SendGrid)
+    @staticmethod
+    def power_footer() -> dict[str, str]:
+        """Return the standard Genesis AI Systems response footer."""
+        return {
+            "powered_by": BRAND_NAME,
+            "website": BRAND_WEBSITE,
+            "contact": BRAND_EMAIL,
+        }
+
+
 class EmailNotifier(BaseNotifier):
-    """Notifier for sending emails using SendGrid."""
+    """Notifier for sending branded emails with Resend."""
 
-    def __init__(self, api_key: Optional[str] = None, from_email: Optional[str] = None, from_name: str = BRAND_NAME):
-        self.api_key = api_key or os.environ.get("SENDGRID_API_KEY")
-        self.from_email = from_email or os.environ.get("SENDGRID_FROM_EMAIL", BRAND_EMAIL)
-        self.from_name = from_name or os.environ.get("SENDGRID_FROM_NAME", BRAND_NAME)
+    COLOR_MAP = {
+        "CRITICAL": "#ef4444",
+        "HIGH": "#f97316",
+        "MEDIUM": "#2563eb",
+        "LOW": "#22c55e",
+        "INFO": "#94a3b8",
+    }
 
-        if not self.api_key:
-            logger.warning("SendGrid API key missing. Email notifications will fail.")
-        if SendGridAPIClient is None:
-            logger.warning("sendgrid package not found. Email notifications will not work.")
+    def __init__(self, api_key: Optional[str] = None) -> None:
+        """Initialize the Resend client configuration."""
+        self.api_key = api_key or os.getenv("RESEND_API_KEY")
+        self.to_email = os.getenv("NOTIFICATION_EMAIL", BRAND_EMAIL)
+        if self.api_key and resend is not None:
+            resend.api_key = self.api_key
+        elif not self.api_key:
+            logger.warning("RESEND_API_KEY is missing. Email notifications will be skipped.")
+        elif resend is None:
+            logger.warning("resend package is missing. Email notifications will be skipped.")
 
-    def _render_html(self, subject: str, body: str) -> str:
-        """Produce a branded HTML email template."""
-        now = self.now()
-        template = f'''
-        <html>
-        <body style="margin:0; font-family:Segoe UI,Arial,sans-serif; background:#f7fafd;">
-            <div style="background:{NAVY};padding:32px 8px;">
-                <h1 style="color:#fff;margin:0;font-size:2rem;letter-spacing:2px; font-weight:700;">{BRAND_NAME}</h1>
-                <p style="color:{ELECTRIC_BLUE};font-size:1rem;margin:0;">Done-for-you AI automation for local businesses</p>
-            </div>
-            <div style="background:#fff;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.06);max-width:600px;margin:32px auto;padding:32px 24px 24px;border-top:4px solid {ELECTRIC_BLUE};">
-                <h2 style="color:{NAVY};">{subject}</h2>
-                <div style="color:#1e293b; font-size:1.05rem; line-height:1.7;">
-                    {body}
-                </div>
-                <div style="margin-top:24px; font-size:0.95rem; color:#64748b;">
-                    <hr style="border:none;border-top:1px solid #e2e8f0;"/>
-                    <strong style="color:{NAVY};">{BRAND_NAME}</strong> | <a href="mailto:{BRAND_EMAIL}" style="color:{ELECTRIC_BLUE};text-decoration:none;font-weight:500;">{BRAND_EMAIL}</a> | <a href="tel:{BRAND_PHONE_INTL}" style="color:{ELECTRIC_BLUE};text-decoration:none;">{BRAND_PHONE}</a><br/>
-                    {now}<br/>
-                    <span style="color:#94a3b8;">&copy; 2026 {BRAND_NAME}, Detroit MI</span><br/>
-                </div>
-            </div>
-        </body>
-        </html>
-        '''
-        return template
-
-    def send(self, subject: str, message: str, priority: NotificationPriority, to_email: Optional[str] = None, **kwargs) -> bool:
-        """Send an HTML email using SendGrid."""
-        if not self.api_key or not SendGridAPIClient:
-            logger.error("Missing SendGrid configuration — not sending email.")
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        to_email: Optional[str] = None,
+        **_: Any,
+    ) -> bool:
+        """Send an HTML email using Resend."""
+        if not self.api_key or resend is None:
+            logger.error("Resend is not configured. Email was not sent.")
             return False
-        to_email = to_email or os.environ.get("NOTIFICATION_EMAIL", BRAND_EMAIL)
-        html_content = self._render_html(subject, message)
-        data_payload = self.power_footer()
+
+        normalized = self.normalize_priority(priority)
+        recipient = to_email or self.to_email
 
         try:
-            mail = Mail(
-                from_email=Email(self.from_email, self.from_name),
-                to_emails=To(to_email),
-                subject=subject,
-                html_content=HtmlContent(html_content)
-            )
-            mail.reply_to = Email(self.from_email, self.from_name)
-            sg = SendGridAPIClient(self.api_key)
-            response = sg.send(mail)
-            logger.info(f"Sent email to {to_email} [{priority.value}]: {subject} (status {response.status_code})")
-            return 200 <= response.status_code < 300
-        except Exception as e:
-            logger.error(f"Failed to send SendGrid email: {e}")
+            params = {
+                "from": "Genesis AI Systems <info@genesisai.systems>",
+                "to": [recipient],
+                "subject": subject,
+                "html": self._build_html(message, normalized.value),
+            }
+            resend.Emails.send(params)
+            logger.info("Resend email sent to %s [%s]: %s", recipient, normalized.value, subject)
+            return True
+        except Exception as exc:  # pragma: no cover - external network
+            logger.error("Email failed: %s", exc)
             return False
 
-# SMS Notifier (Twilio)
+    def _build_html(self, message: str, priority: str) -> str:
+        """Build the branded HTML email body for Resend."""
+        color = self.COLOR_MAP.get(priority, ELECTRIC_BLUE)
+        safe_message = escape(message)
+        return f"""
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #0f172a; padding: 24px; border-radius: 8px 8px 0 0;">
+                <h1 style="color: white; margin: 0; font-size: 20px;">
+                    Genesis AI Systems
+                </h1>
+                <p style="color: #94a3b8; margin: 4px 0 0;">
+                    genesisai.systems
+                </p>
+            </div>
+            <div style="background: #f8fafc; padding: 24px; border-left: 4px solid {color};">
+                <div style="background: {color}; color: white; padding: 4px 12px; border-radius: 4px; display: inline-block; font-size: 12px; font-weight: bold; margin-bottom: 16px;">
+                    {priority}
+                </div>
+                <div style="color: #1e293b; line-height: 1.6; white-space: pre-wrap;">
+                    {safe_message}
+                </div>
+            </div>
+            <div style="background: #0f172a; padding: 16px 24px; border-radius: 0 0 8px 8px; text-align: center;">
+                <p style="color: #475569; font-size: 12px; margin: 0;">
+                    Trendell Fordham | Genesis AI Systems<br>
+                    info@genesisai.systems |
+                    (313) 400-2575 | genesisai.systems
+                </p>
+            </div>
+        </div>
+        """
+
+
 class SMSNotifier(BaseNotifier):
-    """Notifier for sending SMS via Twilio."""
-    def __init__(self, account_sid: Optional[str] = None, auth_token: Optional[str] = None, from_number: Optional[str] = None):
-        self.account_sid = account_sid or os.environ.get("TWILIO_ACCOUNT_SID")
-        self.auth_token = auth_token or os.environ.get("TWILIO_AUTH_TOKEN")
-        self.from_number = from_number or os.environ.get("TWILIO_FROM_NUMBER")
-        if not self.account_sid or not self.auth_token or not self.from_number:
-            logger.warning("Twilio credentials missing. SMS notifications will fail.")
-        if TwilioClient is None:
-            logger.warning("twilio package not found. SMS notifications will not work.")
+    """Notifier for sending SMS alerts via Twilio."""
 
-    def send(self, subject: str, message: str, priority: NotificationPriority, to_number: Optional[str] = None, **kwargs) -> bool:
+    def __init__(
+        self,
+        account_sid: Optional[str] = None,
+        auth_token: Optional[str] = None,
+        from_number: Optional[str] = None,
+    ) -> None:
+        """Initialize Twilio credentials."""
+        self.account_sid = account_sid or os.getenv("TWILIO_ACCOUNT_SID")
+        self.auth_token = auth_token or os.getenv("TWILIO_AUTH_TOKEN")
+        self.from_number = from_number or os.getenv("TWILIO_FROM_NUMBER")
+        if not all([self.account_sid, self.auth_token, self.from_number]):
+            logger.warning("Twilio credentials missing. SMS notifications will be skipped.")
+        if TwilioClient is None:
+            logger.warning("twilio package missing. SMS notifications will be skipped.")
+
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        to_number: Optional[str] = None,
+        **_: Any,
+    ) -> bool:
         """Send an SMS message via Twilio."""
-        if not self.account_sid or not self.auth_token or not self.from_number or TwilioClient is None:
-            logger.error("Twilio not configured or twilio package missing, cannot send SMS.")
+        if not all([self.account_sid, self.auth_token, self.from_number]) or TwilioClient is None:
+            logger.error("Twilio is not configured. SMS was not sent.")
             return False
-        to_number = to_number or os.environ.get("ALERT_PHONE_NUMBER", BRAND_PHONE_INTL)
-        sms_body = message
+
+        normalized = self.normalize_priority(priority)
+        destination = to_number or os.getenv("ALERT_PHONE_NUMBER", BRAND_PHONE_INTL)
+        body = (
+            f"Genesis AI Systems:\n"
+            f"{subject}\n"
+            f"Priority: {normalized.value}\n"
+            f"{message}\n"
+            f"- genesisai.systems"
+        )
         try:
             client = TwilioClient(self.account_sid, self.auth_token)
-            msg = client.messages.create(
-                to=to_number,
-                from_=self.from_number,
-                body=sms_body
-            )
-            logger.info(f"Sent SMS to {to_number} [{priority.value}] id={msg.sid}")
+            client.messages.create(to=destination, from_=self.from_number, body=body[:1600])
+            logger.info("Twilio SMS sent to %s [%s]: %s", destination, normalized.value, subject)
             return True
-        except Exception as e:
-            logger.error(f"Failed to send SMS via Twilio: {e}")
+        except Exception as exc:  # pragma: no cover - external network
+            logger.error("SMS failed: %s", exc)
             return False
 
-# Slack Notifier
+
 class SlackNotifier(BaseNotifier):
-    """Notifier for sending Slack messages using webhooks."""
-    def __init__(self, webhook_url: Optional[str] = None):
-        self.webhook_url = webhook_url or os.environ.get("SLACK_WEBHOOK_URL")
-        if not self.webhook_url:
-            logger.warning("Slack webhook missing. Slack notifications will fail.")
-        if requests is None:
-            logger.warning("requests package not found. Slack notifications will not work.")
+    """Notifier for sending Slack webhook alerts."""
 
-    def send(self, subject: str, message: str, priority: NotificationPriority, **kwargs) -> bool:
-        """Send a message to Slack via webhook."""
+    def __init__(self, webhook_url: Optional[str] = None) -> None:
+        """Initialize the Slack webhook."""
+        self.webhook_url = webhook_url or os.getenv("SLACK_WEBHOOK_URL")
+        if not self.webhook_url:
+            logger.warning("SLACK_WEBHOOK_URL missing. Slack notifications will be skipped.")
+        if requests is None:
+            logger.warning("requests package missing. Slack notifications will be skipped.")
+
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **_: Any,
+    ) -> bool:
+        """Send a Slack webhook notification."""
         if not self.webhook_url or requests is None:
-            logger.error("Missing Slack webhook or requests package. Not sending Slack message.")
+            logger.error("Slack is not configured. Message was not sent.")
             return False
-        slack_data = {
-            "text": f"*{subject}*\n{message}",
-            **self.power_footer()
+
+        normalized = self.normalize_priority(priority)
+        payload = {
+            "text": f"*{subject}*\nPriority: {normalized.value}\n{message}",
+            **self.power_footer(),
         }
         try:
-            resp = requests.post(self.webhook_url, json=slack_data, timeout=8)
-            if resp.status_code == 200:
-                logger.info(f"Sent Slack notification [{priority.value}]: {subject}")
-                return True
-            else:
-                logger.error(f"Slack webhook error: HTTP {resp.status_code} {resp.text}")
-                return False
-        except Exception as e:
-            logger.error(f"Slack notification failed: {e}")
+            response = requests.post(self.webhook_url, json=payload, timeout=10)
+            response.raise_for_status()
+            logger.info("Slack notification sent [%s]: %s", normalized.value, subject)
+            return True
+        except Exception as exc:  # pragma: no cover - external network
+            logger.error("Slack notification failed: %s", exc)
             return False
 
-# GitHub Notifier (Issues)
-class GitHubNotifier(BaseNotifier):
-    """Notifier for creating GitHub Issues as alerts."""
-    def __init__(self, repo: Optional[str] = None, token: Optional[str] = None):
-        # Requires repo and personal access token with repo:issues scope
-        self.repo = repo or os.environ.get("GITHUB_REPOSITORY", GITHUB_REPO)
-        self.token = token or os.environ.get("GITHUB_TOKEN")  # Github Actions auto-provides GITHUB_TOKEN
-        if requests is None:
-            logger.warning("requests package not found. GitHub notifications will not work.")
-        if not self.token:
-            logger.warning("GITHUB_TOKEN missing. GitHub issue alerts will fail.")
 
-    def send(self, subject: str, message: str, priority: NotificationPriority, **kwargs) -> bool:
-        """Create a GitHub Issue with alert details."""
+class GitHubNotifier(BaseNotifier):
+    """Notifier for creating GitHub issues as alerts."""
+
+    def __init__(self, repo: Optional[str] = None, token: Optional[str] = None) -> None:
+        """Initialize the GitHub notifier."""
+        self.repo = repo or os.getenv("GITHUB_REPOSITORY", REPO_SLUG)
+        self.token = token or os.getenv("GITHUB_TOKEN")
+        if not self.token:
+            logger.warning("GITHUB_TOKEN missing. GitHub issue alerts will be skipped.")
+        if requests is None:
+            logger.warning("requests package missing. GitHub issue alerts will be skipped.")
+
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **_: Any,
+    ) -> bool:
+        """Create a GitHub issue for an alert."""
         if not self.token or requests is None:
-            logger.error("Cannot send GitHub issue notification (missing token/requests)."); return False
-        url = f"https://api.github.com/repos/{self.repo}/issues"
-        issue = {
-            "title": f"[{BRAND_NAME}][{priority.value}] {subject}",
-            "body": message + ("\n\nPowered by Genesis AI Systems."),
-            "labels": ["alert", priority.value.lower(), "autobot"]
+            logger.error("GitHub notifications are not configured.")
+            return False
+
+        normalized = self.normalize_priority(priority)
+        payload = {
+            "title": f"[{normalized.value}] {subject}",
+            "body": f"{message}\n\nPowered by Genesis AI Systems\n{BRAND_WEBSITE}",
+            "labels": ["alert", normalized.value.lower()],
         }
         headers = {
             "Authorization": f"token {self.token}",
-            "Accept": "application/vnd.github+json"
+            "Accept": "application/vnd.github+json",
         }
         try:
-            resp = requests.post(url, headers=headers, json=issue, timeout=10)
-            if resp.status_code in (200, 201):
-                logger.info(f"GitHub issue created for [{priority.value}]: {subject}")
-                return True
-            else:
-                logger.error(f"GitHub issue failed: {resp.status_code} {resp.text}")
-                return False
-        except Exception as e:
-            logger.error(f"GitHub Issue notification failed: {e}")
+            response = requests.post(
+                f"https://api.github.com/repos/{self.repo}/issues",
+                headers=headers,
+                json=payload,
+                timeout=10,
+            )
+            response.raise_for_status()
+            logger.info("GitHub issue created [%s]: %s", normalized.value, subject)
+            return True
+        except Exception as exc:  # pragma: no cover - external network
+            logger.error("GitHub notification failed: %s", exc)
             return False
 
-# Notification Orchestrator (SRP + Dependency Inversion + Open/Closed)
+
 class NotificationOrchestrator:
-    """
-    Orchestrates notifications between channels based on priority.
-    - CRITICAL: all channels
-    - HIGH: email + SMS
-    - MEDIUM: email
-    - LOW: batch for daily digest
-    - INFO: batch for weekly report
-    """
-    def __init__(self,
-                 email_notifier: Optional[EmailNotifier] = None,
-                 sms_notifier: Optional[SMSNotifier] = None,
-                 slack_notifier: Optional[SlackNotifier] = None,
-                 github_notifier: Optional[GitHubNotifier] = None):
+    """Route notifications to the right channels based on severity."""
+
+    def __init__(
+        self,
+        email_notifier: Optional[EmailNotifier] = None,
+        sms_notifier: Optional[SMSNotifier] = None,
+        slack_notifier: Optional[SlackNotifier] = None,
+        github_notifier: Optional[GitHubNotifier] = None,
+    ) -> None:
+        """Initialize all supported notification channels."""
         self.email_notifier = email_notifier or EmailNotifier()
         self.sms_notifier = sms_notifier or SMSNotifier()
         self.slack_notifier = slack_notifier or SlackNotifier()
         self.github_notifier = github_notifier or GitHubNotifier()
-        self.low_priority_queue = []  # (subject, message, priority)
-        self.info_queue = []
 
-    def notify(self, subject: str, message: str, priority: NotificationPriority, **kwargs):
-        """
-        Notify all channels based on priority.
-        """
-        # All messages are HTML-safe for email, plain text for others
-        sent = dict()
-        if priority == NotificationPriority.CRITICAL:
-            sent['email'] = self.email_notifier.send(subject, message, priority, **kwargs)
-            sent['sms'] = self.sms_notifier.send(subject, message, priority, **kwargs)
-            sent['slack'] = self.slack_notifier.send(subject, message, priority, **kwargs)
-            sent['github'] = self.github_notifier.send(subject, message, priority, **kwargs)
-            logger.info(f"CRITICAL notification: {sent}")
-        elif priority == NotificationPriority.HIGH:
-            sent['email'] = self.email_notifier.send(subject, message, priority, **kwargs)
-            sent['sms'] = self.sms_notifier.send(subject, message, priority, **kwargs)
-            logger.info(f"HIGH notification: {sent}")
-        elif priority == NotificationPriority.MEDIUM:
-            sent['email'] = self.email_notifier.send(subject, message, priority, **kwargs)
-            logger.info(f"MEDIUM notification: {sent}")
-        elif priority == NotificationPriority.LOW:
-            self.low_priority_queue.append((subject, message, priority, kwargs))
-            logger.info(f"LOW notification queued (for digest)")
-        elif priority == NotificationPriority.INFO:
-            self.info_queue.append((subject, message, priority, kwargs))
-            logger.info(f"INFO notification queued (for weekly)")
+    def notify(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> dict[str, bool]:
+        """Dispatch a notification based on its priority."""
+        normalized = BaseNotifier.normalize_priority(priority)
+        sent: dict[str, bool] = {}
+        if normalized == NotificationPriority.CRITICAL:
+            sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
+            sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
+            sent["slack"] = self.slack_notifier.send(subject, message, normalized, **kwargs)
+            sent["github"] = self.github_notifier.send(subject, message, normalized, **kwargs)
+        elif normalized == NotificationPriority.HIGH:
+            sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
+            sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
+        elif normalized == NotificationPriority.MEDIUM:
+            sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
+        elif normalized == NotificationPriority.LOW:
+            sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
         else:
-            logger.warning(f"Unknown priority: {priority}")
+            sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
         return sent
 
-    def send_daily_digest(self, to_email: Optional[str] = None) -> bool:
-        """Send a single daily digest email for LOW priority messages."""
-        if not self.low_priority_queue:
-            logger.info("No LOW priority messages to send in daily digest.")
-            return False
-        subject = f"Genesis AI Systems — Daily Health {datetime.date.today()}"
-        html = ""
-        for idx, (s, m, p, k) in enumerate(self.low_priority_queue, 1):
-            html += f"<h4 style='margin-bottom:2px;color:{ELECTRIC_BLUE};'>{idx}. {s} <span style='color:#64748b;font-size:.95em;'>[{p.value}]</span></h4>"
-            html += f"<div style='margin-left:10px;margin-bottom:16px;'>{m}</div>"
-        sent = self.email_notifier.send(subject, html, NotificationPriority.LOW, to_email=to_email or BRAND_EMAIL)
-        self.low_priority_queue.clear()
-        logger.info("Daily digest sent.")
-        return sent
+    def send_email_only(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> bool:
+        """Send an email without touching other channels."""
+        return self.email_notifier.send(subject, message, priority, **kwargs)
 
-    def send_weekly_report(self, to_email: Optional[str] = None) -> bool:
-        """Send a single weekly report email for INFO messages."""
-        if not self.info_queue:
-            logger.info("No INFO messages to send in weekly report.")
-            return False
-        today = datetime.date.today()
-        week_start = today - datetime.timedelta(days=today.weekday())
+    def send_sms_only(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> bool:
+        """Send an SMS without touching other channels."""
+        return self.sms_notifier.send(subject, message, priority, **kwargs)
+
+    def send_slack_only(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> bool:
+        """Send a Slack message without touching other channels."""
+        return self.slack_notifier.send(subject, message, priority, **kwargs)
+
+    def send_github_only(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **kwargs: Any,
+    ) -> bool:
+        """Create a GitHub issue without touching other channels."""
+        return self.github_notifier.send(subject, message, priority, **kwargs)
+
+    def send_daily_digest(self, message: str, to_email: Optional[str] = None) -> bool:
+        """Send a daily digest email immediately."""
+        subject = f"Genesis AI Systems — Daily Health {dt.date.today().isoformat()}"
+        return self.email_notifier.send(subject, message, NotificationPriority.LOW, to_email=to_email)
+
+    def send_weekly_report(self, message: str, to_email: Optional[str] = None) -> bool:
+        """Send a weekly report email immediately."""
+        today = dt.date.today()
+        week_start = today - dt.timedelta(days=today.weekday())
         subject = f"Genesis AI Systems — Weekly Report {week_start} to {today}"
-        html = ""
-        for idx, (s, m, p, k) in enumerate(self.info_queue, 1):
-            html += f"<h4 style='margin-bottom:2px;color:{ELECTRIC_BLUE};'>{idx}. {s} <span style='color:#64748b;font-size:.95em;'>[{p.value}]</span></h4>"
-            html += f"<div style='margin-left:10px;margin-bottom:16px;'>{m}</div>"
-        sent = self.email_notifier.send(subject, html, NotificationPriority.INFO, to_email=to_email or BRAND_EMAIL)
-        self.info_queue.clear()
-        logger.info("Weekly report sent.")
-        return sent
+        return self.email_notifier.send(subject, message, NotificationPriority.INFO, to_email=to_email)
 
-    def batch_digest(self):
-        self.send_daily_digest()
-        self.send_weekly_report()
 
-# Utility for formatting SMS for agent failure and recovery
+def format_sms_failure(agent_name: str, description: str, when: Optional[str] = None) -> str:
+    """Format the branded SMS failure body."""
+    timestamp = when or BaseNotifier.now()
+    return (
+        "🚨 Genesis AI Systems Alert\n"
+        f"Agent: {agent_name}\n"
+        "Status: FAILED\n"
+        f"Issue: {description}\n"
+        f"Time: {timestamp}\n"
+        f"Fix: {ACTIONS_URL}"
+    )
 
-def format_sms_failure(agent_name, description, when=None):
-    when = when or BaseNotifier.now()
-    text = f"""
-🚨 Genesis AI Systems Alert
-Agent: {agent_name}\nStatus: FAILED\nIssue: {description}\nTime: {when}\nFix: {ACTIONS_URL}
-"""
-    return text.strip()
 
-def format_sms_recovery(agent_name, when=None):
-    when = when or BaseNotifier.now()
-    text = f"""
-✅ Genesis AI Systems
-Agent: {agent_name}\nStatus: RECOVERED\nAll systems operational\nTime: {when}
-"""
-    return text.strip()
+def format_sms_recovery(agent_name: str, when: Optional[str] = None) -> str:
+    """Format the branded SMS recovery body."""
+    timestamp = when or BaseNotifier.now()
+    return (
+        "✅ Genesis AI Systems\n"
+        f"Agent: {agent_name}\n"
+        "Status: RECOVERED\n"
+        "All systems operational\n"
+        f"Time: {timestamp}"
+    )
 
-# === Commandline for Local Testing ===
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description="Genesis AI Systems Notification Utility")
-    parser.add_argument('--test-sms', action='store_true', help="Test SMS notification")
-    parser.add_argument('--test-email', action='store_true', help="Test email notification")
-    parser.add_argument('--test-slack', action='store_true', help="Test Slack notification")
-    parser.add_argument('--test-all', action='store_true', help="Test all notification channels")
-    parser.add_argument('--to-email', default=None, help="Override destination email for test")
-    parser.add_argument('--to-number', default=None, help="Override destination phone number for test")
-    args = parser.parse_args()
 
-    results = {}
+def load_json_report(report_path: str) -> dict[str, Any]:
+    """Load a JSON report file if it exists."""
+    path = Path(report_path)
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        logger.error("Could not parse report %s: %s", report_path, exc)
+        return {}
+
+
+def derive_priority_from_report(report: dict[str, Any]) -> NotificationPriority:
+    """Infer the highest priority contained in a report object."""
+    serialized = json.dumps(report).upper()
+    if "CRITICAL" in serialized:
+        return NotificationPriority.CRITICAL
+    if "HIGH" in serialized or '"FAILED"' in serialized:
+        return NotificationPriority.HIGH
+    if "MEDIUM" in serialized:
+        return NotificationPriority.MEDIUM
+    if "LOW" in serialized or "WARNING" in serialized:
+        return NotificationPriority.LOW
+    return NotificationPriority.INFO
+
+
+def build_report_message(agent: str, report: dict[str, Any], fallback: str) -> str:
+    """Build a concise plain-text message from a report."""
+    if not report:
+        return fallback
+
+    summary = report.get("summary") or report.get("message") or fallback
+    findings = report.get("findings") or report.get("issues") or []
+    lines = [f"Agent: {agent}", f"Summary: {summary}"]
+    if isinstance(findings, list) and findings:
+        lines.append("Key findings:")
+        for finding in findings[:5]:
+            if isinstance(finding, dict):
+                label = finding.get("title") or finding.get("name") or finding.get("message") or str(finding)
+            else:
+                label = str(finding)
+            lines.append(f"- {label}")
+    lines.append(f"Website: {BRAND_WEBSITE}")
+    return "\n".join(lines)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for local tests and workflow usage."""
+    parser = argparse.ArgumentParser(description="Genesis AI Systems notification utility")
+    parser.add_argument("--subject", default=None, help="Notification subject")
+    parser.add_argument("--message", default=None, help="Notification body")
+    parser.add_argument("--priority", default="MEDIUM", help="Priority level")
+    parser.add_argument("--agent", default=None, help="Agent name")
+    parser.add_argument("--status", default=None, help="Agent status")
+    parser.add_argument("--desc", default=None, help="Description text")
+    parser.add_argument("--report", default=None, help="Report type (daily/weekly) or JSON report path")
+    parser.add_argument("--qa-report", default=None, help="QA report path for deploy notifications")
+    parser.add_argument("--notify-deploy", action="store_true", help="Send post-deploy notifications")
+    parser.add_argument("--on-critical-fail", default="false", help="Send CRITICAL alerts when report is critical")
+    parser.add_argument("--on-high-email", default="false", help="Send HIGH email alerts when report is high")
+    parser.add_argument("--on-warning-log", default="false", help="Log LOW/MEDIUM report warnings without failing")
+    parser.add_argument("--test-sms", action="store_true", help="Test SMS notification")
+    parser.add_argument("--test-email", action="store_true", help="Test email notification")
+    parser.add_argument("--test-slack", action="store_true", help="Test Slack notification")
+    parser.add_argument("--test-all", action="store_true", help="Test all notification channels")
+    parser.add_argument("--to-email", default=None, help="Override destination email")
+    parser.add_argument("--to-number", default=None, help="Override destination phone")
+    return parser.parse_args()
+
+
+def bool_arg(value: str) -> bool:
+    """Parse a workflow-style boolean string."""
+    return str(value).strip().lower() in {"1", "true", "yes", "y"}
+
+
+def handle_tests(args: argparse.Namespace, orchestrator: NotificationOrchestrator) -> int:
+    """Run requested test notifications."""
+    ran_any = False
+    results: list[bool] = []
 
     if args.test_sms or args.test_all:
-        sms_body = """\n✅ Genesis AI Systems\nTest notification successful!\nYour agent monitoring is active.\n- Trendell Fordham\n  genesisai.systems\n""".strip()
-        sms = SMSNotifier()
-        ok = sms.send("Genesis AI Systems Test SMS", sms_body, NotificationPriority.INFO, to_number=args.to_number)
+        ran_any = True
+        message = (
+            "✅ Genesis AI Systems\n"
+            "Test notification successful!\n"
+            "Your agent monitoring is active.\n"
+            "- Trendell Fordham\n"
+            "  genesisai.systems"
+        )
+        ok = orchestrator.send_sms_only(
+            subject="Genesis AI Systems Test SMS",
+            message=message,
+            priority=NotificationPriority.INFO,
+            to_number=args.to_number,
+        )
         print("Test SMS:", "PASS" if ok else "FAIL")
-        results['sms'] = ok
+        results.append(ok)
 
     if args.test_email or args.test_all:
-        subject = "✅ Genesis AI Systems — Notification Test"
-        body = """
-This is a test from Genesis AI Systems agent monitoring system.<br><br>
-If you received this, notifications work.<br><br>
-Monitoring: <a href=\"https://genesisai.systems\">https://genesisai.systems</a><br><br>
-Trendell Fordham<br>
-Founder, Genesis AI Systems<br>
-info@genesisai.systems<br>
-(313) 400-2575
-""".strip()
-        email = EmailNotifier()
-        ok = email.send(subject, body, NotificationPriority.INFO, to_email=args.to_email)
+        ran_any = True
+        message = (
+            "This is a test from Genesis AI Systems agent monitoring system.\n\n"
+            "If you received this, notifications work.\n\n"
+            f"Monitoring: {BRAND_WEBSITE}\n\n"
+            "Trendell Fordham\n"
+            "Founder, Genesis AI Systems\n"
+            "info@genesisai.systems\n"
+            "(313) 400-2575"
+        )
+        ok = orchestrator.send_email_only(
+            subject="✅ Genesis AI Systems — Notification Test",
+            message=message,
+            priority=NotificationPriority.INFO,
+            to_email=args.to_email,
+        )
         print("Test Email:", "PASS" if ok else "FAIL")
-        results['email'] = ok
+        results.append(ok)
 
     if args.test_slack or args.test_all:
-        slack_msg = "✅ Genesis AI Systems\nTest notification successful from agent monitoring system."
-        slack = SlackNotifier()
-        ok = slack.send("Genesis AI Systems — Notification Test", slack_msg, NotificationPriority.INFO)
+        ran_any = True
+        ok = orchestrator.send_slack_only(
+            subject="Genesis AI Systems — Notification Test",
+            message="✅ Genesis AI Systems\nTest notification successful from agent monitoring system.",
+            priority=NotificationPriority.INFO,
+        )
         print("Test Slack:", "PASS" if ok else "FAIL")
-        results['slack'] = ok
+        results.append(ok)
 
-    if not (args.test_sms or args.test_email or args.test_slack or args.test_all):
-        parser.print_help()
+    if not ran_any:
+        return -1
+    return 0 if all(results) else 1
 
-    exit_code = 0 if all(results.values()) else 1
-    sys.exit(exit_code)
+
+def handle_report_mode(args: argparse.Namespace, orchestrator: NotificationOrchestrator) -> int:
+    """Handle daily, weekly, or JSON report notifications."""
+    if args.report == "daily":
+        message = args.desc or "Genesis AI Systems — Daily Health Digest"
+        return 0 if orchestrator.send_daily_digest(message) else 1
+
+    if args.report == "weekly":
+        message = args.desc or "Genesis AI Systems — Weekly Report"
+        return 0 if orchestrator.send_weekly_report(message) else 1
+
+    report = load_json_report(args.report)
+    priority = derive_priority_from_report(report)
+    agent_name = args.agent or "Genesis AI Systems Agent"
+    message = build_report_message(
+        agent=agent_name,
+        report=report,
+        fallback=args.desc or f"{agent_name} report requires review.",
+    )
+
+    if priority == NotificationPriority.CRITICAL and bool_arg(args.on_critical_fail):
+        results = orchestrator.notify(
+            subject=f"{agent_name} report requires immediate attention",
+            message=message,
+            priority=NotificationPriority.CRITICAL,
+        )
+        return 0 if any(results.values()) else 1
+
+    if priority == NotificationPriority.HIGH and bool_arg(args.on_high_email):
+        ok = orchestrator.send_email_only(
+            subject=f"{agent_name} high-priority report",
+            message=message,
+            priority=NotificationPriority.HIGH,
+        )
+        return 0 if ok else 1
+
+    if bool_arg(args.on_warning_log):
+        logger.warning("%s", message)
+        return 0
+
+    ok = orchestrator.send_email_only(
+        subject=f"{agent_name} report",
+        message=message,
+        priority=priority,
+    )
+    return 0 if ok else 1
+
+
+def handle_deploy_mode(args: argparse.Namespace, orchestrator: NotificationOrchestrator) -> int:
+    """Handle post-deployment notifications."""
+    report = load_json_report(args.qa_report) if args.qa_report else {}
+    priority = derive_priority_from_report(report) if report else NotificationPriority.INFO
+    summary = build_report_message(
+        agent="Deploy Agent",
+        report=report,
+        fallback="Deployment completed. Review post-deploy QA report for details.",
+    )
+    results = orchestrator.notify(
+        subject="Genesis AI Systems deployment update",
+        message=summary,
+        priority=priority,
+    )
+    return 0 if any(results.values()) else 1
+
+
+def handle_direct_mode(args: argparse.Namespace, orchestrator: NotificationOrchestrator) -> int:
+    """Handle direct subject/message or agent/status alerts."""
+    priority = BaseNotifier.normalize_priority(args.priority)
+
+    if args.subject and args.message:
+        results = orchestrator.notify(args.subject, args.message, priority, to_email=args.to_email)
+        return 0 if any(results.values()) else 1
+
+    if args.agent and args.status:
+        subject = f"{args.agent}: {args.status}"
+        description = args.desc or "No additional details provided."
+        message = (
+            f"Agent: {args.agent}\n"
+            f"Status: {args.status}\n"
+            f"Detail: {description}\n"
+            f"Time: {BaseNotifier.now()}\n"
+            f"Fix: {ACTIONS_URL}"
+        )
+        results = orchestrator.notify(subject, message, priority)
+        return 0 if any(results.values()) else 1
+
+    return -1
+
+
+def main() -> int:
+    """Entry point for workflow and local CLI notification handling."""
+    args = parse_args()
+    orchestrator = NotificationOrchestrator()
+
+    for handler in (
+        lambda: handle_tests(args, orchestrator),
+        lambda: handle_deploy_mode(args, orchestrator) if args.notify_deploy else -1,
+        lambda: handle_report_mode(args, orchestrator) if args.report else -1,
+        lambda: handle_direct_mode(args, orchestrator),
+    ):
+        result = handler()
+        if result != -1:
+            return result
+
+    print("No action requested. Use --help for options.")
+    return 1
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
