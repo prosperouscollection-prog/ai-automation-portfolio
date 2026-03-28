@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Dashboard — Genesis AI Systems</title>
+  <meta
+    name="description"
+    content="Client AI performance dashboard powered by Genesis AI Systems. Review lead capture, Riley calls, AI performance, monthly ROI, and next-step recommendations."
+  >
+  <style>
+    :root {
+      --bg: #08101d;
+      --panel: #0f172a;
+      --panel-soft: #16233f;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --accent: #2563eb;
+      --shadow: 0 22px 70px rgba(2, 6, 23, 0.36);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.18), transparent 28%),
+        linear-gradient(180deg, #08101d 0%, #0b1323 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    a { color: inherit; }
+
+    .page-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 16px 18px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), #1d4ed8);
+      color: white;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .topbar-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .topbar-links a {
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      background: rgba(148, 163, 184, 0.06);
+      color: var(--text);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      color: #bfdbfe;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.05;
+    }
+
+    .hero p {
+      color: var(--muted);
+      line-height: 1.7;
+      margin: 16px 0 0;
+      max-width: 680px;
+    }
+
+    .live-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.28);
+      color: #86efac;
+    }
+
+    .hero-meta {
+      display: grid;
+      gap: 14px;
+      align-content: space-between;
+    }
+
+    .metric-card-grid,
+    .system-grid,
+    .performance-grid,
+    .roi-grid,
+    .activity-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .metric-card-grid,
+    .system-grid,
+    .performance-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .roi-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .metric-card,
+    .system-card,
+    .roi-card,
+    .performance-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(148, 163, 184, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      min-width: 0;
+    }
+
+    .metric-label,
+    .small-label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      font-size: clamp(28px, 4vw, 38px);
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .metric-subtext {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .section {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .status-badge.active {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+    }
+
+    .status-badge.inactive {
+      background: rgba(148, 163, 184, 0.12);
+      color: #cbd5e1;
+    }
+
+    .status-badge.warn {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      border-radius: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+    }
+
+    th,
+    td {
+      padding: 13px 12px;
+      text-align: left;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+      font-size: 13px;
+    }
+
+    th {
+      color: #bfdbfe;
+      background: rgba(37, 99, 235, 0.08);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .chart-card {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .canvas-wrap {
+      background: rgba(15, 23, 42, 0.74);
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    }
+
+    .timeline-item:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+      background: var(--accent);
+    }
+
+    .timeline-main {
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .timeline-time {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .next-steps {
+      display: grid;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .next-step {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(148, 163, 184, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .cta-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-weight: 700;
+      min-height: 48px;
+    }
+
+    .cta-button.primary {
+      background: linear-gradient(135deg, var(--accent), #1d4ed8);
+      color: white;
+    }
+
+    .cta-button.secondary {
+      background: rgba(148, 163, 184, 0.08);
+      color: white;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .footer {
+      margin-top: 26px;
+      padding: 18px 22px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 16px;
+      background: rgba(148, 163, 184, 0.06);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 1024px) {
+      .hero,
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-card-grid,
+      .system-grid,
+      .performance-grid,
+      .roi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-shell {
+        padding: 16px 14px 36px;
+      }
+
+      .topbar {
+        padding: 14px;
+      }
+
+      .metric-card-grid,
+      .system-grid,
+      .performance-grid,
+      .roi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h2 {
+        font-size: 34px;
+      }
+
+      .topbar-links {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Template params: ?client=SmileDental&color=2563eb&system=lead-capture -->
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">GAI</div>
+        <div>
+          <h1 id="clientNameTop">Client Dashboard</h1>
+          <p>
+            Powered by Genesis AI Systems
+            <br>
+            Last updated: <span id="lastUpdated">--</span>
+          </p>
+        </div>
+      </div>
+      <div class="topbar-links">
+        <a href="/index.html">Back to Site</a>
+        <a href="https://genesisai.systems" target="_blank" rel="noopener">genesisai.systems</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="panel">
+        <span class="eyebrow">Your AI Systems</span>
+        <h2 id="heroTitle">Your AI is working for you right now.</h2>
+        <p id="heroCopy">
+          Genesis AI Systems keeps your automation running, measurable, and easy to understand.
+          This dashboard shows what your systems handled this month and the value they created.
+        </p>
+      </div>
+      <div class="hero-meta">
+        <div class="panel">
+          <span class="live-chip">LIVE CLIENT VIEW</span>
+          <p style="margin:14px 0 0;color:var(--muted);line-height:1.7;">
+            Trendell Fordham built this dashboard so you can check leads, calls, uptime, and ROI from your phone in under a minute.
+          </p>
+        </div>
+        <div class="panel" id="heroSystemFocus"></div>
+      </div>
+    </section>
+
+    <section class="section" id="systemsSection">
+      <div class="section-head">
+        <div>
+          <h3>Your AI Systems</h3>
+          <p>Only the systems your business is actively using are shown here.</p>
+        </div>
+      </div>
+      <div class="system-grid" id="systemsGrid"></div>
+    </section>
+
+    <section class="section" id="leadsSection">
+      <div class="section-head">
+        <div>
+          <h3>Leads This Month</h3>
+          <p>How your AI captured, scored, and moved leads forward.</p>
+        </div>
+        <span class="live-chip">LEAD CAPTURE LIVE</span>
+      </div>
+      <div class="two-col">
+        <div class="panel">
+          <div class="metric-card-grid" id="leadMetrics"></div>
+          <div class="table-wrap" style="margin-top:18px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Need</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="leadTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel chart-card">
+          <div>
+            <div class="small-label">Lead Score Breakdown</div>
+            <h4 style="margin:0;">Where your inquiries are landing</h4>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="leadDonut" width="320" height="260" aria-label="Lead score donut chart"></canvas>
+          </div>
+          <div id="leadBreakdownList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="callsSection">
+      <div class="section-head">
+        <div>
+          <h3>Riley Call Summary</h3>
+          <p>What your AI voice agent captured that would otherwise have been missed.</p>
+        </div>
+      </div>
+      <div class="metric-card-grid" id="callMetrics"></div>
+    </section>
+
+    <section class="section" id="performanceSection">
+      <div class="section-head">
+        <div>
+          <h3>AI Performance</h3>
+          <p>Operational quality and customer experience signals.</p>
+        </div>
+      </div>
+      <div class="performance-grid" id="performanceGrid"></div>
+    </section>
+
+    <section class="section" id="roiSection">
+      <div class="panel">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Your AI ROI This Month</span>
+            <h3 style="font-size:32px;margin:0;">Genesis AI Systems generated value you can actually see.</h3>
+            <p id="roiHeadlineCopy">Your monthly ROI summary is loading…</p>
+          </div>
+          <span class="live-chip">ROI FIRST</span>
+        </div>
+        <div class="roi-grid" id="roiCards"></div>
+      </div>
+    </section>
+
+    <section class="section" id="activitySection">
+      <div class="section-head">
+        <div>
+          <h3>This Month's Activity</h3>
+          <p>A simple timeline of what your AI systems handled and what Genesis AI Systems deployed for you.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="timeline" id="activityTimeline"></div>
+      </div>
+    </section>
+
+    <section class="section" id="nextStepsSection">
+      <div class="panel">
+        <div class="section-head">
+          <div>
+            <h3>Next Steps</h3>
+            <p>Recommendations from Genesis AI Systems to help you get more value from your stack.</p>
+          </div>
+        </div>
+        <div class="next-steps" id="nextSteps"></div>
+        <div class="cta-row">
+          <a
+            class="cta-button primary"
+            href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
+            target="_blank"
+            rel="noopener"
+          >
+            Schedule a call with Trendell
+          </a>
+          <a class="cta-button secondary" href="mailto:info@genesisai.systems">
+            Email Genesis AI Systems
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Genesis AI Systems | Trendell Fordham
+      <br>
+      info@genesisai.systems | (313) 400-2575 | genesisai.systems
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = "https://genesis-ai-systems-demo.onrender.com";
+    const params = new URLSearchParams(window.location.search);
+
+    function safeText(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function formatDate(value) {
+      return new Date(value).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function parseAccentColor(value) {
+      const normalized = String(value || "").replace("#", "").trim();
+      return /^[0-9a-fA-F]{6}$/.test(normalized) ? `#${normalized}` : "#2563eb";
+    }
+
+    const dashboardConfig = {
+      clientName: params.get("client") || "Smile Dental",
+      accent: parseAccentColor(params.get("color")),
+      requestedSystem: params.get("system") || ""
+    };
+
+    document.documentElement.style.setProperty("--accent", dashboardConfig.accent);
+
+    const fallbackClient = {
+      client_name: dashboardConfig.clientName,
+      systems: [
+        { key: "lead-capture", status: "ACTIVE", uptime_month: "99.9%", tasks_completed: 34, time_saved_hours: 12 },
+        { key: "voice-agent", status: "ACTIVE", uptime_month: "99.6%", tasks_completed: 48, time_saved_hours: 17 },
+        { key: "chat-widget", status: "ACTIVE", uptime_month: "99.8%", tasks_completed: 64, time_saved_hours: 9 }
+      ],
+      leads: {
+        total: 34,
+        high: 10,
+        medium: 16,
+        low: 8,
+        conversion_rate: "24%",
+        revenue_attributed: "$6,800",
+        recent: [
+          { date: new Date(Date.now() - 2 * 3600 * 1000).toISOString(), score: "HIGH", need: "Emergency consultation", status: "Followed up within 2 hours" },
+          { date: new Date(Date.now() - 7 * 3600 * 1000).toISOString(), score: "MEDIUM", need: "Insurance question", status: "Followed up within 24 hours" },
+          { date: new Date(Date.now() - 28 * 3600 * 1000).toISOString(), score: "LOW", need: "General pricing", status: "Nurture" }
+        ]
+      },
+      calls: {
+        answered: 48,
+        total_minutes: 143,
+        appointments_booked: 11,
+        average_duration: "2.9 min",
+        after_hours: 17,
+        estimated_value: "$4,950"
+      },
+      ai_performance: {
+        response_time: "842ms",
+        accuracy_rate: "97.4%",
+        topics_handled: 19,
+        escalations: 3,
+        satisfaction: "4.8/5"
+      },
+      roi: {
+        monthly_retainer: 650,
+        leads_value: 4760,
+        calls_value: 2160,
+        automation_value: 720,
+        total_value: 7640,
+        net_roi_percent: 1075,
+        value_multiple: 11.8
+      },
+      activity: [
+        { date: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), text: "Lead captured: emergency consultation request" },
+        { date: new Date(Date.now() - 11 * 3600 * 1000).toISOString(), text: "Riley call: 4 min, appointment booked" },
+        { date: new Date(Date.now() - 18 * 3600 * 1000).toISOString(), text: "Chatbot answered 47 questions" },
+        { date: new Date(Date.now() - 29 * 3600 * 1000).toISOString(), text: "System update deployed successfully" },
+        { date: new Date(Date.now() - 34 * 3600 * 1000).toISOString(), text: "Security scan: all clear" }
+      ],
+      next_steps: [
+        "Add the Voice Agent to capture calls you are still missing after hours.",
+        "Upgrade to workflow automation to auto-respond and route every inquiry.",
+        "Your lead volume is high — consider the chat widget to convert website traffic."
+      ]
+    };
+
+    async function fetchClientStats() {
+      try {
+        const response = await fetch(`${API_BASE}/stats/client/${encodeURIComponent(dashboardConfig.clientName)}`);
+        if (!response.ok) throw new Error("Request failed");
+        return await response.json();
+      } catch {
+        return fallbackClient;
+      }
+    }
+
+    function systemLabel(key) {
+      const labels = {
+        "lead-capture": "Lead Capture System",
+        "voice-agent": "Riley Voice Agent",
+        "chat-widget": "AI Chat Widget",
+        "workflow": "Workflow Automation",
+        "rag-chatbot": "RAG Knowledge Chatbot"
+      };
+      return labels[key] || key;
+    }
+
+    function renderSystems(data) {
+      const systems = dashboardConfig.requestedSystem
+        ? data.systems.filter((system) => system.key === dashboardConfig.requestedSystem)
+        : data.systems;
+
+      document.getElementById("systemsGrid").innerHTML = systems.length
+        ? systems.map((system) => `
+            <div class="system-card">
+              <div class="small-label">${safeText(systemLabel(system.key))}</div>
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+                <div class="metric-value" style="font-size:26px;">${safeText(system.tasks_completed)}</div>
+                <span class="status-badge ${system.status === "ACTIVE" ? "active" : "inactive"}">${safeText(system.status)}</span>
+              </div>
+              <div class="metric-subtext">
+                Uptime this month: <strong>${safeText(system.uptime_month)}</strong>
+                <br>
+                Time saved equivalent: <strong>${safeText(system.time_saved_hours)} hours</strong>
+              </div>
+            </div>
+          `).join("")
+        : '<div class="empty-state">No systems are active on this dashboard yet. Genesis AI Systems can enable your first automation at any time.</div>';
+
+      document.getElementById("heroSystemFocus").innerHTML = `
+        <div class="small-label">System focus</div>
+        <div class="metric-value" style="font-size:30px;">${systems.length}</div>
+        <div class="metric-subtext">
+          Active systems shown for ${safeText(data.client_name)}.
+          <br>
+          Accent color: <strong>${safeText(dashboardConfig.accent)}</strong>
+        </div>
+      `;
+    }
+
+    function renderLeads(data) {
+      const section = document.getElementById("leadsSection");
+      const hasLeadSystem = data.systems.some((system) => system.key === "lead-capture" || system.key === "chat-widget");
+      section.style.display = hasLeadSystem ? "grid" : "none";
+      if (!hasLeadSystem) return;
+
+      document.getElementById("leadMetrics").innerHTML = [
+        ["Total leads captured", data.leads.total],
+        ["HIGH priority", data.leads.high],
+        ["MEDIUM priority", data.leads.medium],
+        ["LOW priority", data.leads.low],
+        ["Conversion rate", data.leads.conversion_rate],
+        ["Revenue attributed", data.leads.revenue_attributed],
+        ["Monthly follow-up speed", "HIGH within 2h"],
+        ["Estimated value", `${data.leads.total} leads this month`]
+      ].map(([label, value]) => `
+        <div class="metric-card">
+          <div class="metric-label">${safeText(label)}</div>
+          <div class="metric-value" style="font-size:28px;">${safeText(value)}</div>
+        </div>
+      `).join("");
+
+      document.getElementById("leadTableBody").innerHTML = data.leads.recent.map((lead) => `
+        <tr>
+          <td>${safeText(formatDate(lead.date))}</td>
+          <td>${safeText(lead.score)}</td>
+          <td>${safeText(lead.need)}</td>
+          <td>${safeText(lead.status)}</td>
+        </tr>
+      `).join("");
+
+      const breakdown = [
+        ["High", data.leads.high],
+        ["Medium", data.leads.medium],
+        ["Low", data.leads.low]
+      ];
+      document.getElementById("leadBreakdownList").innerHTML = breakdown.map(([label, value]) => `
+        <div style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,0.08);">
+          <span style="color:var(--muted);">${safeText(label)}</span>
+          <strong>${safeText(value)}</strong>
+        </div>
+      `).join("");
+
+      drawDonut("leadDonut", breakdown.map((item) => item[1]), [dashboardConfig.accent, "#f59e0b", "#94a3b8"]);
+    }
+
+    function renderCalls(data) {
+      const section = document.getElementById("callsSection");
+      const hasVoiceAgent = data.systems.some((system) => system.key === "voice-agent");
+      section.style.display = hasVoiceAgent ? "grid" : "none";
+      if (!hasVoiceAgent) return;
+
+      document.getElementById("callMetrics").innerHTML = [
+        ["Calls answered this month", data.calls.answered],
+        ["Total call minutes", data.calls.total_minutes],
+        ["Appointments booked", data.calls.appointments_booked],
+        ["Average call duration", data.calls.average_duration],
+        ["Calls outside business hours", data.calls.after_hours],
+        ["Estimated value", data.calls.estimated_value],
+        ["What Riley prevented", `${data.calls.after_hours} missed opportunities avoided`],
+        ["Coverage", "24/7 call handling active"]
+      ].map(([label, value]) => `
+        <div class="metric-card">
+          <div class="metric-label">${safeText(label)}</div>
+          <div class="metric-value" style="font-size:28px;">${safeText(value)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderPerformance(data) {
+      document.getElementById("performanceGrid").innerHTML = [
+        ["Average response time", data.ai_performance.response_time],
+        ["Accuracy rate", data.ai_performance.accuracy_rate],
+        ["Topics handled successfully", data.ai_performance.topics_handled],
+        ["Escalations to human", data.ai_performance.escalations],
+        ["Customer satisfaction", data.ai_performance.satisfaction],
+        ["System uptime", "99.9%"],
+        ["Last live update", new Date().toLocaleTimeString()],
+        ["Powered by", "Genesis AI Systems"]
+      ].map(([label, value]) => `
+        <div class="performance-card">
+          <div class="metric-label">${safeText(label)}</div>
+          <div class="metric-value" style="font-size:28px;">${safeText(value)}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderRoi(data) {
+      const valueGenerated = Number(data.roi.total_value || 0);
+      const monthlyRetainer = Number(data.roi.monthly_retainer || 0);
+      const roiHeadline = `Genesis AI Systems generated ${formatCurrency(valueGenerated)} in value for ${data.client_name} this month.`;
+      document.getElementById("roiHeadlineCopy").textContent = roiHeadline;
+      document.getElementById("roiCards").innerHTML = [
+        {
+          title: "Investment",
+          body: `Monthly retainer: ${formatCurrency(monthlyRetainer)}`
+        },
+        {
+          title: "Value Generated",
+          body: `
+            Leads captured: ${formatCurrency(data.roi.leads_value)}
+            <br>
+            Calls answered: ${formatCurrency(data.roi.calls_value)}
+            <br>
+            Hours automated: ${formatCurrency(data.roi.automation_value)}
+            <br>
+            Total value generated: <strong>${formatCurrency(valueGenerated)}</strong>
+          `
+        },
+        {
+          title: "ROI",
+          body: `
+            Net ROI: <strong>${safeText(data.roi.net_roi_percent)}%</strong>
+            <br>
+            Every $1 spent returned <strong>${safeText(data.roi.value_multiple)}x</strong>
+          `
+        }
+      ].map((card) => `
+        <div class="roi-card">
+          <div class="metric-label">${safeText(card.title)}</div>
+          <div class="metric-subtext" style="color:#e2e8f0;">${card.body}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderActivity(data) {
+      document.getElementById("activityTimeline").innerHTML = data.activity.map((item) => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div>
+            <div class="timeline-main">${safeText(item.text)}</div>
+            <div class="timeline-time">${safeText(formatDate(item.date))}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderNextSteps(data) {
+      document.getElementById("nextSteps").innerHTML = data.next_steps.map((item) => `
+        <div class="next-step">${safeText(item)}</div>
+      `).join("");
+    }
+
+    function drawDonut(canvasId, values, colors) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+      const total = values.reduce((sum, value) => sum + value, 0) || 1;
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = 88;
+      let start = -Math.PI / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      values.forEach((value, index) => {
+        const slice = (value / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, start, start + slice);
+        ctx.closePath();
+        ctx.fillStyle = colors[index];
+        ctx.fill();
+        start += slice;
+      });
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 54, 0, Math.PI * 2);
+      ctx.fillStyle = "#08101d";
+      ctx.fill();
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "700 24px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(String(total), centerX, centerY + 8);
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "12px sans-serif";
+      ctx.fillText("leads", centerX, centerY + 28);
+    }
+
+    async function boot() {
+      const data = await fetchClientStats();
+      document.title = `${data.client_name} Dashboard — Genesis AI Systems`;
+      document.getElementById("clientNameTop").textContent = data.client_name;
+      document.getElementById("heroTitle").innerHTML = `${safeText(data.client_name)}<br>AI performance at a glance.`;
+      document.getElementById("heroCopy").textContent =
+        `Powered by Genesis AI Systems. This is your simple monthly snapshot: what your AI handled, what value it generated, and where Trendell recommends going next.`;
+      document.getElementById("lastUpdated").textContent = new Date().toLocaleString();
+      renderSystems(data);
+      renderLeads(data);
+      renderCalls(data);
+      renderPerformance(data);
+      renderRoi(data);
+      renderActivity(data);
+      renderNextSteps(data);
+    }
+
+    boot();
+  </script>
+</body>
+</html>
