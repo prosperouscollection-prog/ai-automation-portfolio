@@ -373,19 +373,38 @@
 
     .demo-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: 1fr;
       gap: 24px;
       max-width: 1200px;
       margin: 0 auto;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+
+    @media (min-width: 768px) {
+      .demo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .demo-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1100px;
+      }
     }
 
     .demo-card {
       background: #0f172a;
       border: 1px solid #1e3a8a;
       border-radius: 12px;
-      padding: 24px;
+      padding: 28px;
       position: relative;
-      box-shadow: 0 18px 40px rgba(2, 6, 23, 0.32);
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .demo-card h3 {
@@ -417,14 +436,14 @@
 
     .demo-input {
       width: 100%;
-      padding: 12px;
+      box-sizing: border-box;
+      padding: 12px 16px;
       background: #1e293b;
       border: 1px solid #2563eb;
       border-radius: 8px;
       color: white;
       font-size: 14px;
       margin: 12px 0;
-      box-sizing: border-box;
     }
 
     .demo-input:focus {
@@ -434,17 +453,17 @@
     }
 
     .demo-btn {
+      width: 100%;
+      box-sizing: border-box;
       background: #2563eb;
       color: white;
       border: none;
-      padding: 12px 24px;
+      padding: 14px 24px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
-      width: 100%;
       margin-top: 8px;
-      transition: background 0.2s ease, transform 0.2s ease;
     }
 
     .demo-btn:hover,
@@ -522,7 +541,13 @@
       justify-content: center;
       gap: 8px;
       margin: 16px 0;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+    }
+
+    @media (max-width: 480px) {
+      .pipeline {
+        flex-wrap: wrap;
+      }
     }
 
     .pipeline-step {
@@ -548,8 +573,14 @@
     .comparison {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 16px;
       margin-top: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
     }
 
     .comparison-col h4 {
@@ -745,6 +776,127 @@
       padding: 0 0.1em;
     }
 
+    .chat-launcher {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: #2563eb;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+      z-index: 9999;
+      transition: transform 0.2s;
+      border: none;
+    }
+
+    .chat-launcher:hover { transform: scale(1.1); }
+
+    .chat-window {
+      position: fixed;
+      bottom: 96px;
+      right: 24px;
+      width: 360px;
+      height: 500px;
+      background: #0f172a;
+      border: 1px solid #1e3a8a;
+      border-radius: 16px;
+      display: none;
+      flex-direction: column;
+      z-index: 9998;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .chat-window.open { display: flex; }
+
+    .chat-header {
+      background: #1e293b;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1e3a8a;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-input-row {
+      padding: 12px 16px;
+      border-top: 1px solid #1e3a8a;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input-field {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #2563eb;
+      border-radius: 24px;
+      padding: 10px 16px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .chat-send-btn {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      background: #2563eb;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: white;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .message-bubble {
+      max-width: 82%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message-ai {
+      background: #1e293b;
+      color: #e2e8f0;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-user {
+      background: #2563eb;
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-powered-by {
+      text-align: center;
+      font-size: 10px;
+      color: #475569;
+      padding: 6px;
+      background: #0a0f1e;
+    }
+
     @media (max-width: 960px) {
       .hero-grid,
       .contact-panel {
@@ -779,10 +931,6 @@
         grid-template-columns: 1fr;
       }
 
-      .comparison {
-        grid-template-columns: 1fr;
-      }
-
       .footer-inner {
         flex-direction: column;
         gap: 1em;
@@ -808,6 +956,21 @@
         padding: 20px;
       }
     }
+
+    @media (max-width: 480px) {
+      .chat-window {
+        width: 100vw;
+        height: 100vh;
+        bottom: 0;
+        right: 0;
+        border-radius: 0;
+      }
+
+      .chat-launcher {
+        bottom: 16px;
+        right: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -817,7 +980,7 @@
       <nav aria-label="Primary Navigation">
         <div class="nav-links">
           <a href="#projects">Projects</a>
-          <a href="#demos">Demos</a>
+          <a href="/demos.html">Demos</a>
           <a href="#case-studies">Case Studies</a>
           <a href="#pricing">Pricing</a>
           <a href="#contact">Contact</a>
@@ -1129,45 +1292,134 @@
       </div>
     </section>
 
-    <section class="section-shell" id="contact">
-      <div class="container contact-panel">
-        <div class="info-card">
-          <h3>Work With Genesis AI Systems</h3>
-          <p>
-            Trendell Fordham builds done-for-you AI automation systems for local businesses
-            that want faster follow-up, cleaner operations, and fewer missed opportunities.
-          </p>
-          <div class="contact-actions">
-            <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noopener">Book a Demo</a>
-            <a class="button button-secondary" href="mailto:info@genesisai.systems">Email Founder</a>
-            <a class="button button-secondary" href="tel:+13134002575">Call (313) 400-2575</a>
+    <section id="contact" style="padding:80px 20px; background:#0a0f1e;">
+      <div style="max-width:600px;margin:0 auto; text-align:center;">
+        <h2 style="color:white;font-size:36px; font-weight:700;margin-bottom:12px;">
+          Work With Genesis AI Systems
+        </h2>
+        <p style="color:#94a3b8;font-size:16px; margin-bottom:40px;">
+          Trendell Fordham builds done-for-you AI automation
+          systems for local businesses that want faster
+          follow-up, cleaner operations, and fewer
+          missed opportunities.
+        </p>
+        <div style="background:#0f172a;border:1px solid #1e3a8a;
+                    border-radius:16px;padding:32px;
+                    text-align:left;">
+          <div style="display:grid;gap:16px;">
+            <input type="text" id="contactName"
+              placeholder="Your Full Name *"
+              aria-label="Your Full Name"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'"/>
+            <input type="text" id="contactBusiness"
+              placeholder="Business Name *"
+              aria-label="Business Name"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'"/>
+            <input type="email" id="contactEmail"
+              placeholder="Email Address *"
+              aria-label="Email Address"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'"/>
+            <input type="tel" id="contactPhone"
+              placeholder="Phone Number *"
+              aria-label="Phone Number"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'"/>
+            <select id="contactNeed"
+              aria-label="What do you need"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;
+                     cursor:pointer;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'">
+              <option value="">What do you need? *</option>
+              <option value="Lead Capture System">
+                Lead Capture System — $500
+              </option>
+              <option value="AI Voice Agent">
+                AI Voice Agent — $1,500
+              </option>
+              <option value="AI Chatbot">
+                AI Chatbot — $1,000
+              </option>
+              <option value="Workflow Automation">
+                Workflow Automation — $2,000
+              </option>
+              <option value="Full Agency Package">
+                Full Agency Package — $24,000
+              </option>
+              <option value="Not sure yet">
+                Not sure yet — let's talk
+              </option>
+            </select>
+            <textarea id="contactMessage"
+              placeholder="Tell us about your business (optional)"
+              aria-label="Tell us about your business"
+              rows="3"
+              style="width:100%;box-sizing:border-box;
+                     padding:14px 16px;background:#1e293b;
+                     border:1px solid #334155;border-radius:8px;
+                     color:white;font-size:15px;outline:none;
+                     resize:vertical;"
+              onfocus="this.style.borderColor='#2563eb'"
+              onblur="this.style.borderColor='#334155'"></textarea>
+            <button onclick="submitContactForm()"
+              id="contactSubmitBtn"
+              style="width:100%;padding:16px;background:#2563eb;
+                     color:white;border:none;border-radius:8px;
+                     font-size:16px;font-weight:600;
+                     cursor:pointer;">
+              Book My Free Demo →
+            </button>
+            <div id="contactResult" style="display:none;
+              padding:16px;border-radius:8px;
+              text-align:center;font-size:15px;">
+            </div>
           </div>
         </div>
-        <aside class="info-card">
-          <h3>Founder Contact</h3>
-          <ul class="contact-list">
-            <li>
-              <strong>Trendell Fordham</strong>
-              Founder, Genesis AI Systems
-            </li>
-            <li>
-              <strong>Email</strong>
-              <a href="mailto:info@genesisai.systems">info@genesisai.systems</a>
-            </li>
-            <li>
-              <strong>Phone</strong>
-              <a href="tel:+13134002575">(313) 400-2575</a>
-            </li>
-            <li>
-              <strong>Website</strong>
-              <a href="https://genesisai.systems" target="_blank" rel="noopener">https://genesisai.systems</a>
-            </li>
-            <li>
-              <strong>GitHub</strong>
-              <a href="https://github.com/prosperouscollection-prog/ai-automation-portfolio" target="_blank" rel="noopener">View the live repo</a>
-            </li>
-          </ul>
-        </aside>
+        <div style="margin-top:32px;display:flex;
+                    flex-direction:column;gap:12px;
+                    align-items:center;">
+          <div style="color:#94a3b8;font-size:14px;">
+            Or reach out directly:
+          </div>
+          <a href="tel:3134002575"
+             style="color:#2563eb;text-decoration:none;
+                    font-size:15px;">
+            📞 (313) 400-2575
+          </a>
+          <a href="mailto:info@genesisai.systems"
+             style="color:#2563eb;text-decoration:none;
+                    font-size:15px;">
+            📧 info@genesisai.systems
+          </a>
+          <a href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
+             target="_blank" rel="noopener"
+             style="color:#2563eb;text-decoration:none;
+                    font-size:15px;">
+            📅 Book directly on Calendly
+          </a>
+        </div>
       </div>
     </section>
   </main>
@@ -1190,6 +1442,72 @@
     </div>
     <button id="pwa-install-btn" type="button">Install</button>
     <button class="close" id="pwa-install-dismiss" aria-label="Dismiss banner">&times;</button>
+  </div>
+
+  <!-- Floating Chat Widget -->
+  <div id="chatLauncher" class="chat-launcher"
+       onclick="toggleChat()"
+       title="Chat with Genesis AI Systems"
+       aria-label="Open chat with Genesis AI Systems"
+       role="button"
+       tabindex="0"
+       onkeypress="if(event.key==='Enter' || event.key===' ') toggleChat()">
+    <svg width="24" height="24" viewBox="0 0 24 24"
+         fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </div>
+
+  <div id="chatWindow" class="chat-window" aria-label="Genesis AI Systems chat window">
+    <div class="chat-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;background:#2563eb;
+                    border-radius:50%;display:flex;
+                    align-items:center;justify-content:center;
+                    font-weight:bold;font-size:12px;color:white;">
+          GAI
+        </div>
+        <div>
+          <div style="color:white;font-weight:500;font-size:14px;">
+            Genesis AI Systems
+          </div>
+          <div style="color:#22c55e;font-size:11px;">
+            ● Online
+          </div>
+        </div>
+      </div>
+      <button onclick="toggleChat()"
+              aria-label="Close chat"
+              style="background:none;border:none;
+                     color:#94a3b8;cursor:pointer;
+                     font-size:20px;padding:4px;">
+        ×
+      </button>
+    </div>
+    <div id="chatMessages" class="chat-messages">
+      <div class="message-bubble message-ai">
+        👋 Hi! I'm the Genesis AI Systems assistant.
+        How can I help you today?
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text"
+             id="chatInput"
+             class="chat-input-field"
+             aria-label="Type your chat question"
+             placeholder="Type your question..."
+             onkeypress="if(event.key==='Enter')sendChat()"/>
+      <button class="chat-send-btn" onclick="sendChat()" aria-label="Send chat message">
+        ➤
+      </button>
+    </div>
+    <div class="chat-powered-by">
+      Powered by <a href="https://genesisai.systems"
+                    target="_blank" rel="noopener"
+                    style="color:#2563eb;">
+        Genesis AI Systems
+      </a>
+    </div>
   </div>
 
   <script>
@@ -1453,6 +1771,161 @@
         `;
       } catch (error) {
         showError(meta, "Live agent telemetry unavailable");
+      }
+    }
+
+    function toggleChat() {
+      const win = document.getElementById("chatWindow");
+      win.classList.toggle("open");
+      if (win.classList.contains("open")) {
+        document.getElementById("chatInput").focus();
+      }
+    }
+
+    async function sendChat() {
+      const input = document.getElementById("chatInput");
+      const msgs = document.getElementById("chatMessages");
+      const text = input.value.trim();
+      if (!text) return;
+
+      msgs.innerHTML += `
+        <div class="message-bubble message-user">
+          ${escapeHtml(text)}
+        </div>`;
+      input.value = "";
+      msgs.scrollTop = msgs.scrollHeight;
+
+      const loadId = "load" + Date.now();
+      msgs.innerHTML += `
+        <div class="message-bubble message-ai" id="${loadId}">
+          <div class="spinner"
+               style="width:14px;height:14px;margin:2px auto;
+                      border:2px solid #2563eb;
+                      border-top-color:transparent;
+                      border-radius:50%;
+                      animation:spin 0.8s linear infinite;">
+          </div>
+        </div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+
+      try {
+        const res = await fetch(demoUrl("/demo/rag-chatbot"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text })
+        });
+        const data = await res.json();
+        const el = document.getElementById(loadId);
+        if (el) {
+          el.textContent = data.answer || data.response || "How can I help you?";
+        }
+      } catch (error) {
+        const el = document.getElementById(loadId);
+        if (el) {
+          el.innerHTML =
+            "I&apos;m having trouble connecting. " +
+            "Please email <a href=\"mailto:info@genesisai.systems\" " +
+            "style=\"color:#2563eb;\">info@genesisai.systems</a>";
+        }
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    async function submitContactForm() {
+      const name = document.getElementById("contactName").value;
+      const business = document.getElementById("contactBusiness").value;
+      const email = document.getElementById("contactEmail").value;
+      const phone = document.getElementById("contactPhone").value;
+      const need = document.getElementById("contactNeed").value;
+      const message = document.getElementById("contactMessage").value;
+      const btn = document.getElementById("contactSubmitBtn");
+      const result = document.getElementById("contactResult");
+
+      if (!name || !business || !email || !phone || !need) {
+        result.style.display = "block";
+        result.style.background = "#1e293b";
+        result.style.color = "#f97316";
+        result.innerHTML = "Please fill in all required fields.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = "Sending...";
+      result.style.display = "none";
+
+      const leadMessage =
+        `New lead from ${name} at ${business}. ` +
+        `Need: ${need}. Email: ${email}. ` +
+        `Phone: ${phone}. Message: ${message}`;
+
+      try {
+        const res = await fetch(demoUrl("/demo/lead-capture"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: leadMessage,
+            name: name,
+            business: business,
+            email: email,
+            phone: phone,
+            need: need
+          })
+        });
+        const data = await res.json();
+        const score = data.score || "MEDIUM";
+
+        result.style.display = "block";
+
+        if (score === "HIGH") {
+          result.style.background = "#052e16";
+          result.style.border = "1px solid #22c55e";
+          result.style.color = "#22c55e";
+          result.innerHTML =
+            "🔥 <strong>High priority lead!</strong><br>" +
+            "Trendell will reach out within 2 hours.<br>" +
+            "<small>Or book instantly:</small><br>" +
+            "<a href=\"https://calendly.com/genesisai-info-ptmt/free-ai-demo-call\" " +
+            "target=\"_blank\" rel=\"noopener\" " +
+            "style=\"color:#22c55e;font-weight:bold;\">" +
+            "Schedule your demo now →</a>";
+        } else if (score === "MEDIUM") {
+          result.style.background = "#1c1917";
+          result.style.border = "1px solid #2563eb";
+          result.style.color = "#93c5fd";
+          result.innerHTML =
+            "✅ <strong>Got it, " + escapeHtml(name) + "!</strong><br>" +
+            "Trendell will reach out within 24 hours.<br>" +
+            "<a href=\"https://calendly.com/genesisai-info-ptmt/free-ai-demo-call\" " +
+            "target=\"_blank\" rel=\"noopener\" " +
+            "style=\"color:#2563eb;\">" +
+            "Or book a time directly →</a>";
+        } else {
+          result.style.background = "#1e293b";
+          result.style.border = "1px solid #475569";
+          result.style.color = "#94a3b8";
+          result.innerHTML =
+            "📅 <strong>Thanks " + escapeHtml(name) + "!</strong><br>" +
+            "Trendell will be in touch soon.<br>" +
+            "<a href=\"/demos.html\" style=\"color:#2563eb;\">" +
+            "Explore our live demos while you wait →</a>";
+        }
+
+        btn.innerHTML = "✅ Submitted!";
+        setTimeout(() => {
+          window.location.href = "/thank-you.html";
+        }, 3000);
+      } catch (error) {
+        result.style.display = "block";
+        result.style.background = "#1e293b";
+        result.style.color = "#94a3b8";
+        result.innerHTML =
+          "Thanks! Please email us directly at " +
+          "<a href=\"mailto:info@genesisai.systems\" " +
+          "style=\"color:#2563eb;\">info@genesisai.systems</a> " +
+          "or call <a href=\"tel:3134002575\" " +
+          "style=\"color:#2563eb;\">(313) 400-2575</a>";
+        btn.disabled = false;
+        btn.innerHTML = "Book My Free Demo →";
       }
     }
 
