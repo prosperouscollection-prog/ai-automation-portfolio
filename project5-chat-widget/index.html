@@ -2,240 +2,337 @@
 <html lang="en">
 <!--
   ============================================
-  PROJECT 5: AI Customer Service Chat Widget
+  PROJECT 5: AI Chat Widget — Genesis AI Systems
   ============================================
-  Author: [Your Name]
+  Author: Trendell Fordham
+  Business: Genesis AI Systems (Detroit, MI)
   Description: Embeddable AI chat widget for local business websites.
-  Use case: 24/7 customer support and lead capture for service businesses.
   Offer: Setup Fee $2,500 | Monthly Retainer $500/month
-
-  TO DEPLOY:
-  1. Replace CONFIG.apiEndpoint with your secure backend proxy URL
-  2. Customize CONFIG.businessName, hours, phone, services
-  3. Embed the widget into any website
+  Production Mode — Calls backend proxy, no keys exposed in browser.
   ============================================
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Customer Service Chat Widget</title>
+  <title>Genesis AI Systems — Chat</title>
+  <meta name="description" content="Ask Genesis AI Systems anything - get instant AI automation answers.">
+  <link rel="icon" href="https://genesisai.systems/favicon.ico">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
+    *, *:before, *:after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
       background: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       min-height: 100vh;
     }
-    .widget {
-      width: 400px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    .gen-ai-widget {
+      width: 100%;
+      max-width: 400px;
+      margin: 40px auto;
+      background: #0f172a;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(16,24,40,0.13);
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #2563eb;
     }
-    .header {
-      background: #2563eb;
-      color: white;
-      padding: 20px;
+    .gen-ai-header {
+      background: #0f172a;
+      color: #fff;
+      padding: 22px 20px 14px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
+      border-bottom: 1px solid #1e293b;
     }
-    .avatar {
-      width: 40px;
-      height: 40px;
-      background: white;
+    .gen-ai-logo {
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
+      background:#2563eb;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 25px;
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 2px 10px 0 rgba(37,99,235,0.16);
+      flex-shrink: 0;
     }
-    .header-text h3 { font-size: 16px; }
-    .header-text p { font-size: 12px; opacity: 0.8; }
-    .chat-box {
-      height: 350px;
+    .gen-ai-header-body h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      letter-spacing: -0.5px;
+    }
+    .gen-ai-header-body p {
+      font-size: 13px;
+      font-weight: 400;
+      color: #93c5fd;
+      margin-bottom: 0;
+    }
+    @media (max-width: 480px) {
+      .gen-ai-widget { max-width: 100%; border-radius: 0; margin:0; }
+      .gen-ai-header { padding: 18px 10px 10px 10px; }
+      .gen-ai-chat { padding: 12px 7px; font-size: 14px; }
+    }
+    .gen-ai-chat {
+      background: #0f172a;
+      height: 340px;
       overflow-y: auto;
-      padding: 20px;
+      padding: 18px 15px;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
-    .message {
-      max-width: 80%;
+    .gen-ai-msg {
+      max-width: 82%;
       padding: 12px 16px;
-      border-radius: 12px;
-      font-size: 14px;
+      border-radius: 14px;
+      font-size: 15px;
       line-height: 1.5;
+      word-break: break-word;
+      transition: background .2s;
+      box-shadow: 0 2px 8px 0 rgba(16,27,80,0.04);
     }
-    .bot {
-      background: #f0f2f5;
-      color: #1a1a1a;
+    .gen-ai-bot {
+      background: #172244;
+      color: #e0e7ef;
       align-self: flex-start;
       border-bottom-left-radius: 4px;
+      border: 1px solid #2563eb33;
     }
-    .user {
+    .gen-ai-user {
       background: #2563eb;
-      color: white;
+      color: #fff;
       align-self: flex-end;
       border-bottom-right-radius: 4px;
+      border: 1px solid #2563eb88;
     }
-    .typing {
-      background: #f0f2f5;
-      color: #666;
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
+    .gen-ai-typing {
       font-style: italic;
+      color: #60a5fa;
+      background: #12293f;
+      align-self: flex-start;
+      border-radius: 11px;
+      padding: 10px 13px;
+      max-width: 73%;
     }
-    .input-area {
-      padding: 16px;
-      border-top: 1px solid #e5e7eb;
+    .gen-ai-input-row {
       display: flex;
-      gap: 8px;
+      gap: 9px;
+      border-top: 1px solid #172244;
+      background: #0f172a;
+      padding: 13px 13px;
     }
-    input {
+    .gen-ai-input {
       flex: 1;
-      padding: 12px 16px;
-      border: 1px solid #e5e7eb;
-      border-radius: 24px;
-      outline: none;
+      padding: 13px 16px;
+      border-radius: 22px;
+      background: #131b34;
+      color: #fff;
+      border: 1px solid #2563eb33;
       font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
     }
-    input:focus { border-color: #2563eb; }
-    button {
+    .gen-ai-input:focus {
+      border: 1.8px solid #2563eb;
+      background: #172244;
+    }
+    .gen-ai-send-btn {
       background: #2563eb;
-      color: white;
+      color: #fff;
       border: none;
       border-radius: 50%;
-      width: 44px;
-      height: 44px;
+      width: 43px;
+      height: 43px;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 19px;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background .18s;
+      box-shadow: 0 2px 8px 0 rgba(37,99,235,0.16);
     }
-    button:hover { background: #1d4ed8; }
-    .powered {
+    .gen-ai-send-btn:focus, .gen-ai-send-btn:hover {
+      background: #1d4ed8;
+      outline: 2px solid #93c5fd;
+    }
+    .gen-ai-powered {
       text-align: center;
-      font-size: 11px;
-      color: #9ca3af;
-      padding: 8px;
-      border-top: 1px solid #f0f2f5;
+      font-size: 12px;
+      color: #93c5fd;
+      padding: 9px 6px;
+      background: #172244;
+      border-top: 1px solid #2563eb33;
+      font-weight: 500;
+      letter-spacing: .04em;
+    }
+    /* Accessibility - focus ring */
+    .gen-ai-input:focus, .gen-ai-send-btn:focus {
+      outline: 2px solid #93c5fd;
+    }
+    @media (max-width: 380px) {
+      .gen-ai-header-body h3 { font-size: 15px; }
+      .gen-ai-header-body p { font-size: 11px; }
+      .gen-ai-chat { font-size: 12px; }
+    }
+    /* Hide scrollbar for chat */
+    .gen-ai-chat::-webkit-scrollbar {
+      width: 7px;
+      background: #172244;
+      border-radius: 3px;
+    }
+    .gen-ai-chat::-webkit-scrollbar-thumb {
+      background: #2563eb33;
+      border-radius: 3px;
     }
   </style>
 </head>
 <body>
-  <div class="widget">
-    <div class="header">
-      <div class="avatar">🤖</div>
-      <div class="header-text">
-        <h3 id="widgetTitle">Smile Dental Assistant</h3>
-        <p>Online • Typically replies instantly</p>
+  <main>
+    <div class="gen-ai-widget" aria-label="Genesis AI Systems chat widget">
+      <header class="gen-ai-header">
+        <div class="gen-ai-logo" aria-hidden="true">GAI</div>
+        <div class="gen-ai-header-body">
+          <h3 id="genAiTitle">Genesis AI Systems</h3>
+          <p id="genAiSubtitle">Ask us anything</p>
+        </div>
+      </header>
+      <section class="gen-ai-chat" id="genAiChat" tabindex="0" aria-live="polite">
+        <div class="gen-ai-msg gen-ai-bot" id="greetingMsg">
+          👋 Hi! I'm the Genesis AI Systems assistant.<br>How can I help you today?
+        </div>
+      </section>
+      <div class="gen-ai-input-row">
+        <input
+          type="text"
+          class="gen-ai-input"
+          id="genAiInput"
+          aria-label="Type your message"
+          placeholder="Type your question..."
+          autocomplete="off"
+          maxlength="280"
+          required
+        />
+        <button class="gen-ai-send-btn" id="genAiSendBtn" aria-label="Send message" title="Send Message">
+          &#10148;
+        </button>
       </div>
+      <footer class="gen-ai-powered">
+        Powered by <a href="https://genesisai.systems" target="_blank" rel="noopener" style="color:#60a5fa;text-decoration:underline;font-weight:600">Genesis AI Systems</a>
+      </footer>
     </div>
-    <div class="chat-box" id="chatBox">
-      <div class="message bot">
-        👋 Hi! I'm your Smile Dental assistant. How can I help you today?
-      </div>
-    </div>
-    <div class="input-area">
-      <input
-        type="text"
-        id="userInput"
-        placeholder="Type your question..."
-        onkeypress="if(event.key==='Enter') sendMessage()"
-      />
-      <button onclick="sendMessage()">➤</button>
-    </div>
-    <div class="powered">Powered by Genesis AI Systems</div>
-  </div>
+  </main>
 
   <script>
     // ============================================
-    // CONFIGURATION — Edit this section only
+    // PRODUCTION CONFIGURATION
     // ============================================
     const CONFIG = {
-      apiEndpoint: 'https://your-backend-proxy.example.com/chat',
-      businessName: 'Smile Dental',
-      phone: '(555) 123-4567',
-      hours: 'Mon-Fri 8am-6pm, Sat 9am-2pm',
-      services: 'cleanings, whitening, fillings, extractions, Invisalign',
-      model: 'gpt-4o-mini',
+      apiEndpoint: 'https://genesisai-chat-proxy-production.up.railway.app/chat', // Backend Express proxy (deploy to Railway!)
+      model: 'gpt-4o',
+      founder: 'Trendell Fordham',
+      company: 'Genesis AI Systems',
+      companyPhone: '(313) 400-2575',
+      companyEmail: 'info@genesisai.systems',
+      website: 'https://genesisai.systems',
+      defaultGreeting: `👋 Hi! I'm the Genesis AI Systems assistant.<br>How can I help you today?`,
+      subtitle: 'Ask us anything',
       maxTokens: 200
     };
+    // Accessibility: Set initial focus for keyboard users
+    window.onload = function() {
+      document.getElementById('genAiInput').focus();
+    }
 
-    document.getElementById('widgetTitle').textContent = `${CONFIG.businessName} Assistant`;
+    // Keyboard & click send
+    document.getElementById('genAiSendBtn').onclick = sendMsg;
+    document.getElementById('genAiInput').addEventListener('keypress', function(e){
+      if (e.key === 'Enter') sendMsg();
+    });
 
-    // ============================================
-    // CHAT ENGINE — No edits needed below
-    // ============================================
-    async function sendMessage() {
-      const input = document.getElementById('userInput');
-      const chatBox = document.getElementById('chatBox');
-      const message = input.value.trim();
-      if (!message) return;
-
+    // Main send message logic
+    async function sendMsg() {
+      const input = document.getElementById('genAiInput');
+      const chat = document.getElementById('genAiChat');
+      const userMsg = input.value.trim();
+      if (!userMsg) return;
       // Render user message
-      chatBox.innerHTML += `<div class="message user">${message}</div>`;
+      appendMessage(userMsg, 'user');
       input.value = '';
-      chatBox.scrollTop = chatBox.scrollHeight;
+      chat.scrollTop = chat.scrollHeight;
 
       // Show typing indicator
-      chatBox.innerHTML += `<div class="message typing" id="typing">Assistant is typing...</div>`;
-      chatBox.scrollTop = chatBox.scrollHeight;
+      const typingId = 'gaityping'+Date.now();
+      appendTyping(typingId);
+      chat.scrollTop = chat.scrollHeight;
 
       try {
-        if (!CONFIG.apiEndpoint || CONFIG.apiEndpoint.includes('your-backend-proxy.example.com')) {
-          throw new Error('Missing backend proxy configuration');
-        }
-
-        const response = await fetch(CONFIG.apiEndpoint, {
+        const res = await fetch(CONFIG.apiEndpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: CONFIG.model,
             messages: [
-              {
-                role: 'system',
-                content: `You are a helpful customer service assistant for ${CONFIG.businessName}.
-                Keep answers short and friendly.
-                Office hours: ${CONFIG.hours}.
-                Phone: ${CONFIG.phone}.
-                Services: ${CONFIG.services}.
-                Always end with: Is there anything else I can help you with?`
-              },
-              { role: 'user', content: message }
+              { role: 'system', content:
+                `You are an AI customer support & automation expert for Genesis AI Systems, an AI automation agency founded by Trendell Fordham in Detroit, MI. Always:
+- Respond in a clear, friendly, professional tone.
+- Highlight agency expertise in AI automation for local businesses.
+- Refer to our founder, Trendell Fordham, if expertise is requested.
+- Mention pricing starts at $500 setup + $150/month when cost is requested.
+- Point them to genesisai.systems or Calendly link for more info or demo.
+- Offer to connect to a real team member (Trendell Fordham) for complex requests.
+- Support: ${CONFIG.companyEmail} | ${CONFIG.companyPhone}.
+Finish answers with: 'Is there anything else I can help you with?'` },
+              { role: 'user', content: userMsg }
             ],
             max_tokens: CONFIG.maxTokens
           })
         });
-
-        if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();
-        const reply = data.reply || data.choices?.[0]?.message?.content;
-
+        if (!res.ok) throw new Error('Network error!');
+        const out = await res.json();
+        const reply = out.reply || out.choices?.[0]?.message?.content;
+        removeTyping(typingId);
         if (!reply) {
-          throw new Error('No reply returned from API');
+          appendMessage('Sorry, something went wrong. Please call us at ' + CONFIG.companyPhone + ' or try again.', 'bot');
+        } else {
+          appendMessage(reply, 'bot');
         }
-
-        document.getElementById('typing').remove();
-        chatBox.innerHTML += `<div class="message bot">${reply}</div>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-      } catch (error) {
-        document.getElementById('typing').remove();
-        chatBox.innerHTML += `<div class="message bot">Sorry, I'm having trouble connecting right now. Please call us at ${CONFIG.phone} and we'll be happy to help.</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      } catch(e) {
+        removeTyping(typingId);
+        appendMessage('Sorry, I can\'t connect right now. Please call our office at ' + CONFIG.companyPhone + '.', 'bot');
       }
     }
+
+    function appendMessage(txt, who) {
+      // who: 'user' or 'bot'
+      const chat = document.getElementById('genAiChat');
+      const div = document.createElement('div');
+      div.className = `gen-ai-msg gen-ai-${who}`;
+      div.innerHTML = txt;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function appendTyping(id) {
+      const chat = document.getElementById('genAiChat');
+      const div = document.createElement('div');
+      div.className = 'gen-ai-typing';
+      div.id = id;
+      div.innerHTML = '<span aria-live="polite">Genesis AI Systems assistant is typing...</span>';
+      chat.appendChild(div);
+    }
+    function removeTyping(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    // Greeting (can re-greet if cleared)
+    document.getElementById('genAiChat').innerHTML = `
+      <div class="gen-ai-msg gen-ai-bot">${CONFIG.defaultGreeting}</div>
+    `;
   </script>
 </body>
 </html>

@@ -14,10 +14,11 @@
 | Field | Value |
 | --- | --- |
 | Business | Genesis AI Systems |
-| Name | [Your Name] |
-| Email | [your@email.com] |
-| Phone | [Your Phone Number] |
-| Location | [City, State / Country] |
+| Name | Trendell Fordham |
+| Website | genesisai.systems |
+| Email | info@genesisai.systems |
+| Phone | (313) 400-2575 |
+| Location | Detroit, MI |
 
 ## Bill To
 
@@ -67,3 +68,6 @@ Work, support, or project delivery may be paused on overdue invoices until payme
 ## Thank You
 
 Thank you for your business. Genesis AI Systems appreciates the opportunity to support [Client Business Name] and looks forward to helping you get strong results from this project.
+
+---
+genesisai.systems | info@genesisai.systems

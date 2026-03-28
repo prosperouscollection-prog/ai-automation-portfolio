@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>404 Not Found | Genesis AI Systems</title>
+  <meta name="description" content="404 error — Genesis AI Systems. Oops — our AI looked everywhere but couldn't find that page.">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="icon" href="/icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --blue: #2563eb;
+      --white: #fff;
+      --gray: #cbd5e1;
+      --shadow: 0 4px 24px 0 rgba(0,0,0,0.13);
+    }
+    html, body {
+      height: 100%;
+      background: var(--navy);
+      margin: 0;
+      padding: 0;
+      color: var(--white);
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: space-between;
+    }
+    main {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 2rem 1rem 1rem 1rem;
+      text-align: center;
+    }
+    .logo-text {
+      font-weight: 800;
+      font-size: 2.2rem;
+      letter-spacing: -0.04em;
+      color: var(--blue);
+      margin-bottom: 0.6rem;
+    }
+    .error-animation {
+      margin: 0 auto 1.3rem auto;
+      height: 4.5rem;
+      width: 6.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-eyes {
+      display: inline-flex;
+      background: var(--navy);
+      border-radius: 2rem;
+      box-shadow: var(--shadow);
+      border: 2.5px solid var(--blue);
+      padding: .7rem 1.7rem;
+      align-items: center;
+    }
+    .eye {
+      width: 1.7rem;
+      height: 1.7rem;
+      background: var(--gray);
+      border-radius: 50%;
+      margin: 0 .5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 8px 0 rgba(37,99,235,0.12);
+    }
+    .pupil {
+      width: .7rem;
+      height: .7rem;
+      background: var(--blue);
+      border-radius: 50%;
+      position: absolute;
+      top: .45rem;
+      left: .5rem;
+      animation: lookaround 3s infinite;
+    }
+    @keyframes lookaround {
+      0%,100% { left: 0.5rem; }
+      10% { left: 0.7rem; }
+      25% { left: 0.9rem; }
+      30% { left: 0.5rem; }
+      52% { left: 0.2rem; }
+      70% { left: 0.7rem; }
+      90% { left: 0.9rem; }
+    }
+    .blink-cursor {
+      display: inline-block;
+      width: 0.11em;
+      height: 1em;
+      background: var(--blue);
+      margin-left: .18em;
+      animation: blink 0.95s steps(2, start) infinite;
+      vertical-align: -.1em;
+      border-radius: 1px;
+    }
+    @keyframes blink {
+      to {
+        visibility: hidden;
+      }
+    }
+    .error-message h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      color: var(--white);
+    }
+    .help-section {
+      margin: 1.2rem 0 .6rem 0;
+      color: var(--gray);
+      font-size: 1rem;
+      letter-spacing: -0.015em;
+      font-weight: 400;
+    }
+    .riley-line {
+      font-size: 1.08rem;
+      margin: 1.05em 0 .7em 0;
+      letter-spacing: -0.01em;
+      color: var(--blue);
+      font-weight: 600;
+      display: flex; 
+      align-items: center;
+      justify-content: center;
+      gap: .4em;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .8rem;
+      justify-content: center;
+      margin: 1.1rem 0 1.3rem 0;
+    }
+    .btn {
+      padding: 0.74rem 1.55rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 2.3rem;
+      cursor: pointer;
+      background: var(--blue);
+      color: var(--white);
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      transition: filter .13s, background .14s;
+      outline-offset: 2px;
+    }
+    .btn:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 2px;
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+      box-shadow: none;
+    }
+    .btn.secondary:focus-visible {
+      outline: 3px solid var(--blue);
+    }
+    .btn[aria-current="page"] {
+      filter: brightness(1.06);
+      pointer-events: none;
+    }
+    .call-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--navy);
+      color: var(--blue);
+      border: 2px solid var(--blue);
+      border-radius: 2.3rem;
+      padding: .48rem .8rem;
+      font-size: 1.03rem;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: none;
+      margin: .6rem auto 0 auto;
+      width: fit-content;
+      transition: background .17s, color .17s;
+    }
+    .call-btn svg {
+      display: inline-block;
+      width: 1.3em;
+      height: 1.3em;
+      fill: currentColor;
+    }
+    .call-btn:focus-visible {
+      outline: 3px solid var(--blue);
+    }
+    .call-btn:hover, .call-btn:active {
+      background: var(--blue);
+      color: var(--white);
+    }
+    @media (max-width:600px) {
+      .logo-text {
+        font-size: 1.4rem;
+      }
+      .error-message h1 {
+        font-size: 1.13rem;
+      }
+      .error-animation {
+        height: 2.7rem;
+        width: 3.7rem;
+      }
+      .actions {
+        flex-direction: column;
+        gap: .64rem;
+      }
+    }
+    footer {
+      width: 100%;
+      background: #101728;
+      color: var(--gray);
+      font-size: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1.2rem 0 1rem 0;
+      border-top: 1px solid #273356;
+      margin-top: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      max-width: 1000px;
+      margin: 0 auto;
+      width: 94%;
+      gap: .7rem 0;
+    }
+    .footer-col {
+      min-width: 0;
+    }
+    .footer-center {
+      text-align: center;
+    }
+    .footer-center a {
+      color: var(--blue);
+      text-decoration: underline;
+      margin: 0 .5em;
+      font-weight: 600;
+      transition: color .17s;
+    }
+    .footer-center a:focus-visible {
+      outline: 2px solid var(--blue);
+    }
+    .footer-center a:hover { color: #5393ff; }
+    .footer-note {
+      text-align: center;
+      color: var(--gray);
+      font-size: 0.98rem;
+      margin-top: .9em;
+      letter-spacing: -0.01em;
+    }
+  </style>
+</head>
+<body>
+  <main role="main" aria-labelledby="404-heading">
+    <span class="logo-text" aria-label="Genesis AI Systems"><span style="letter-spacing:0.00em">Genesis </span><span style="color:#fff;">AI</span> Systems</span>
+    <div class="error-animation" aria-hidden="true">
+      <div class="ai-eyes" title="AI animating, looking for the page">
+        <div class="eye"><div class="pupil"></div></div>
+        <div class="eye"><div class="pupil"></div></div>
+      </div>
+    </div>
+    <div class="error-message" id="404-heading">
+      <h1>
+        Oops&nbsp;&mdash;&nbsp;our AI looked everywhere but couldn't find that page<span class="blink-cursor" aria-hidden="true"></span>
+      </h1>
+    </div>
+    <section class="actions" aria-label="Error page navigation options">
+      <a href="https://genesisai.systems" class="btn" aria-label="Go back to Genesis AI Systems Home">Back to Home</a>
+      <a href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" class="btn secondary" aria-label="Book a free AI automation demo call with Genesis AI Systems">Book a Demo</a>
+    </section>
+    <div class="riley-line" aria-live="polite">
+      Lost? Let Riley help.
+    </div>
+    <a href="https://app.vapi.ai/c/65bd682c2f5378d31d910a95" class="call-btn" aria-label="Call Riley, Genesis AI Systems voice agent, now">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.82 16.77l-2.21-2.02a3.46 3.46 0 0 0-2.5-.88c-.51.04-.99.25-1.36.62L12 15.24c-2.28-.93-4.12-2.76-5.05-5.04l1.94-1.74c.37-.37.58-.84.62-1.36a3.46 3.46 0 0 0-.87-2.5L5.61 4.18A2.06 2.06 0 0 0 3.3 3.43l-.93.16C1.56 3.71 1 4.52 1 5.48c0 9.63 7.84 17.47 17.46 17.47.96 0 1.77-.57 1.89-1.37l.15-.93c.13-.83-.28-1.67-1.01-2.1z"/></svg>
+      Call Riley
+    </a>
+  </main>
+  <footer>
+    <div class="footer-row">
+      <div class="footer-col">
+        © 2026 Genesis AI Systems&nbsp;|&nbsp;Detroit, MI
+      </div>
+      <div class="footer-col footer-center" aria-label="Legal links">
+        <a href="/privacy-policy.html">Privacy Policy</a> |
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div class="footer-col" style="text-align:right;">
+        genesisai.systems
+      </div>
+    </div>
+    <div class="footer-note">
+      All systems monitored by Genesis AI Systems Agent Infrastructure
+    </div>
+  </footer>
+</body>
+</html>

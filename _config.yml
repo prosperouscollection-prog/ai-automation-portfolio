@@ -1,0 +1,31 @@
+title: Genesis AI Systems
+description: Done-for-you AI automation for local businesses
+url: https://genesisai.systems
+
+# Branding for PWA
+brand:
+  name: Genesis AI Systems
+  tagline: "Done-for-you AI automation for local businesses"
+  colors:
+    navy: "#0f172a"
+    blue: "#2563eb"
+  logo: /icons/icon-512.png
+
+# Founder details
+founder:
+  name: Trendell Fordham
+  location: Detroit, MI
+  email: info@genesisai.systems
+  phone: (313) 400-2575
+
+# PWA options
+pwa:
+  enabled: true
+  manifest: /manifest.json
+  theme_color: "#2563eb"
+  background_color: "#0f172a"
+  apple_touch_icon: /icons/icon-192.png
+
+# Site URL and hosting
+repository: prosperouscollection-prog/ai-automation-portfolio
+domain: genesisai.systems

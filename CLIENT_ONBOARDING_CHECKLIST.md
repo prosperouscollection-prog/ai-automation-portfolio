@@ -46,6 +46,29 @@ Do not begin implementation until every required item below is complete.
 - [ ] Agenda sent to client
 - [ ] Access checklist sent before kickoff
 
+### Welcome Email Template
+
+**Subject:** Welcome to Genesis AI Systems
+
+Hi [Client Name],
+
+Excited to get started on [Project Name].
+
+Your client portal and resources are at genesisai.systems.
+
+I’ll use this thread for kickoff details, access requests, timelines, and delivery updates so everything stays in one place.
+
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
+
 ## Kickoff Call Agenda
 
 ### 30 Minute Kickoff Structure
@@ -258,8 +281,16 @@ How has it been working from your side so far? Have you noticed anything you wan
 
 If helpful, I’m happy to review early performance with you and make sure everything is running the way it should.
 
-Best,  
-[Your Name]
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
 
 ### Month 1 Review Template
 
@@ -278,8 +309,16 @@ I’d like to look at:
 
 If you want, we can schedule a quick review call this week.
 
-Best,  
-[Your Name]
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
 
 ### How To Transition From Project To Retainer
 
@@ -311,8 +350,16 @@ Would you be open to sharing a short testimonial about what the project helped i
 
 If easier, I can draft something based on your feedback and you can edit it however you like.
 
-Best,  
-[Your Name]
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
 
 ### How To Ask For A Referral
 
@@ -326,8 +373,16 @@ If you know another business owner dealing with missed leads, response delays, o
 
 I’m always happy to make it easy and send a short overview they can review first.
 
-Best,  
-[Your Name]
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
 
 ## Simple Rule For Client Experience
 

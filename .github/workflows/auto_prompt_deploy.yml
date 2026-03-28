@@ -1,0 +1,54 @@
+name: Auto Prompt Deployer
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt_number:
+        description: "Run specific prompt (1-4) or all (0)"
+        required: false
+        default: "0"
+  schedule:
+    - cron: "0 2 * * 0"
+
+jobs:
+  deploy-prompts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r .github/workflows/scripts/requirements.txt
+
+      - name: Run prompt deployer
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+          PROMPT_NUMBER: ${{ github.event.inputs.prompt_number || '0' }}
+          PROMPT_MODEL: gpt-4.1
+          MIN_BALANCE: "2.00"
+        run: |
+          cd .github/workflows/scripts
+          python run_all_prompts.py --prompt "${PROMPT_NUMBER}"
+
+      - name: Commit and push generated files
+        run: |
+          git config --global user.name "Genesis AI Systems"
+          git config --global user.email "info@genesisai.systems"
+          git add .
+          git diff --cached --quiet && exit 0
+          git commit -m "Auto-deployed by Genesis AI Systems prompt deployer — $(date '+%Y-%m-%d %H:%M')"
+          git push origin main

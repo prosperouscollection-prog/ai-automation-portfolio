@@ -1,0 +1,32 @@
+# Genesis AI Systems Agent Pipeline Dependencies
+# Maintainer: Trendell Fordham
+# https://genesisai.systems
+
+# Core AI Providers
+anthropic==0.20.1
+openai==1.30.5
+
+# Notification & Communication
+sendgrid==6.11.0
+twilio==8.10.0
+
+# HTTP and parsing
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.2.2
+
+# Python environment
+python-dotenv==1.0.1
+
+# Security Auditing
+bandit==1.7.7
+semgrep==1.70.0
+
+# Quality Assurance & Testing
+pytest==8.2.1
+playwright==1.43.0
+
+# (Optional: tiktoken/rich/tqdm included for internal use or progress display)
+tiktoken==0.7.0
+rich==13.7.1
+tqdm==4.66.4

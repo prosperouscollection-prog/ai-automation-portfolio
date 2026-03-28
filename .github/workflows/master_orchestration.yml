@@ -1,0 +1,162 @@
+# Genesis AI Systems: Master Orchestration Workflow
+# https://genesisai.systems — Trendell Fordham, Founder
+
+name: "Master Orchestration (Genesis AI Systems)"
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+    - cron: '0 8 * * *'  # 8am daily digest
+    - cron: '0 9 * * 1'  # Monday 9am weekly report
+  workflow_dispatch:
+
+concurrency:
+  group: master-orchestration-production
+  cancel-in-progress: false
+
+env:
+  ALERT_PHONE_NUMBER: '+13134002575'
+  NOTIFICATION_EMAIL: 'info@genesisai.systems'
+  SITE_URL: 'https://genesisai.systems'
+  BRAND_NAVY: '#0f172a'
+  BRAND_ELECTRIC: '#2563eb'
+  FOUNDER: 'Trendell Fordham'
+  COMPANY: 'Genesis AI Systems'
+  COMPANY_PHONE: '(313) 400-2575'
+  GITHUB_REPO: 'prosperouscollection-prog/ai-automation-portfolio'
+
+jobs:
+  orchestrate-agents:
+    name: Orchestrate Genesis AI Agents Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('.github/workflows/scripts/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r .github/workflows/scripts/requirements.txt
+
+      - name: ✅ Start Security Agent
+        id: security
+        uses: ./.github/workflows/security_agent.yml
+        continue-on-error: false
+
+      - name: 🟡 Check Security Agent Result
+        run: |
+          if [ "${{ steps.security.outcome }}" != "success" ]; then
+            echo '[CRITICAL] Security Agent failed.'
+            python .github/workflows/scripts/notify.py --agent Security --status FAILED --priority CRITICAL --desc 'Security Agent did not pass. Blocked further runs.'
+            exit 1
+          fi
+
+      - name: ✅ Start QA Agent
+        id: qa
+        uses: ./.github/workflows/qa_agent.yml
+        continue-on-error: false
+
+      - name: 🟡 Check QA Agent Result
+        run: |
+          if [ "${{ steps.qa.outcome }}" != "success" ]; then
+            echo '[CRITICAL] QA Agent failed.'
+            python .github/workflows/scripts/notify.py --agent QA --status FAILED --priority CRITICAL --desc 'QA Agent did not pass. Blocked Deploy/Evolution.'
+            exit 1
+          fi
+
+      - name: ⏰ Trigger Evolution Agent (2am daily or manual)
+        if: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '0 2 * * *' }}
+        id: evolution
+        uses: ./.github/workflows/evolution_agent.yml
+        continue-on-error: true
+
+      - name: ✅ Start Deploy Agent (only on push or manual)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        id: deploy
+        uses: ./.github/workflows/deploy_agent.yml
+        continue-on-error: true
+
+      - name: 🩺 Collect Health Metrics
+        id: health
+        run: |
+          python .github/workflows/scripts/report_generator.py --collect-health \
+            --output .github/workflows/scripts/health_report.json
+          cat .github/workflows/scripts/health_report.json
+
+      - name: 📊 Post Hourly Health (silent on success)
+        if: github.event_name == 'schedule' && github.event.schedule == '0 * * * *' && success()
+        run: |
+          python .github/workflows/scripts/report_generator.py --post-badge --badge-type health && echo 'Health badge updated.'
+
+      - name: 📧 Send Daily Digest (8am only)
+        if: github.event.schedule == '0 8 * * *'
+        run: |
+          python .github/workflows/scripts/notify.py --report daily --priority LOW --desc 'Genesis AI Systems — Daily Health Digest'
+
+      - name: 📅 Send Weekly Report (Monday 9am)
+        if: github.event.schedule == '0 9 * * 1'
+        run: |
+          python .github/workflows/scripts/notify.py --report weekly --priority INFO --desc 'Genesis AI Systems — Weekly Report'
+
+      - name: 🚨 Notify on Any Agent Failure
+        if: failure()
+        run: |
+          python .github/workflows/scripts/notify.py --agent Master --status FAILED --priority CRITICAL --desc 'One or more agents failed in Master Orchestration. Immediate attention required.'
+
+      - name: 📦 Upload Health Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: health_report
+          path: .github/workflows/scripts/health_report.json
+
+  workflow-outputs:
+    name: Save Health Report as Build Output
+    runs-on: ubuntu-latest
+    needs: orchestrate-agents
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: health_report
+      - name: Upload to summary
+        run: |
+          echo '## Genesis AI Master Health' >> $GITHUB_STEP_SUMMARY
+          cat health_report.json >> $GITHUB_STEP_SUMMARY
+
+#
+# HEALTH REPORT JSON (example):
+# {
+#   "overall_score": 98,
+#   "agents": {
+#       "security": "passed",
+#       "qa": "passed",
+#       "evolution": "passed",
+#       "deploy": "passed"
+#   },
+#   "demo_server_uptime": "100.0%",
+#   "demo_response_times": [0.850, 1.020, 1.190, 0.950, 1.130, 1.110, 0.970, 1.050],
+#   "uptime_percentage": "99.99%",
+#   "open_issues": 0,
+#   "powered_by": "Genesis AI Systems",
+#   "website": "https://genesisai.systems",
+#   "contact": "info@genesisai.systems"
+# }
+
+#
+# --- Branding: Genesis AI Systems — Done-for-you AI automation for local businesses ---

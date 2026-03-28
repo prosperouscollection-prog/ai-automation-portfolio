@@ -4,6 +4,8 @@ This document is the operating manual for turning the Genesis AI Systems 7-proje
 
 The biggest takeaway: your technical portfolio is strong enough to sell now. The missing pieces are not more builds. They are packaging, proof, outreach infrastructure, sales process, legal/payment systems, and client delivery operations.
 
+The live portfolio is now available at genesisai.systems, and it should be used as proof in every sales conversation.
+
 ## Portfolio Gap Analysis
 
 ### Current Strengths
@@ -11,6 +13,7 @@ The biggest takeaway: your technical portfolio is strong enough to sell now. The
 - You have 7 concrete AI service offers, not just tutorial projects.
 - Most projects are built around real small-business problems: lead response, customer support, phone handling, workflow automation, and content generation.
 - Your offers are commercially sensible for local businesses.
+- Your live portfolio is now online at genesisai.systems.
 - Projects 1, 2, 3, 4, 5, and 7 are already complete and tested.
 - Project 6 is code-complete and portfolio-worthy even before live fine-tuning.
 
@@ -24,7 +27,7 @@ The biggest takeaway: your technical portfolio is strong enough to sell now. The
 
 ### What Is Missing
 
-- A visual portfolio website with one page per offer
+- Deeper project-specific proof assets beyond the main live portfolio at genesisai.systems
 - Public GitHub repos or polished code samples with live links where possible
 - Loom demo videos for every project
 - A Calendly booking page
@@ -60,7 +63,7 @@ Do not spend the next week building more projects.
 
 Do these first:
 
-1. Launch a portfolio website
+1. Use the live portfolio at genesisai.systems as proof in every outreach flow
 2. Record Loom demos
 3. Set up Calendly
 4. Create a proposal template
@@ -75,8 +78,8 @@ Do not send outreach until every `Critical` item is done.
 
 ### Critical
 
-- [ ] Buy or connect a domain for your portfolio
-- [ ] Create a simple portfolio website with all 7 projects
+- [x] Buy or connect a domain for your portfolio
+- [x] Create a simple portfolio website with all 7 projects
 - [ ] Add one clear CTA on every page: `Book a free 15-minute demo`
 - [ ] Set up a business email on your domain
 - [ ] Create a Calendly booking link
@@ -117,6 +120,7 @@ This is the path from cold prospect to recurring retainer.
 
 - Goal: start a conversation, not sell everything
 - Tool: email, LinkedIn DM, or local business contact form
+- Always include genesisai.systems in every outreach message
 - Output: short message with one pain point and one relevant demo
 
 ### Step 2: They Respond
@@ -206,6 +210,8 @@ Use this for a 10-minute live call. Speak calmly and keep momentum. Do not over-
 ### Minute 0 to 1: Opening
 
 > Thanks for taking the call. What I want to do in the next 10 minutes is show you 7 AI systems I’ve built for local businesses, explain which ones actually matter for your business, and show you how they can save time, capture more leads, and improve response speed without adding headcount.
+>
+> Let me pull up our portfolio at genesisai.systems so you can see exactly what we've built.
 
 ### Minute 1 to 2: Project 1
 

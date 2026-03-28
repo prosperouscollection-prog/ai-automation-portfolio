@@ -45,8 +45,11 @@ A dental office missing 10 website chats per week at $200 average visit value is
 ---
 ## Book a Discovery Call
 Ready to implement this system for your business?
-[Schedule a free 15-minute call](#) — we'll show you a live demo and tell you exactly what it would cost to build this for you.
+[Schedule a free 15-minute call](https://calendly.com/genesisai-info-ptmt/free-ai-demo-call) — we'll show you a live demo and tell you exactly what it would cost to build this for you.
 
-**[Your Name] | AI Automation Engineer, Genesis AI Systems**
-📧 [your@email.com]
-🔗 [linkedin.com/in/yourprofile]
+**Trendell Fordham | AI Automation Engineer, Genesis AI Systems**
+📞 (313) 400-2575
+📧 info@genesisai.systems
+🌐 https://genesisai.systems
+🔗 https://linkedin.com/in/trendell-fordham
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call

@@ -6,7 +6,7 @@ This branding kit keeps Genesis AI Systems consistent across your portfolio webs
 
 ### Core Role
 
-**[Your Name] | Genesis AI Systems**
+**Trendell Fordham | Genesis AI Systems**
 
 ### Core Tagline
 
@@ -211,15 +211,20 @@ Avoid:
 - Last Chance
 - Aggressive sales language
 
-## Personalization Fields To Replace
+## Standardized Founder Details
 
-Before publishing publicly, replace:
+Use these exact founder details across public assets and outreach materials:
 
-- `[Your Name]`
-- `[your@email.com]`
-- `[your-phone-number]`
-- `[yourprofile]`
-- `[yourlink]`
+- Name: Trendell Fordham
+- Role: Founder, Genesis AI Systems
+- Outreach email: hello@genesisai.systems
+- Business email: info@genesisai.systems
+- Phone: (313) 400-2575
+- Website: https://genesisai.systems
+- LinkedIn: https://linkedin.com/in/trendell-fordham
+- Calendly: https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+- GitHub: https://github.com/prosperouscollection-prog/ai-automation-portfolio
+- Location: Detroit, MI
 
 ## Final Rule
 

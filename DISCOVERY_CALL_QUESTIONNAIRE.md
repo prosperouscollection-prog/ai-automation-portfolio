@@ -205,11 +205,20 @@ Thanks again for taking the time to speak today.
 Based on our conversation, the main opportunity I see is [brief summary of problem], and I believe the strongest starting point is [recommended solution].
 
 As discussed, I’ll send over [the proposal / next steps / demo / summary] by [time or date].
+You can explore our full portfolio at genesisai.systems before our next call.
 
 If anything comes to mind in the meantime, feel free to reply here.
 
-Best,  
-[Your Name]
+Best,
+
+---
+Trendell Fordham
+Founder, Genesis AI Systems
+📞 (313) 400-2575
+📧 hello@genesisai.systems
+🌐 genesisai.systems
+📅 https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
+---
 
 ### How To Log The Prospect In Your CRM
 

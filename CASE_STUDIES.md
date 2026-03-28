@@ -1,5 +1,7 @@
 # Case Studies
 
+All systems demonstrated at genesisai.systems.
+
 These are portfolio demo case studies built around a realistic demo client: **Smile Dental**. They are written as projected before-and-after business scenarios to help prospects understand the likely ROI of each system.
 
 ## Case Study 1: Lead Capture + AI Scoring
@@ -49,6 +51,8 @@ We built **Lead Capture + AI Scoring** using an n8n webhook, OpenAI scoring logi
 
 > We finally had a way to see which leads needed immediate attention instead of treating every inquiry the same. Even as a demo, this felt like something our front desk would use daily.
 
+**See this system live at genesisai.systems**
+
 ---
 
 ## Case Study 2: AI Voice Agent
@@ -97,6 +101,8 @@ We built an **AI Voice Agent** in Vapi with an assistant named Riley that answer
 
 > The most impressive part was hearing the caller get a real response even after hours. It felt like we had added another front-desk layer without hiring another person.
 
+**See this system live at genesisai.systems**
+
 ---
 
 ## Case Study 3: RAG Knowledge Base Chatbot
@@ -144,6 +150,8 @@ We built a **RAG Knowledge Base Chatbot** using a Smile Dental FAQ document insi
 ### Client Quote
 
 > The real value was consistency. The chatbot sounded informed, stayed within our approved information, and knew when to hand things off instead of improvising.
+
+**See this system live at genesisai.systems**
 
 ---
 
@@ -194,6 +202,8 @@ We built **AI Workflow Automation + Email** in n8n so new leads were captured, s
 
 > The biggest improvement was speed. Instead of leads waiting hours, they heard back almost instantly, which made the office feel much more responsive.
 
+**See this system live at genesisai.systems**
+
 ---
 
 ## Case Study 5: AI Customer Service Chat Widget
@@ -243,6 +253,8 @@ We built an **AI Customer Service Chat Widget** that could be embedded on the we
 
 > The widget made the site feel alive. Instead of visitors bouncing with unanswered questions, they could get help immediately, even outside office hours.
 
+**See this system live at genesisai.systems**
+
 ---
 
 ## Case Study 6: Fine-Tuned AI Model
@@ -291,6 +303,8 @@ We built a **Fine-Tuned AI Model** using a curated set of Smile Dental training 
 
 > This felt less like a generic assistant and more like a digital version of our front desk. The tone was the biggest difference.
 
+**See this system live at genesisai.systems**
+
 ---
 
 ## Case Study 7: AI Video Automation Pipeline
@@ -338,3 +352,5 @@ We built an **AI Video Automation Pipeline** that accepts a topic and generates 
 ### Client Quote
 
 > Instead of staring at a blank page trying to make content, we could start with a full draft in minutes and focus on publishing.
+
+**See this system live at genesisai.systems**

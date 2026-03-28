@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Thank You | Genesis AI Systems</title>
+  <meta name="description" content="Thank you! Your inquiry with Genesis AI Systems was received and scored. Trendell Fordham will contact you within 24 hours.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --blue: #2563eb;
+      --white: #fff;
+      --gray: #dbeafe;
+      font-size: 16px;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', Arial, Helvetica, sans-serif;
+      background: var(--navy);
+      color: var(--gray);
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: space-between;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem 1.5rem 1rem;
+      box-sizing: border-box;
+    }
+    .checkmark-container {
+      margin-bottom: 1.75rem;
+      width: 76px;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .checkmark {
+      width: 76px;
+      height: 76px;
+      display: block;
+    }
+    .circle {
+      stroke: var(--blue);
+      stroke-width: 6;
+      fill: none;
+      stroke-dasharray: 238.761;
+      stroke-dashoffset: 238.761;
+      animation: drawCircle 0.6s cubic-bezier(.84,0,.08,1) forwards;
+    }
+    .check {
+      stroke: var(--blue);
+      stroke-width: 6;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 50.911688;
+      stroke-dashoffset: 50.911688;
+      animation: drawCheck 0.4s 0.6s cubic-bezier(.84,0,.08,1) forwards;
+    }
+    @keyframes drawCircle {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+    .headline {
+      color: var(--white);
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      letter-spacing: -1px;
+      font-family: inherit;
+    }
+    .subheadline {
+      color: var(--gray);
+      font-size: 1.125rem;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      font-weight: 500;
+    }
+    ul.confirm-list {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 2.2rem;
+      color: var(--gray);
+      font-size: 1rem;
+      width: 100%;
+      max-width: 380px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    ul.confirm-list li {
+      display: flex;
+      align-items: center;
+      font-weight: 400;
+      margin-bottom: 0.65em;
+    }
+    ul.confirm-list li:last-child {
+      margin-bottom: .2em;
+    }
+    ul.confirm-list .list-badge {
+      color: var(--blue);
+      font-size: 1.25rem;
+      margin-right: 0.7em;
+      font-weight: bold;
+      margin-top: 1px;
+    }
+    .live-lead-counter {
+      background: rgba(37,99,235,0.15);
+      box-shadow: 0 2px 12px 0 rgba(37,99,235,0.08);
+      color: var(--blue);
+      padding: 0.6em 1.4em;
+      border-radius: 26px;
+      font-weight: 600;
+      margin: 0 auto 2em auto;
+      font-size: 1.10rem;
+      text-align: center;
+      letter-spacing: .01em;
+      max-width: 350px;
+      outline: none;
+      border: none;
+      display: inline-block;
+    }
+    .redirect-timer {
+      display: block;
+      color: var(--gray);
+      font-size: 1rem;
+      margin: 0 auto 1.2rem auto;
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 0.006em;
+    }
+    .stay-link {
+      color: var(--blue);
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0.19em 0.5em;
+      border-radius: 5px;
+      background: transparent;
+      transition: background 0.15s;
+      font-size: 0.98rem;
+    }
+    .stay-link:focus {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: row;
+      gap: 1em;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 2.2em;
+      margin-top: 0.2em;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75em 1.65em;
+      border: none;
+      border-radius: 9px;
+      font-size: 1.06rem;
+      font-weight: 600;
+      transition: background 0.18s, color 0.15s;
+      cursor: pointer;
+      background: var(--blue);
+      color: var(--white);
+      margin-bottom: 0.2em;
+      text-align: center;
+      box-shadow: 0 2px 12px 0 rgba(37,99,235,0.09);
+      letter-spacing: 0.018em;
+    }
+    .btn:focus {
+      outline: 2px solid var(--gray);
+      outline-offset: 2px;
+      background: #1e40af;
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+      transition: background 0.2s, color 0.15s;
+    }
+    .btn.secondary:focus {
+      background: #172554;
+    }
+    @media (max-width: 600px) {
+      .main-content {
+        padding: 1rem 0.2rem 1.2rem 0.2rem;
+      }
+      .headline {
+        font-size: 1.35rem;
+      }
+      .subheadline {
+        font-size: 1rem;
+      }
+      .live-lead-counter {
+        padding: 0.5em 1em;
+        font-size: 0.98rem;
+      }
+      .btn, .btn.secondary {
+        width: 100%;
+        font-size: 1.02rem;
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+      }
+      .buttons {
+        flex-direction: column;
+        gap: 0.6em;
+        margin-bottom: 1.4em;
+      }
+    }
+    /* Visually hidden for a11y */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      border: 0;
+      padding: 0;
+      clip: rect(0 0 0 0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    footer {
+      background: #1e293b;
+      color: var(--gray);
+      padding: 1.1em 1.2em 1.2em 1.2em;
+      font-size: 0.99rem;
+      font-family: inherit;
+      box-shadow: 0 -2px 16px 0 rgba(15,23,42,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      margin-top: 1.4em;
+    }
+    .footer-main {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.7em;
+      flex-wrap: wrap;
+      margin-bottom: 0.4em;
+    }
+    .footer-section {
+      flex: 1 1 0%;
+      min-width: 120px;
+      color: var(--gray);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 1em;
+      gap: 0.2em;
+    }
+    .footer-section.center {
+      justify-content: center;
+    }
+    .footer-section.right {
+      justify-content: flex-end;
+      color: var(--gray);
+      text-align: right;
+    }
+    .footer-section a {
+      color: var(--blue);
+      text-decoration: underline;
+      font-weight: 500;
+      margin: 0 0.23em;
+    }
+    .footer-note {
+      font-size: 0.87em;
+      color: #b3c6e3;
+      text-align: center;
+      margin-top: 0.18em;
+      letter-spacing: 0.01em;
+    }
+    @media (max-width: 720px) {
+      .footer-main {
+        flex-direction: column;
+        gap: 0.29em;
+        align-items: stretch;
+      }
+      .footer-section {
+        text-align: center;
+        justify-content: center;
+        margin-bottom: 0.13em;
+      }
+      .footer-section.right {
+        text-align: center;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="main-content" role="main">
+    <div class="checkmark-container" aria-hidden="true">
+      <svg class="checkmark" viewBox="0 0 76 76" width="76" height="76" aria-hidden="true">
+        <circle class="circle" cx="38" cy="38" r="34"></circle>
+        <polyline class="check" points="22,39 34.5,51 56,29"></polyline>
+      </svg>
+    </div>
+    <h1 class="headline" tabindex="-1" id="thankyou-title">You're in good hands.</h1>
+    <div class="subheadline">Trendell will reach out within 24 hours.</div>
+    <ul class="confirm-list">
+      <li><span class="list-badge" aria-hidden="true">✅</span> Your inquiry has been captured and scored</li>
+      <li><span class="list-badge" aria-hidden="true">✅</span> You'll receive a confirmation email shortly</li>
+      <li><span class="list-badge" aria-hidden="true">✅</span> Trendell personally reviews every inquiry</li>
+      <li><span class="list-badge" aria-hidden="true">✅</span> Expect a response within 24 hours</li>
+    </ul>
+    <div class="live-lead-counter" id="lead-counter" aria-live="polite">
+      <span>You are lead #<span id="lead-number">...</span> captured by Genesis AI Systems today</span>
+    </div>
+    <div class="redirect-timer" id="redirect-msg">Redirecting to booking page in <span id="timer">10</span> seconds...</div>
+    <div style="display:block; margin-bottom:1.5em; text-align:center;">
+      <a href="#stay" class="stay-link" id="stay-link" tabindex="0" role="button" aria-describedby="cancel-desc">Stay on this page</a>
+      <span id="cancel-desc" class="sr-only">Clicking this will cancel the redirect to booking.</span>
+    </div>
+    <div class="buttons" role="group" aria-label="Primary actions">
+      <a href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" class="btn" id="book-btn" rel="noopener" target="_blank" aria-label="Book a call now on Calendly">Book a Call Now</a>
+      <a href="https://genesisai.systems" class="btn secondary" id="portfolio-btn" rel="noopener" target="_blank" aria-label="Explore our portfolio">Explore our portfolio</a>
+    </div>
+  </main>
+  <footer>
+    <div class="footer-main">
+      <div class="footer-section left">
+        © 2026 Genesis AI Systems | Detroit, MI
+      </div>
+      <div class="footer-section center">
+        <a href="/privacy-policy.html">Privacy Policy</a> | <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div class="footer-section right">
+        <a href="https://genesisai.systems" target="_blank" rel="noopener">genesisai.systems</a>
+      </div>
+    </div>
+    <div class="footer-note">All systems monitored by Genesis AI Systems Agent Infrastructure</div>
+  </footer>
+  <script>
+    /* Accessibility - focus headline for screen readers */
+    window.onload = function() {
+      var heading = document.getElementById('thankyou-title');
+      if (heading) {
+        heading.focus();
+      }
+    }
+    // Lead counter logic (per day)
+    function leadCounter() {
+      var today = new Date();
+      var todayString = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+      var counterKey = 'genesis_lead_counter_' + todayString;
+      var counter = localStorage.getItem(counterKey);
+      if (!counter) {
+        counter = 1;
+      } else {
+        counter = parseInt(counter,10) + 1;
+      }
+      localStorage.setItem(counterKey, counter);
+      document.getElementById('lead-number').innerText = counter;
+    }
+    leadCounter();
+
+    // Redirect timer logic
+    var interval;
+    var timeLeft = 10;
+    var timerElem = document.getElementById('timer');
+    var redirectMsg = document.getElementById('redirect-msg');
+    var stayLink = document.getElementById('stay-link');
+    var canceled = false;
+    function startRedirectCountdown() {
+      interval = setInterval(function() {
+        if (canceled) return;
+        timeLeft--;
+        if (timerElem) timerElem.innerText = timeLeft;
+        if (timeLeft <= 0 && !canceled) {
+          clearInterval(interval);
+          window.location.href = 'https://calendly.com/genesisai-info-ptmt/free-ai-demo-call';
+        }
+      }, 1000);
+    }
+    startRedirectCountdown();
+    function cancelRedirect(e) {
+      canceled = true;
+      if (interval) clearInterval(interval);
+      if (redirectMsg) {
+        redirectMsg.textContent = 'Redirect canceled. You can book a call whenever you are ready.';
+        redirectMsg.style.color = '#38bdf8';
+      }
+      stayLink.setAttribute('aria-disabled', 'true');
+      stayLink.style.pointerEvents = 'none';
+      stayLink.style.opacity = 0.7;
+    }
+    stayLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      cancelRedirect();
+    });
+    stayLink.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        cancelRedirect();
+      }
+    });
+  </script>
+</body>
+</html>

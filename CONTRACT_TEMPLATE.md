@@ -1,8 +1,10 @@
 # Genesis AI Systems Services Agreement
 
+*Trendell Fordham | Genesis AI Systems | Detroit, MI | genesisai.systems | info@genesisai.systems*
+
 This Agreement is entered into on [Date] by and between:
 
-- **Service Provider:** [Your Name], Genesis AI Systems, located at [Your Address]
+- **Service Provider:** Trendell Fordham, Genesis AI Systems | genesisai.systems | info@genesisai.systems, located at Detroit, MI
 - **Client:** [Client Name / Business Name], located at [Client Address]
 
 Together, the parties agree to the following:
@@ -158,9 +160,12 @@ By signing below, both parties agree to the terms of this Agreement.
 
 ### Service Provider
 
-- Name: [Your Name]
+- Name: Trendell Fordham
 - Company: Genesis AI Systems
 - Legal Entity Name: Genesis AI Systems
+- Website: genesisai.systems
+- Email: info@genesisai.systems
+- Phone: (313) 400-2575
 - Signature: ______________________________
 - Date: ______________________________
 
@@ -170,3 +175,6 @@ By signing below, both parties agree to the terms of this Agreement.
 - Company: [Client Business Name]
 - Signature: ______________________________
 - Date: ______________________________
+
+---
+Trendell Fordham | Genesis AI Systems | Detroit, MI | genesisai.systems | info@genesisai.systems

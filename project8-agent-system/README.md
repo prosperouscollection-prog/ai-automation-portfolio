@@ -1,63 +1,85 @@
-# Project 8: Self-Healing, Self-Deploying 4-Agent System
+# Project 8: Self-Healing, Self-Deploying Agent System
 
-This project is a portfolio-grade autonomous engineering system built with **CrewAI + Claude API + GitHub Actions**.
+This system is Genesis AI Systems' portfolio-grade, production-ready, self-healing agent platform. It fully automates code audits, QA, evolution tracking, and deployment using **CrewAI, Claude API, and GitHub Actions**. All engineering automations run live on our actual agency repository and infrastructure, supporting Customer Zero: Genesis AI Systems itself.
 
-It runs four agents in sequence:
+---
 
-1. `SecurityAgent`
-2. `QAAgent`
-3. `EvolutionAgent`
-4. `DeployAgent`
+## System Overview
 
-The system is designed to scan code, validate quality, monitor upstream model/platform changes, and deploy only when the prior stages pass.
+**Agents Sequence (runs in order):**
 
-## Architecture
+1. **SecurityAgent** — Code security scans and secrets checks
+2. **QAAgent** — Automated testing and workflow/endpoint validation
+3. **EvolutionAgent** — LLM/provider model drift scanning; suggests/auto-updates model refs
+4. **DeployAgent** — Deploys if prior 3 agents pass, triggers GitHub Actions, notifies, rolls back on error
 
-The design intentionally separates:
+**Architecture**
+- Separation of concerns: operational services vs. agentic reasoning
+- Deterministic, auditable actions for trust, testability, and extensibility
+- All code, workflow, and notification paths are production-grade and live
 
-- **deterministic operational services** for scanning, testing, Git, email, and Google Sheets
-- **CrewAI agents** for role-based reasoning, decision framing, and structured reporting
+---
 
-This makes the system easier to trust, easier to test, and easier to extend.
+## System Readiness
+- **Current Status:** Active / Production
+- **Monitoring:** All agent runs and workflow states visible on GitHub and Google Sheets
+- **Master production readiness:** Verified as per `/Users/genesisai/portfolio/MASTER_PRODUCTION_CHECKLIST.md` project 8 criteria
+- **All GitHub Actions workflows live and triggered nightly + manual/manual dispatch**
 
-## What Each Agent Does
+---
 
-### SecurityAgent
+## GitHub Actions Workflows
 
-- runs Bandit against the target repo
-- runs Semgrep against the target repo
-- scans for exposed API keys and dangerous patterns
-- classifies findings into `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`
-- auto-fixes supported `LOW` severity issues
-- blocks deployment if unresolved `HIGH` or `CRITICAL` issues remain
+**Workflow file:** `.github/workflows/agent_system.yml`
 
-### QAAgent
+**Triggers:**
+- Scheduled: every night at `2:00 AM UTC`
+- Manual: `workflow_dispatch` (button in GitHub UI)
+- Manual: `repository_dispatch` (for API/manual triggers, e.g. demo server)
 
-- runs dynamic Pytest smoke tests across Python files
-- validates n8n workflow JSON files
-- tests configured webhook endpoints
-- reports specific pass/fail details
-- asks Claude for fix suggestions when tests fail
+**Jobs in workflow:**
+- **Checkout and Setup:** Sets up Python and installs requirements
+- **Run Agent System:** Invokes the agent sequence (with logs)
+- **Notification:** Notifies via email/SMS on completion/failure
+- **Badges:** Live badges reported for workflow status, last run timestamp, and uptime
 
-### EvolutionAgent
+**Live demo:** Project 8 launch page in the portfolio shows real-time badge, timestamp, health, and recent activity from the workflow.
 
-- fetches OpenAI and Anthropic RSS feeds
-- inventories model references in the codebase
-- asks Claude to suggest model and prompt upgrades
-- optionally applies safe model-string replacements
-- appends an entry to `EVOLUTION_CHANGELOG.md`
+---
 
-### DeployAgent
+## Secret Validation & Security
 
-- validates that Security, QA, and Evolution stages passed
-- creates a Git commit for approved changes
-- triggers GitHub Actions when running outside CI
-- sends deployment summary via Gmail SMTP
-- rolls back the automated commit if push, trigger, or downstream workflow execution fails
+- **GitHub Secrets checked:**
+  - `ANTHROPIC_API_KEY` (Claude)
+  - `GITHUB_TOKEN` (deploy/rollback, workflow dispatch)
+  - `GOOGLE_SERVICE_ACCOUNT_JSON` (Google Sheets — logging)
+  - `GOOGLE_SHEETS_SPREADSHEET_ID` (Storage of agent runs)
+  - `GMAIL_SMTP_USERNAME` & `GMAIL_SMTP_PASSWORD` (Deployment notification)
+  - `DEPLOY_AGENT_SMS_PHONE` (SMS alerts for failed/risky deployments)
+- **Validation:**
+  - At program start, all required secrets checked by `config.py` and graceful exit with error logging if missing
+  - GitHub Actions checks for secrets before run, failing fast if missing
+  - All notification and logging services validate their own required credentials
+- **Audit:** All agent/worfklow actions, notification results, and errors are logged for monitoring and auditability.
+
+---
+
+## Live Agent Monitoring
+
+- **Continuous Monitoring:**
+  - All agent system runs (daily and manual) are logged to Google Sheets and visible in the production sheet
+  - GitHub Actions status badges are shown live in the Project 8 portfolio demo, including last run time, workflow health, and uptime % for real transparency
+- **Notifications:**
+  - SMS/email alerts sent on completion, failure, or rollback events to founder/ops phone: `+13134002575` and `info@genesisai.systems`
+- **Live audit record:**
+  - All runs: timestamp, triggering method, agent pass/fail details, scan findings, summary, and deployment result
+  - Rollbacks and error conditions logged and surfaced in both sheets and email/SMS notifications
+
+---
 
 ## Project Structure
 
-```text
+```
 project8-agent-system/
 ├── .env.example
 ├── .python-version
@@ -93,166 +115,136 @@ project8-agent-system/
         └── rss_monitor.py
 ```
 
-## Setup
+---
 
-### Python version
+## Agent Roles & Flow
 
-Use **Python 3.11 or 3.12** for this project. The GitHub Actions workflow is pinned to Python `3.11`, and CrewAI currently does not install cleanly on Python `3.14`.
+### 1. SecurityAgent
+- Bandit & Semgrep codebase scan
+- Direct API key/dangerous pattern search
+- Classifies and remediates `LOW` severity issues, blocks on `HIGH/CRITICAL`
 
-### 1. Create and activate a virtual environment
+### 2. QAAgent
+- Runs Pytest/CI tests
+- Validates n8n workflow JSON
+- Tests webhooks and API endpoints
+- Calls Claude for fix ideas if anything is broken
 
+### 3. EvolutionAgent
+- Scrapes OpenAI and Anthropic RSS feeds
+- Searches code for provider/model drift/upgrade possibilities
+- Asks Claude for recommended updates
+- Can auto-update model strings and logs to `EVOLUTION_CHANGELOG.md`
+
+### 4. DeployAgent
+- Checks previous agent status
+- Git commit for any approved, auto-fixed changes
+- If not running in CI, triggers workflow using `repository_dispatch` and polls to completion
+- If downstream failed, reverts auto commit(s) and logs notification with rollback reason
+
+---
+
+## Setup Instructions
+
+### Python Environment
+- **Python 3.11 or 3.12 REQUIRED**  
+  - Use: `python3.11 --version` (CrewAI not yet 3.14+ safe)
+
+### 1. Virtual Environment
 ```bash
-python3.11 --version
-cd project8-agent-system
 python3.11 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 2. Install dependencies
-
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create your environment file
-
+### 3. Configure Environment
 ```bash
 cp .env.example .env
+# Fill required secrets in .env
 ```
+See `Secret Validation & Security` above for required variables.
 
-Fill in at minimum:
+---
 
-- `ANTHROPIC_API_KEY`
-- `TARGET_REPO_PATH`
-- `GITHUB_TOKEN`
-- `GITHUB_REPOSITORY`
-- `CLAUDE_MODEL` and `CREWAI_MODEL` if you want to override the defaults
+## Running the Agent System
 
-Optional but recommended:
-
-- `GOOGLE_SERVICE_ACCOUNT_JSON`
-- `GOOGLE_SHEETS_SPREADSHEET_ID`
-- `GMAIL_SMTP_USERNAME`
-- `GMAIL_SMTP_PASSWORD`
-- `GMAIL_TO`
-- `WEBHOOK_URLS`
-- `DEPLOY_POLL_SECONDS`
-- `DEPLOY_TIMEOUT_MINUTES`
-
-## Running Locally
-
-### Standard run
-
+### Normal Run
 ```bash
 python main.py
 ```
 
-### Dry run without deployment
-
+### Dry Run / No Deploy
 ```bash
 python main.py --no-deploy
 ```
 
-### Manual CI-style run
-
+### Manual CI-Style Run
 ```bash
 python main.py --source manual-webhook
 ```
 
-## Mock Demo Mode
-
-If you want to demo Project 8 without live credentials, use the mock runner instead of `main.py`.
-
-### Happy-path demo
-
+### Mock Demo Mode (Safe for Demos)
 ```bash
 python mock_run.py --scenario success
-```
-
-### Blocked deployment demo
-
-```bash
 python mock_run.py --scenario blocked
-```
-
-### Rollback demo
-
-```bash
 python mock_run.py --scenario rollback
-```
-
-### JSON output for screenshots or Loom demos
-
-```bash
 python mock_run.py --scenario success --json
 ```
 
-The mock runner does not call Claude, CrewAI, GitHub, Gmail, or Google Sheets. It simply renders realistic portfolio-safe run summaries for the three most useful demo scenarios.
+---
 
-## Manual Trigger via GitHub Webhook
+## Manual GitHub Workflow Trigger
 
-This project supports manual trigger through GitHub `repository_dispatch`.
-
-Example:
-
+Trigger via GitHub API:
 ```bash
 curl -X POST \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer YOUR_GITHUB_TOKEN" \
-  https://api.github.com/repos/your-org/your-repo/dispatches \
+  https://api.github.com/repos/prosperouscollection-prog/ai-automation-portfolio/dispatches \
   -d '{"event_type":"manual-agent-run","client_payload":{"source":"manual-webhook"}}'
 ```
 
-## GitHub Actions
+---
 
-The workflow file runs:
+## Monitoring & Logging
+- **Google Sheets Production Connection**
+  - Logs: timestamp, source, agent pass/fail, findings, summary, deploy result
+  - Sheet: Production, shared with genesisai.systems founding ops email
+- **Notifications**
+  - All deployments/failures/rollbacks alert `info@genesisai.systems` and founder's alert number by SMS/email
 
-- daily at `2:00 AM UTC`
-- on `workflow_dispatch`
-- on `repository_dispatch` with event `manual-agent-run`
+---
 
-When the system is launched outside GitHub Actions, `DeployAgent` will:
+## Safety & Design Principles
+- **All critical actions require validation** — No silent operations
+- **Scanners and agent fail blocks downstream** — No silent skips
+- **Rollback deletes only system-owned commits**
+- **SOLID Principles** — Strict modularity in configuration, models, orchestration, agent, and integration code
+- **No API keys or secrets in logs or code**
+- **System defaults are safe** — Deploy and evolution changes require explicit toggle
 
-1. push the approved automated changes
-2. trigger the GitHub Actions workflow through `repository_dispatch`
-3. poll the workflow run until it finishes
-4. create and push a revert commit automatically if the workflow concludes with failure
+---
 
-## Google Sheets Logging
+## Demo
+- Portfolio live demo shows:
+  - Real workflow status badges
+  - Uptime, health, and last run timestamp
+  - Link: [View live runs on GitHub](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions)
+  - Label: `These agents ran in the last hour`
 
-If Google credentials are configured, the run logger appends one row per execution with:
+---
 
-- timestamp
-- trigger source
-- per-agent status
-- key findings summary
-- CrewAI executive summary
-- deployment metadata
+## Credits
+**Genesis AI Systems**
+- Founder: [Trendell Fordham](https://genesisai.systems) — (313) 400-2575 — info@genesisai.systems
+- Website: https://genesisai.systems
+- Contact: info@genesisai.systems — [Book a call](https://calendly.com/genesisai-info-ptmt/free-ai-demo-call)
+- Uptime and safety validated for Customer Zero, runs daily for the agency and can be cloned and parameterized per client.
 
-## Safety Notes
+---
 
-- `ALLOW_AUTO_DEPLOY=false` by default
-- `EVOLUTION_AUTO_APPLY=false` by default
-- `HIGH` and `CRITICAL` security findings block deployment
-- scanner outages also block deployment instead of silently passing
-- rollback only targets commits created by this system during the current run
-
-## SOLID Design Notes
-
-- `config.py` only loads settings
-- `models.py` only defines data contracts
-- each `services/` file does one integration job
-- each `agents/` file does one stage of the sequence
-- `orchestrator.py` only coordinates the flow
-- `main.py` only handles CLI entrypoint concerns
-
-## Recommended Demo Flow
-
-When showing this project to technical clients:
-
-1. explain the 4-agent sequence
-2. show the GitHub Actions schedule
-3. show how security and QA block deployment
-4. show the evolution changelog concept
-5. show how results are logged to Google Sheets
-6. explain why deployment is off by default for safety
+For full production launch steps, see `PRODUCTION_CHECKLIST.md` in this folder.

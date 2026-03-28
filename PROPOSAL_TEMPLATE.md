@@ -1,12 +1,19 @@
 # Project Proposal
 
+> Live portfolio: genesisai.systems
+>
+> Suggested footer for every exported page: Genesis AI Systems | genesisai.systems | info@genesisai.systems
+
 ## Proposal For
 
 - **Client:** [Client Name / Business Name]
-- **Prepared By:** [Your Name] | Genesis AI Systems
+- **Prepared By:** Trendell Fordham | Genesis AI Systems | Detroit, MI | genesisai.systems
+- **Email:** info@genesisai.systems
+- **Phone:** (313) 400-2575
 - **Project Name:** [Project Name]
 - **Date:** [Date]
 - **Proposal Valid Through:** [Date 7 days from today]
+- **Live Portfolio:** genesisai.systems
 
 ## Executive Summary
 
@@ -104,6 +111,7 @@ Anything outside this scope can be quoted separately if needed.
 [Write 3 to 5 sentences here. Example:]
 
 Genesis AI Systems builds AI automation systems specifically for real business use cases, not just tech demos. The focus is on practical systems that help local businesses respond faster, reduce repetitive work, and capture more revenue. The portfolio covers lead handling, customer support, voice agents, workflow automation, fine-tuned models, and content generation systems. Every implementation is designed to stay clear, business-focused, and easy for non-technical teams to use.
+View our live systems at genesisai.systems.
 
 ## Next Steps
 
@@ -121,3 +129,6 @@ Once those 4 steps are complete, I can begin implementation.
 This proposal is valid for **7 days** from the date listed above.
 
 After that, pricing, timing, and availability may be updated.
+
+---
+Trendell Fordham | Genesis AI Systems | Detroit, MI | info@genesisai.systems | genesisai.systems
