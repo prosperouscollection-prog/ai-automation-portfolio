@@ -1,4 +1,4 @@
-name: QA Agent — Genesis AI Systems
+name: QA Agent - Genesis AI Systems
 on:
   schedule:
     - cron: '0 * * * *'
@@ -11,23 +11,92 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check main site is live
+
+      - name: Check main site is live and fast
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
-          echo "Site: $STATUS"
+          STATUS=$(curl -s -o /tmp/home.html -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
+          TIME=$(curl -s -o /dev/null -w "%{time_total}" --max-time 30 https://genesisai.systems || echo "99")
+          echo "Home status: $STATUS"
+          echo "Home load time: $TIME"
           test "$STATUS" = "200"
+          awk "BEGIN {exit !($TIME < 3)}"
+
+      - name: Check key pages return 200
+        run: |
+          for URL in \
+            https://genesisai.systems/about.html \
+            https://genesisai.systems/demos.html \
+            https://genesisai.systems/sitemap.xml \
+            https://genesisai.systems/robots.txt
+          do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$URL" || echo "000")
+            echo "$URL -> $STATUS"
+            test "$STATUS" = "200"
+          done
+
+      - name: Check contact form is present
+        run: |
+          curl -sL --max-time 30 https://genesisai.systems | grep -q 'id="contactForm"'
+
+      - name: Check buy links use Stripe
+        run: |
+          curl -sL --max-time 30 https://genesisai.systems | grep -q 'buy.stripe.com'
+
+      - name: Check industry tabs are present
+        run: |
+          curl -sL --max-time 30 https://genesisai.systems | grep -q 'data-tab-group="industry"'
+
+      - name: Check business phone is present
+        run: |
+          curl -sL --max-time 30 https://genesisai.systems | grep -q '586'
+
+      - name: Check logo and favicon
+        run: |
+          curl -sL --max-time 30 https://genesisai.systems | grep -q '/assets/site.js'
+          curl -sL --max-time 30 https://genesisai.systems/assets/site.js | grep -q 'genesis-logo'
+          curl -sL --max-time 30 https://genesisai.systems/favicon.svg | grep -q '<svg'
+
+      - name: Check nav links
+        run: |
+          SHELL=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.js)
+          echo "$SHELL" | grep -q 'How It Works'
+          echo "$SHELL" | grep -q 'Real Examples'
+          echo "$SHELL" | grep -q 'About'
+          echo "$SHELL" | grep -q 'Demos'
+          echo "$SHELL" | grep -q 'Pricing'
+          echo "$SHELL" | grep -q 'Dashboard'
+          echo "$SHELL" | grep -q 'Contact'
+
+      - name: Check footer links
+        run: |
+          SHELL=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.js)
+          echo "$SHELL" | grep -q 'Privacy Policy'
+          echo "$SHELL" | grep -q 'Terms of Service'
+          echo "$SHELL" | grep -q 'Command Center'
+
+      - name: Check testimonials and activity sections
+        run: |
+          PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
+          echo "$PAGE" | grep -q 'What our clients say'
+          echo "$PAGE" | grep -q 'Your AI is already working'
+
       - name: Check demo server is live
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesis-ai-systems-demo.onrender.com || echo "000")
-          echo "Demo: $STATUS"
-      - name: Check key pages
+          echo "Demo server status: $STATUS"
+          test "$STATUS" = "200"
+
+      - name: Check local files exist
         run: |
           test -f index.html
-          test -f demos.html
           test -f about.html
-          test -f command.html
-      - name: Check live stats path
-        run: curl -s --max-time 30 https://genesis-ai-systems-demo.onrender.com/stats/health || true
+          test -f demos.html
+          test -f dashboard.html
+          test -f favicon.svg
+          test -f manifest.json
+          test -f sitemap.xml
+          test -f robots.txt
+
       - name: SMS alert on failure
         if: failure()
         env:
@@ -48,16 +117,15 @@ jobs:
                   )
                   client.messages.create(
                       body=(
-                          "🚨 Genesis AI Systems Alert\n"
-                          "An agent just FAILED.\n"
-                          "Check GitHub Actions:\n"
-                          "github.com/prosperouscollection-prog/"
-                          "ai-automation-portfolio/actions"
+                          "Genesis AI Systems alert\n"
+                          "A site check failed.\n"
+                          "Review GitHub Actions:\n"
+                          "github.com/prosperouscollection-prog/ai-automation-portfolio/actions"
                       ),
                       from_=os.getenv('TWILIO_FROM_NUMBER'),
                       to=os.getenv('ALERT_PHONE_NUMBER')
                   )
-                  print('✅ Failure SMS sent')
-              except Exception as e:
-                  print(f'SMS failed: {e}')
+                  print('Failure text sent')
+              except Exception as error:
+                  print(f'SMS failed: {error}')
           PYEOF

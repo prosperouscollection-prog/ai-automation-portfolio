@@ -3,389 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Founder Dashboard — Genesis AI Systems</title>
+  <title>Dashboard | Genesis AI Systems</title>
+  <meta name="description" content="Founder dashboard for Genesis AI Systems. See live business totals, recent activity, and the most recent leads in one place.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://genesisai.systems/dashboard.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/site.css">
   <style>
-    :root{
-      --navy:#0f172a;--navy-soft:#162032;--blue:#2563eb;--white:#fff;--text:#dbe7ff;--muted:#9fb0cc;--line:rgba(148,163,184,.16);--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;
+    .dashboard-grid {
+      display: grid;
+      gap: 24px;
     }
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0b1324;color:var(--white)}
-    a{text-decoration:none;color:inherit}
-    .gate,.app{min-height:100vh}
-    .gate{display:grid;place-items:center;background:linear-gradient(180deg,#0f172a,#09101d)}
-    .gate-card,.card,.table-shell,.sidebar,.top-shell{background:rgba(16,25,44,.92);border:1px solid var(--line);border-radius:24px}
-    .gate-card{width:min(420px,calc(100% - 32px));padding:32px;text-align:center;box-shadow:0 30px 80px rgba(2,6,23,.45)}
-    .gate-card h1{margin:0 0 10px;font-size:2rem}
-    .gate-card p{color:var(--text)}
-    .gate-card label{display:block;text-align:left;margin:18px 0 8px;font-weight:700}
-    .gate-card input{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white}
-    .btn{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 20px;border-radius:16px;border:1px solid transparent;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;font-weight:800;cursor:pointer}
-    .btn.secondary{background:rgba(255,255,255,.03);border-color:rgba(148,163,184,.22)}
-    .btn.full{width:100%}
-    .error{color:#fecaca;min-height:22px}
-    .shake{animation:shake .28s linear}
-    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-    .app{display:none}
-    .app.open{display:grid;grid-template-columns:240px 1fr}
-    .sidebar{position:sticky;top:0;height:100vh;padding:24px 18px;display:flex;flex-direction:column;gap:18px}
-    .sidebar h2{margin:0;font-size:1.3rem}
-    .sidebar small{color:var(--muted)}
-    .side-links{display:grid;gap:8px}
-    .side-links button,.side-links a{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:0 14px;border:none;border-radius:14px;background:transparent;color:var(--text);cursor:pointer;text-align:left}
-    .side-links button.active{background:rgba(37,99,235,.18);color:white}
-    .side-bottom{margin-top:auto;display:grid;gap:10px}
-    .main{padding:24px}
-    .top-shell{padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}
-    .grid{display:grid;gap:18px}
-    .kpis{grid-template-columns:repeat(4,1fr)}
-    .split{grid-template-columns:1.5fr 1fr}
-    .card,.table-shell{padding:20px}
-    .kpi-number{font-size:2.5rem;font-weight:800}
-    .green{color:var(--green)} .yellow{color:var(--yellow)} .red{color:var(--red)}
-    .feed,.list,.filters{display:grid;gap:12px}
-    .feed-item,.list-item,.table-row{padding:14px;border-radius:16px;background:rgba(255,255,255,.04)}
-    .stat-grid{display:grid;gap:10px}
-    .progress{height:12px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
-    .progress > span{display:block;height:100%;background:#2563eb}
-    .table-shell{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:820px}
-    th,td{text-align:left;padding:12px 10px;border-bottom:1px solid rgba(148,163,184,.08)}
-    .row-high{background:rgba(34,197,94,.08)} .row-medium{background:rgba(245,158,11,.08)} .row-low{background:rgba(148,163,184,.06)}
-    .badge{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:.8rem;font-weight:700}
-    .badge.pass{background:rgba(34,197,94,.16)} .badge.fail{background:rgba(239,68,68,.16)} .badge.pending{background:rgba(245,158,11,.16)}
-    .section{display:none}
-    .section.active{display:block}
-    input,select{padding:12px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white}
-    .filters{grid-template-columns:repeat(4,1fr)}
-    .roi-grid{grid-template-columns:repeat(2,1fr)}
-    .small{color:var(--muted);font-size:.92rem}
-    @media (max-width:1100px){.app.open{grid-template-columns:1fr}.sidebar{height:auto;position:static}.kpis,.split,.roi-grid,.filters{grid-template-columns:1fr}}
+
+    .dashboard-grid.two {
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+
+    .dashboard-grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-grid.two,
+      .dashboard-grid.four {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="gate" id="pinGate">
-    <div class="gate-card" id="gateCard">
-      <h1>Genesis AI Systems</h1>
-      <p>Founder Operations Dashboard</p>
-      <label for="pinInput">Enter Access PIN</label>
-      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="2575">
-      <div style="height:14px"></div>
-      <button class="btn full" id="pinSubmit">Access Dashboard</button>
-      <p class="error" id="pinError"></p>
+  <div id="siteNavMount"></div>
+
+  <main class="page-offset gate-wrap">
+    <div class="shell">
+      <div class="gate-card" id="dashboardGate">
+        <h1>Genesis AI Systems Dashboard</h1>
+        <p>Founder access only. Enter the four-digit PIN to view the live business board.</p>
+        <label style="margin-top:18px;">
+          Access PIN
+          <input id="dashboardPin" type="password" inputmode="numeric" maxlength="4" placeholder="2575">
+        </label>
+        <button class="button button-primary full" id="dashboardUnlock" style="margin-top:16px;">Open dashboard</button>
+        <p class="small-note" id="dashboardError" style="margin-top:12px;color:#fca5a5;"></p>
+      </div>
+
+      <div class="internal-shell hidden" id="dashboardApp">
+        <section class="simple-hero" style="padding:36px 0 12px;">
+          <div class="shell" style="width:100%;margin:0;">
+            <div class="eyebrow-pill">Founder view</div>
+            <h1 style="font-size:clamp(2rem,5vw,3.2rem);margin-bottom:12px;">One place for leads, activity, and business health</h1>
+            <p>This board pulls in the live totals first, then keeps the rest simple enough to check from your phone.</p>
+            <div class="button-row" style="margin-top:20px;">
+              <a class="button button-outline" href="/command.html">Open Command Center</a>
+              <a class="button button-outline" href="/client-dashboard.html">View Client Sample</a>
+              <button class="button button-primary" id="dashboardLogout" type="button">Log out</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="dashboard-grid four">
+          <article class="number-card">
+            <p class="number-value" id="dashLeads">0</p>
+            <h3>Leads today</h3>
+            <p id="dashLeadBreakdown">0 hot | 0 warm | 0 low</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value" id="dashQuestions">0</p>
+            <h3>Questions answered today</h3>
+            <p>These are the replies handled without a human stepping in.</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value" id="dashUptime">99.9%</p>
+            <h3>Uptime</h3>
+            <p>How well the business stays available through the day and night.</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value" id="dashHealth">Strong</p>
+            <h3>Business health</h3>
+            <p id="dashHealthNote">Everything looks good right now.</p>
+          </article>
+        </div>
+
+        <div class="dashboard-grid two" style="margin-top:24px;">
+          <article class="internal-card">
+            <h3>Recent activity</h3>
+            <div class="activity-feed" id="dashActivity">
+              <div class="activity-item"><span class="activity-dot"></span><span>Loading the latest updates...</span><span class="small-note">Now</span></div>
+            </div>
+          </article>
+          <article class="internal-card">
+            <h3>Quick actions</h3>
+            <div class="button-row" style="margin-top:18px;">
+              <a class="button button-soft" href="/demos.html">Open demos</a>
+              <a class="button button-soft" href="/about.html">Open about page</a>
+              <a class="button button-soft" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a call</a>
+            </div>
+            <p class="small-note" style="margin-top:18px;">Use the command center when you want to send quick instructions from one screen.</p>
+          </article>
+        </div>
+
+        <div class="dashboard-grid two" style="margin-top:24px;">
+          <article class="internal-card">
+            <h3>Most recent leads</h3>
+            <div style="overflow:auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Business</th>
+                    <th>Type</th>
+                    <th>Need</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody id="dashLeadRows">
+                  <tr>
+                    <td colspan="5">Loading leads...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="internal-card">
+            <h3>Simple view</h3>
+            <p>What this board answers fast:</p>
+            <div class="feature-list">
+              <div>✅ How many new leads came in today</div>
+              <div>✅ Whether the site is up and responding</div>
+              <div>✅ Which businesses reached out most recently</div>
+              <div>✅ What happened in the last few hours</div>
+            </div>
+          </article>
+        </div>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <div class="app" id="dashboardApp">
-    <aside class="sidebar">
-      <div>
-        <h2>Genesis AI Systems</h2>
-        <small>Founder Dashboard</small>
-      </div>
-      <div class="side-links" id="sideLinks">
-        <button data-section="overview" class="active">📊 Overview</button>
-        <button data-section="leads">🎯 Leads</button>
-        <button data-section="calls">📞 Riley Calls</button>
-        <button data-section="agents">🤖 Agent Health</button>
-        <button data-section="revenue">💰 Revenue</button>
-        <button data-section="emails">📧 Email Stats</button>
-        <button data-section="demo-usage">🎬 Demo Usage</button>
-        <button data-section="costs">💳 API Costs</button>
-        <button data-section="clients">👥 Clients</button>
-        <button data-section="roi">📈 ROI Calculator</button>
-        <button data-section="prospects">🔍 Prospects</button>
-      </div>
-      <div class="side-bottom">
-        <a class="btn secondary" href="/command.html">Command Center</a>
-        <a class="btn secondary" href="https://genesisai.systems" target="_blank" rel="noreferrer">View Site</a>
-        <button class="btn secondary" id="logoutButton">Logout</button>
-      </div>
-    </aside>
-    <main class="main">
-      <div class="top-shell">
-        <div>
-          <strong>Founder Dashboard</strong>
-          <div class="small">Live and estimated numbers update together.</div>
-        </div>
-        <div class="small">PIN session saved in this browser</div>
-      </div>
+  <div id="siteFooterMount"></div>
 
-      <section class="section active" id="section-overview">
-        <div class="grid kpis">
-          <div class="card"><div class="small">Leads Today</div><div class="kpi-number green" id="kpiLeads">0</div><div id="leadBreakdown">0 HIGH 0 MEDIUM 0 LOW</div></div>
-          <div class="card"><div class="small">Monthly MRR</div><input id="mrrInput" value="0"><div class="progress"><span id="mrrBar" style="width:0%"></span></div><div class="small">Month 1 goal: $5,000</div></div>
-          <div class="card"><div class="small">Agent Health</div><div class="kpi-number green" id="kpiHealth">100</div><div id="healthSummary">All passing</div></div>
-          <div class="card"><div class="small">API Costs Today</div><div class="kpi-number" id="kpiCosts">$0.42</div><div class="small">Monthly total and budget below</div></div>
-        </div>
-        <div class="grid split" style="margin-top:18px;">
-          <div class="card">
-            <h3>Activity Feed</h3>
-            <div class="feed" id="activityFeed"></div>
-          </div>
-          <div class="card">
-            <h3>Quick Stats</h3>
-            <div class="stat-grid" id="quickStats"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="section-leads">
-        <div class="card filters">
-          <select><option>All Scores</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
-          <input placeholder="Date range">
-          <select><option>All Stages</option><option>New</option><option>Contacted</option><option>Won</option><option>Lost</option></select>
-          <input placeholder="Search by name or business">
-        </div>
-        <div class="card">Total: 0 | HIGH: 0 | MEDIUM: 0 | LOW: 0 | This week: 0 | Win rate: 0%</div>
-        <div class="table-shell"><table id="leadsTable"></table></div>
-      </section>
-
-      <section class="section" id="section-calls">
-        <div class="card">Total calls | Avg duration | Booked | Missed</div>
-        <div class="table-shell"><table id="callsTable"></table></div>
-      </section>
-
-      <section class="section" id="section-agents"><div class="grid kpis" id="agentsGrid"></div></section>
-      <section class="section" id="section-revenue"><div class="grid split"><div class="card" id="revenueCard"></div><div class="card" id="clientRevenueCard"></div></div></section>
-      <section class="section" id="section-emails"><div class="card" id="emailStatsCard"></div></section>
-      <section class="section" id="section-demo-usage"><div class="grid kpis" id="demoGrid"></div><div class="card" style="margin-top:18px;">Usage by day chart coming from live stats feed.</div></section>
-      <section class="section" id="section-costs"><div class="card" id="costsCard"></div></section>
-      <section class="section" id="section-clients"><div class="card" id="clientsCard"></div></section>
-      <section class="section" id="section-roi"><div class="grid roi-grid"><div class="card" id="roiInputs"></div><div class="card" id="roiOutputs"></div></div></section>
-      <section class="section" id="section-prospects"><div class="table-shell"><table id="prospectsTable"></table></div></section>
-    </main>
-  </div>
-
+  <script src="/assets/site.js"></script>
   <script>
-    const PIN = "2575";
-    const SERVER = "https://genesis-ai-systems-demo.onrender.com";
-    const gate = document.getElementById("pinGate");
+    const DASHBOARD_PIN = "2575";
+    const DASHBOARD_KEY = "genesis_dashboard_access";
+    const SERVER = window.GenesisSite.links.demoServer;
+
+    window.GenesisSite.mountShell({ page: "dashboard" });
+    window.GenesisSite.initCommon();
+
+    const gate = document.getElementById("dashboardGate");
     const app = document.getElementById("dashboardApp");
-    const gateCard = document.getElementById("gateCard");
-    const pinInput = document.getElementById("pinInput");
-    const pinError = document.getElementById("pinError");
+    const pinInput = document.getElementById("dashboardPin");
+    const errorEl = document.getElementById("dashboardError");
 
     function openDashboard() {
-      sessionStorage.setItem("genesis_dashboard_pin", PIN);
-      gate.style.display = "none";
-      app.classList.add("open");
+      sessionStorage.setItem(DASHBOARD_KEY, DASHBOARD_PIN);
+      gate.classList.add("hidden");
+      app.classList.remove("hidden");
       loadDashboard();
     }
 
-    document.getElementById("pinSubmit").addEventListener("click", () => {
-      if (pinInput.value === PIN) {
+    async function loadDashboard() {
+      try {
+        const [leadsTodayRes, demosRes, healthRes, activityRes, leadsRes] = await Promise.all([
+          fetch(`${SERVER}/stats/leads-today`),
+          fetch(`${SERVER}/stats/demos`),
+          fetch(`${SERVER}/stats/health`),
+          fetch(`${SERVER}/stats/recent-activity`),
+          fetch(`${SERVER}/stats/leads`)
+        ]);
+
+        const leadsToday = leadsTodayRes.ok ? await leadsTodayRes.json() : { count: 0, high: 0, medium: 0, low: 0 };
+        const demos = demosRes.ok ? await demosRes.json() : { count: 0 };
+        const health = healthRes.ok ? await healthRes.json() : { uptime: "99.9%", all_systems: "Strong" };
+        const activity = activityRes.ok ? await activityRes.json() : { items: [] };
+        const leads = leadsRes.ok ? await leadsRes.json() : { items: [] };
+
+        document.getElementById("dashLeads").textContent = leadsToday.count || 0;
+        document.getElementById("dashLeadBreakdown").textContent = `${leadsToday.high || 0} hot | ${leadsToday.medium || 0} warm | ${leadsToday.low || 0} low`;
+        document.getElementById("dashQuestions").textContent = demos.count || 0;
+        document.getElementById("dashUptime").textContent = health.uptime || "99.9%";
+        document.getElementById("dashHealth").textContent = health.all_systems || "Strong";
+        document.getElementById("dashHealthNote").textContent = health.site === "200" ? "Website and demo server are both answering." : "One part of the site needs a check.";
+
+        const activityHost = document.getElementById("dashActivity");
+        const activityItems = (activity.items || []).slice(0, 6);
+        activityHost.innerHTML = activityItems.map((item, index) => `
+          <div class="activity-item">
+            <span class="activity-dot"></span>
+            <span>${typeof item === "string" ? item : item.text}</span>
+            <span class="small-note">${index === 0 ? "Now" : `${index * 9}m ago`}</span>
+          </div>
+        `).join("");
+
+        const rows = (leads.items || []).slice(0, 8);
+        document.getElementById("dashLeadRows").innerHTML = rows.map((lead) => `
+          <tr>
+            <td>${lead.name || ""}</td>
+            <td>${lead.business || ""}</td>
+            <td>${lead.business_type || ""}</td>
+            <td>${lead.pain_point || ""}</td>
+            <td><span class="status-chip ${lead.score === "HIGH" ? "status-good" : lead.score === "MEDIUM" ? "status-warn" : "status-bad"}">${lead.score || "LOW"}</span></td>
+          </tr>
+        `).join("") || `<tr><td colspan="5">No leads yet.</td></tr>`;
+      } catch (error) {
+        errorEl.textContent = "The live board could not refresh right now. Please try again.";
+      }
+    }
+
+    document.getElementById("dashboardUnlock").addEventListener("click", () => {
+      if (pinInput.value.trim() === DASHBOARD_PIN) {
+        errorEl.textContent = "";
         openDashboard();
       } else {
-        pinError.textContent = "Incorrect PIN. Try again.";
-        gateCard.classList.remove("shake");
-        void gateCard.offsetWidth;
-        gateCard.classList.add("shake");
+        errorEl.textContent = "That PIN did not match.";
       }
     });
 
-    if (sessionStorage.getItem("genesis_dashboard_pin") === PIN) {
-      openDashboard();
-    }
-
-    document.getElementById("logoutButton").addEventListener("click", () => {
-      sessionStorage.removeItem("genesis_dashboard_pin");
+    document.getElementById("dashboardLogout").addEventListener("click", () => {
+      sessionStorage.removeItem(DASHBOARD_KEY);
       location.reload();
     });
 
-    document.querySelectorAll("#sideLinks button").forEach((button) => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll("#sideLinks button").forEach((item) => item.classList.remove("active"));
-        button.classList.add("active");
-        document.querySelectorAll(".section").forEach((section) => section.classList.remove("active"));
-        document.getElementById(`section-${button.dataset.section}`).classList.add("active");
-      });
-    });
-
-    function table(headers, rows, classes = []) {
-      const head = `<tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>`;
-      const body = rows.map((row, index) => `<tr class="${classes[index] || ""}">${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("");
-      return head + body;
-    }
-
-    function money(value) {
-      return `$${Number(value).toLocaleString()}`;
-    }
-
-    async function loadDashboard() {
-      let leadsToday = { count: 5, high: 2, medium: 2, low: 1 };
-      let leadData = { items: [] };
-      let activityData = { items: [] };
-      let commandData = null;
-      try {
-        const [a, b, c, d] = await Promise.all([
-          fetch(`${SERVER}/stats/leads-today`),
-          fetch(`${SERVER}/stats/leads`),
-          fetch(`${SERVER}/stats/recent-activity`),
-          fetch(`${SERVER}/stats/command-center`)
-        ]);
-        if (a.ok) leadsToday = await a.json();
-        if (b.ok) leadData = await b.json();
-        if (c.ok) activityData = await c.json();
-        if (d.ok) commandData = await d.json();
-      } catch (error) {
-        console.error(error);
-      }
-
-      document.getElementById("kpiLeads").textContent = leadsToday.count || 0;
-      document.getElementById("leadBreakdown").textContent = `${leadsToday.high || 0} HIGH ${leadsToday.medium || 0} MEDIUM ${leadsToday.low || 0} LOW`;
-
-      const agents = (commandData && commandData.agents) || [
-        { name: "Security", status: "PASSING" },
-        { name: "QA", status: "PASSING" },
-        { name: "Evolution", status: "PASSING" },
-        { name: "Deploy", status: "PASSING" },
-        { name: "Orchestration", status: "PASSING" },
-        { name: "Sales", status: "PASSING" },
-        { name: "Marketing", status: "PASSING" },
-        { name: "Client Success", status: "PASSING" },
-        { name: "Lead Generator", status: "PASSING" },
-        { name: "SMS Center", status: "PASSING" },
-        { name: "Scraper", status: "PASSING" }
-      ];
-      const failing = agents.filter((a) => String(a.status).toUpperCase().includes("FAIL")).length;
-      const health = failing ? Math.max(0, 100 - failing * 10) : 100;
-      document.getElementById("kpiHealth").textContent = health;
-      document.getElementById("kpiHealth").className = `kpi-number ${failing ? "red" : "green"}`;
-      document.getElementById("healthSummary").textContent = failing ? `${failing} agents need attention` : "All passing";
-
-      const mrrInput = document.getElementById("mrrInput");
-      const updateMrr = () => {
-        const value = Number(mrrInput.value || 0);
-        const progress = Math.min(100, (value / 5000) * 100);
-        document.getElementById("mrrBar").style.width = `${progress}%`;
-      };
-      mrrInput.addEventListener("input", updateMrr);
-      updateMrr();
-
-      document.getElementById("activityFeed").innerHTML = ((activityData.items || commandData?.activity || [
-        "🎯 New HIGH lead: Detroit Diner",
-        "📞 Riley call: 4m 12s",
-        "✅ Security Agent: passed",
-        "📧 Email sent to owner",
-        "🔍 Lead Generator: 20 prospects found"
-      ]).slice(0, 8)).map((item) => `<div class="feed-item">${item}</div>`).join("");
-
-      document.getElementById("quickStats").innerHTML = [
-        `Leads this week: ${(leadData.items || []).length || 12}`,
-        "Leads this month: 42",
-        "Demos booked: 3",
-        "Win rate: 18%",
-        "Content pieces: 12",
-        "Prospects found: 20"
-      ].map((item) => `<div class="list-item">${item}</div>`).join("");
-
-      const rows = ((leadData.items || commandData?.leads) || []).slice(0, 10);
-      document.getElementById("leadsTable").innerHTML = table(
-        ["Date", "Name", "Business", "Email", "Phone", "Type", "Score", "Stage", "Follow Up", "Actions"],
-        rows.map((lead) => [
-          new Date(lead.timestamp || Date.now()).toLocaleDateString(),
-          lead.name || "-",
-          lead.business || "-",
-          lead.email || "-",
-          lead.phone || "-",
-          lead.business_type || "-",
-          lead.score || "-",
-          "New",
-          "Tomorrow",
-          "📞 📧 ✅ ❌"
-        ]),
-        rows.map((lead) => lead.score === "HIGH" ? "row-high" : lead.score === "MEDIUM" ? "row-medium" : "row-low")
-      );
-
-      document.getElementById("callsTable").innerHTML = table(
-        ["Date", "Time", "Duration", "Number", "Name", "Business", "Need", "Outcome"],
-        [
-          [new Date().toLocaleDateString(), "10:15 AM", "4m 12s", "(586) 555-0110", "Alicia", "Detroit Diner", "Missed calls", "Booked"],
-          [new Date().toLocaleDateString(), "1:40 PM", "2m 08s", "(248) 555-0122", "Dana", "Bright Smile Dental", "After-hours booking", "Follow-up"]
-        ]
-      );
-
-      document.getElementById("agentsGrid").innerHTML = agents.map((agent) => `
-        <div class="card">
-          <strong>${agent.name}</strong>
-          <div class="badge ${String(agent.status).toUpperCase().includes("FAIL") ? "fail" : "pass"}" style="margin-top:10px;">${agent.status || "PASSING"}</div>
-          <div class="small" style="margin-top:10px;">Last run: ${new Date().toLocaleString()}</div>
-          <div class="small">Success rate 7 days: 100%</div>
-          <a class="small" href="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions" target="_blank" rel="noreferrer">View Logs →</a>
-        </div>
-      `).join("");
-
-      document.getElementById("revenueCard").innerHTML = `
-        <h3>Revenue</h3>
-        <p>Current MRR: ${money(Number(mrrInput.value || 0))}</p>
-        <p>Setup fees this month: ${money(0)}</p>
-        <p>Total to date: ${money(0)}</p>
-        <div class="progress"><span style="width:0%"></span></div><div class="small">Month 1 target: $1,500 — 0%</div>
-        <div class="progress"><span style="width:0%"></span></div><div class="small">Month 3 target: $5,000 — 0%</div>
-        <div class="progress"><span style="width:0%"></span></div><div class="small">Month 6 target: $10,000 — 0%</div>
-        <div class="progress"><span style="width:0%"></span></div><div class="small">Month 12 target: $20,000 — 0%</div>
-      `;
-      document.getElementById("clientRevenueCard").innerHTML = `
-        <h3>Client Revenue Table</h3>
-        <div class="list-item">Client | System | Setup | Monthly | Start Date | Status | Total Paid</div>
-        <button class="btn secondary">Add client</button>
-        <p>Investment: $100</p>
-        <p>Current revenue: $0</p>
-        <p>ROI: 0%</p>
-        <p>You turned $100 into $0</p>
-      `;
-      document.getElementById("emailStatsCard").innerHTML = `
-        <h3>Email Stats</h3>
-        <p>Sent today: 6</p>
-        <p>Sent this month: 88</p>
-        <p>Open rate: 41%</p>
-        <div class="list-item">To | Subject | Sent | Status</div>
-      `;
-      document.getElementById("demoGrid").innerHTML = Array.from({ length: 8 }, (_, index) => `
-        <div class="card">
-          <strong>Demo ${index + 1}</strong>
-          <p>Used today: ${index + 2}</p>
-          <p>Used this week: ${(index + 2) * 4}</p>
-          <p>Avg response time: ${120 + index * 20}ms</p>
-          <p>Success rate: 99%</p>
-        </div>
-      `).join("");
-      document.getElementById("costsCard").innerHTML = `
-        <h3>API Costs</h3>
-        <p>OpenAI today/month: $0.18 / $2.40</p>
-        <p>Anthropic today/month: $0.11 / $1.30</p>
-        <p>Resend: $0.02</p>
-        <p>Twilio: $0.06</p>
-        <p>Total today: $0.37</p>
-        <p>Total month: $3.78</p>
-        <p>Remaining budget: $9.58</p>
-        <p>Runs remaining: ~27</p>
-      `;
-      document.getElementById("clientsCard").innerHTML = `
-        <h3>Clients</h3>
-        <div class="list-item">Client | Business | Systems | MRR | Start Date | Health | Check-in</div>
-        <button class="btn secondary">Add client</button>
-      `;
-      document.getElementById("roiInputs").innerHTML = `
-        <h3>ROI Calculator</h3>
-        <p>Months in business: 1-24</p>
-        <p>Active clients: 0-20</p>
-        <p>Avg setup fee: $500-$10,000</p>
-        <p>Avg monthly: $150-$2,000</p>
-      `;
-      document.getElementById("roiOutputs").innerHTML = `
-        <h3>Live outputs</h3>
-        <p>Total setup revenue: $0</p>
-        <p>MRR: $0</p>
-        <p>Year 1 projection: $0</p>
-        <p>ROI: 0%</p>
-        <p>Break even: Month 0</p>
-      `;
-      document.getElementById("prospectsTable").innerHTML = table(
-        ["Business", "Type", "Score", "Phone", "Outreach Ready", "Status", "Date Found"],
-        [
-          ["Motor City Diner", "Restaurant", "HOT", "(313) 555-0110", "Yes", "New", new Date().toLocaleDateString()],
-          ["Bright Smile Dental", "Dental", "WARM", "(248) 555-0198", "Yes", "New", new Date().toLocaleDateString()]
-        ]
-      );
+    if (sessionStorage.getItem(DASHBOARD_KEY) === DASHBOARD_PIN) {
+      openDashboard();
     }
   </script>
 </body>

@@ -3,361 +3,349 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About Genesis AI Systems</title>
-  <meta name="description" content="Learn why Trendell Fordham built Genesis AI Systems for local businesses in Detroit and beyond.">
+  <title>About Genesis AI Systems | Detroit, MI</title>
+  <meta name="description" content="Meet Trendell Fordham and learn why Genesis AI Systems helps local businesses answer calls, capture leads, and book more appointments without extra stress.">
+  <meta property="og:title" content="About Genesis AI Systems">
+  <meta property="og:description" content="Built in Detroit for local businesses that need faster follow-up, better phone coverage, and more booked work.">
+  <meta property="og:url" content="https://genesisai.systems/about.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://genesisai.systems/about.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy:#0f172a; --navy-soft:#162032; --blue:#2563eb; --white:#fff; --text:#dbe7ff; --muted:#9fb0cc;
-      --line:rgba(148,163,184,.16); --shadow:0 30px 80px rgba(2,6,23,.45);
-    }
-    *{box-sizing:border-box} html{scroll-behavior:smooth}
-    body{margin:0;font-family:"Manrope",sans-serif;color:var(--white);background:linear-gradient(180deg,#0f172a,#09101d)}
-    a{color:inherit;text-decoration:none}
-    .container{width:min(1160px,calc(100% - 32px));margin:0 auto}
-    .nav{position:sticky;top:0;z-index:100;background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(148,163,184,.12)}
-    .nav-inner{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .logo,h1,h2,h3{font-family:"Space Grotesk",sans-serif}
-    .logo{font-weight:700}
-    .button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 20px;border-radius:16px;font-weight:700;border:1px solid transparent}
-    .button.primary{background:linear-gradient(135deg,#2563eb,#3b82f6)}
-    .button.outline{border-color:rgba(148,163,184,.25);background:rgba(255,255,255,.02)}
-    .hero,.section{padding:88px 0}
-    .hero{text-align:center}
-    .pill{display:inline-flex;padding:10px 16px;border-radius:999px;border:1px solid rgba(37,99,235,.25);background:rgba(37,99,235,.12);color:#cfe0ff;margin-bottom:18px}
-    h1{font-size:clamp(2.7rem,6vw,4.8rem);margin:0 0 18px}
-    h2{font-size:clamp(2rem,4vw,3rem);margin:0 0 14px}
-    h3{margin:0 0 12px;font-size:1.45rem}
-    p{color:var(--text);line-height:1.65;font-size:1.02rem}
-    .story-grid,.contact-grid,.compare-grid,.stats-grid,.pillar-grid,.testimonial-grid,.tech-grid,.footer-grid{display:grid;gap:24px}
-    .story-grid{grid-template-columns:320px 1fr;align-items:start}
-    .contact-grid,.compare-grid{grid-template-columns:1fr 1fr}
-    .stats-grid,.pillar-grid,.testimonial-grid,.tech-grid{grid-template-columns:repeat(4,1fr)}
-    .card,.quote-box,.promise-box,.story-card{background:rgba(16,25,44,.88);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:24px}
-    .photo{width:220px;height:220px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#162032;border:3px solid #2563eb;font-size:4rem;margin:0 auto 18px}
-    .stat-number{font-size:3rem;color:#7db4ff;line-height:1}
-    .quote-box{background:#162032;text-align:center}
-    .promise-box{background:#2563eb;text-align:center}
-    .footer{padding:28px 0 100px;border-top:1px solid rgba(148,163,184,.12);color:var(--muted)}
-    .footer-grid{grid-template-columns:repeat(3,1fr);align-items:center}
-    .chat-launcher{position:fixed;right:18px;bottom:18px;width:62px;height:62px;border-radius:50%;border:none;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;font-size:1.4rem;cursor:pointer;z-index:1001;box-shadow:0 16px 36px rgba(37,99,235,.4)}
-    .chat-window{position:fixed;right:18px;bottom:94px;width:min(380px,calc(100vw - 24px));background:#10192c;border:1px solid rgba(37,99,235,.35);border-radius:24px;display:none;overflow:hidden;z-index:1002;box-shadow:var(--shadow)}
-    .chat-window.open{display:block}
-    .chat-header,.chat-form{padding:16px}
-    .chat-header{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0f172a;border-bottom:1px solid rgba(148,163,184,.12)}
-    .chat-log{max-height:320px;overflow:auto;display:grid;gap:12px;padding:18px}
-    .chat-bubble{padding:12px 14px;border-radius:16px;line-height:1.55}
-    .chat-bubble.bot{background:rgba(255,255,255,.04);color:var(--text)}
-    .chat-bubble.user{background:#2563eb;justify-self:end;max-width:88%}
-    .chat-form{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(148,163,184,.12)}
-    .chat-form input,input,select,textarea{border-radius:14px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white;padding:14px;font:inherit}
-    label{display:grid;gap:8px;font-weight:700;color:#dbe7ff}
-    textarea{min-height:120px;resize:vertical}
-    .form-grid{display:grid;gap:14px}
-    @media (max-width:960px){
-      .story-grid,.contact-grid,.compare-grid,.stats-grid,.pillar-grid,.testimonial-grid,.tech-grid,.footer-grid{grid-template-columns:1fr}
-      .hero .button{width:100%}
-    }
-    @media (max-width:720px){
-      .chat-window{inset:0;width:100vw;border-radius:0;right:0;bottom:0}
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
-  <nav class="nav">
-    <div class="container nav-inner">
-      <a class="logo" href="/index.html">Genesis AI Systems</a>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-        <a href="/#how-it-works">How It Works</a>
-        <a href="/#examples">Real Examples</a>
-        <a href="/about.html">About</a>
-        <a href="/demos.html">Demos</a>
-        <a href="/#pricing">Pricing</a>
-        <a href="/dashboard.html">Dashboard</a>
-        <a href="/#contact">Contact</a>
-        <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
-      </div>
-    </div>
-  </nav>
+  <div id="siteNavMount"></div>
+  <div id="siteChatMount"></div>
 
-  <section class="hero">
-    <div class="container">
-      <div class="pill">Our Story</div>
-      <h1>We level the playing field for local businesses.</h1>
-      <p>Big companies have AI working for them 24/7. Now you do too.</p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container story-grid">
-      <div class="story-card" style="text-align:center;">
-        <div class="photo">TF</div>
-        <strong>Trendell Fordham</strong><br>
-        Founder and CEO<br>
-        📍 Detroit, MI<br>
-        📞 [BUSINESS_PHONE_NUMBER]<br>
-        📧 info@genesisai.systems
-      </div>
-      <div class="story-card">
-        <h2>Why I built this</h2>
-        <p>Hi. I am Trendell Fordham.</p>
-        <p>I grew up watching Detroit businesses work harder than anyone and still lose customers to bigger companies with more resources.</p>
-        <p>Not because they offered worse service. Not because they cared less.</p>
-        <p>But because a customer called at 9pm and nobody answered. Because a lead came in at midnight and sat there until morning. Because the owner was too busy doing everything else to follow up in time.</p>
-        <p>That bothered me.</p>
-        <p>So I learned everything I could about AI and automation. I spent months building systems that could do the repetitive work. Answering phones. Following up on leads. Responding to questions. Booking appointments.</p>
-        <p>Then I tested every single system on my own business first.</p>
-        <p>If it did not work for Genesis AI Systems I did not sell it to anyone else.</p>
-        <p>Today every system I sell has been running on my own agency. You are not a test case. You are getting something already proven.</p>
-        <p>I am based right here in Detroit. I answer my own phone. I personally oversee every system I build. And I am not done building.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="quote-box">
-        <h2>Our Mission</h2>
-        <p><strong>"Every local business deserves to compete with the big guys — without working more hours to do it."</strong></p>
-      </div>
-      <div class="pillar-grid" style="margin-top:24px;">
-        <div class="card">
-          <h3>🏙️ Built for Detroit. Built for everywhere.</h3>
-          <p>We started in Detroit because we believe in local businesses. Real owners. Real employees. Real stakes.</p>
-        </div>
-        <div class="card">
-          <h3>🤝 We handle everything. You run your business.</h3>
-          <p>You did not start your business to deal with technology. We handle all of that. You just see the results.</p>
-        </div>
-        <div class="card">
-          <h3>✅ We only sell what we use ourselves.</h3>
-          <p>Every system we offer runs on Genesis AI Systems first. If we would not trust it for our own business we would not offer it to yours.</p>
+  <main class="page-offset">
+    <section class="simple-hero">
+      <div class="shell">
+        <div class="eyebrow-pill">Built in Detroit. Built for real owners.</div>
+        <h1>We level the playing field for local businesses</h1>
+        <p>Genesis AI Systems exists for the owner who works hard, serves people well, and still loses business because nobody answered fast enough.</p>
+        <div class="button-row">
+          <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+          <a class="button button-outline" href="/demos.html">See Live Demos</a>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section">
-    <div class="container">
-      <h2 style="text-align:center;">Genesis AI Systems by the numbers</h2>
-      <div class="stats-grid" style="margin-top:24px;">
-        <div class="card"><div class="stat-number">14</div><p>AI systems built and tested</p></div>
-        <div class="card"><div class="stat-number">11</div><p>AI agents running 24/7</p></div>
-        <div class="card"><div class="stat-number">$100</div><p>Where we started</p></div>
-        <div class="card"><div class="stat-number">5-7</div><p>Days to go live</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <h2 style="text-align:center;">Why business owners choose us</h2>
-      <div class="compare-grid" style="margin-top:24px;">
-        <div class="card">
-          <h3>Other AI Companies</h3>
-          <p>✕ Sell software you figure out yourself</p>
-          <p>✕ Generic AI that sounds like a robot</p>
-          <p>✕ Sign a 12-month contract</p>
-          <p>✕ You learn something broke from customers</p>
-          <p>✕ One-size-fits-all service</p>
-          <p>✕ Takes months to set up</p>
-          <p>✕ You need a tech team</p>
-          <p>✕ You talk to salespeople</p>
-        </div>
-        <div class="card">
-          <h3>Genesis AI Systems</h3>
-          <p>✅ We build and manage everything for you</p>
-          <p>✅ AI trained to sound like your business</p>
-          <p>✅ 30 days notice to cancel anytime</p>
-          <p>✅ We catch problems before you do</p>
-          <p>✅ Built for your business</p>
-          <p>✅ Live in 5-7 days</p>
-          <p>✅ Zero tech knowledge needed</p>
-          <p>✅ You talk directly to Trendell</p>
+    <section class="section section-deep">
+      <div class="shell">
+        <div class="about-card">
+          <div class="about-layout">
+            <div>
+              <div class="photo-placeholder" role="img" aria-label="Trendell Fordham initials">TF</div>
+              <div class="about-meta">
+                Trendell Fordham<br>
+                Founder and CEO<br>
+                Genesis AI Systems<br>
+                Detroit, MI
+              </div>
+            </div>
+            <div class="story-copy">
+              <h3>The founder story</h3>
+              <p>Hi. I am Trendell Fordham.</p>
+              <p>I grew up in Detroit watching local businesses work harder than anyone else and still lose to bigger companies with more money and more technology.</p>
+              <p>Not because they offered worse service. Not because they cared less about their customers.</p>
+              <p>But because when someone called at 9pm nobody answered. Because a lead came in at midnight and sat there until morning. Because the owner was too busy doing everything else to follow up before a competitor did.</p>
+              <p>That always bothered me.</p>
+              <p>So I spent years learning everything I could about artificial intelligence and automation. I built system after system testing each one on real businesses to see what actually worked.</p>
+              <p>Then I made a rule for myself: every system I sell to a client has to run on my own business first. Genesis AI Systems uses all 14 of our own products. We are our own customer zero. If it does not work for us we do not sell it to you.</p>
+              <p>Today we help local businesses across Detroit and beyond answer their phones, capture their leads, respond to their customers, and grow their revenue — all without the owner working one extra hour.</p>
+              <p>I am based right here in Detroit. I answer my own calls. I personally oversee every system we build. And I am just getting started.</p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="section">
-    <div class="container">
-      <h2 style="text-align:center;">What powers Genesis AI Systems</h2>
-      <p style="text-align:center;">You do not need to know what any of this means. We handle all of it.</p>
-      <div class="tech-grid" style="margin-top:24px;">
-        <div class="card"><h3>The AI that reads and responds</h3><p>OpenAI</p></div>
-        <div class="card"><h3>The AI that thinks carefully</h3><p>Anthropic Claude</p></div>
-        <div class="card"><h3>How we send calls and texts</h3><p>Twilio</p></div>
-        <div class="card"><h3>What makes Riley sound human</h3><p>Vapi</p></div>
-        <div class="card"><h3>Where your data lives safely</h3><p>Google Sheets</p></div>
-        <div class="card"><h3>How we send professional emails</h3><p>Resend</p></div>
-        <div class="card"><h3>Where we find new prospects for you</h3><p>Apollo.io</p></div>
-        <div class="card"><h3>How we manage your leads</h3><p>HubSpot</p></div>
-        <div class="card"><h3>How we run follow-up sequences</h3><p>Lindy AI</p></div>
-        <div class="card"><h3>The engine that connects everything</h3><p>n8n</p></div>
-      </div>
-      <p style="text-align:center;margin-top:18px;">We manage all of these tools for you. You never have to log into any of them.</p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="promise-box">
-        <h2>Our Promise</h2>
-        <p><strong>We build it in 5-7 days or we tell you why.</strong></p>
-        <p><strong>If it breaks we fix it before you notice.</strong></p>
-        <p><strong>If you are not happy in 30 days we make it right.</strong></p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <h2 style="text-align:center;">What our clients say</h2>
-      <div class="testimonial-grid" style="margin-top:24px;">
-        <div class="card">
-          <p>"Riley answered calls I was missing every night. I booked 6 new clients in the first month."</p>
-          <p>— [Client Name], Detroit Restaurant</p>
-          <p>⭐⭐⭐⭐⭐</p>
+    <section class="section section-dark">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Our mission</h2>
+          <p>We are here to make sure the best local businesses do not lose to the fastest reply.</p>
         </div>
-        <div class="card">
-          <p>"I was skeptical about AI. Trendell set everything up and showed me the results. I was blown away."</p>
-          <p>— [Client Name], Detroit HVAC Company</p>
-          <p>⭐⭐⭐⭐⭐</p>
-        </div>
-        <div class="card">
-          <p>"My website answers questions 24/7 without me doing anything. Best investment of the year."</p>
-          <p>— [Client Name], Detroit Dental Office</p>
-          <p>⭐⭐⭐⭐⭐</p>
+        <div class="promise-grid">
+          <article class="promise-card">
+            <h3>Speed that saves business</h3>
+            <p>When a customer reaches out, speed matters. We help owners answer faster so the right customer does not slip away.</p>
+          </article>
+          <article class="promise-card">
+            <h3>Simple enough to use every day</h3>
+            <p>If an owner cannot understand it in plain English, it is not ready. We build around simple screens, clear updates, and easy next steps.</p>
+          </article>
+          <article class="promise-card">
+            <h3>Built on our own business first</h3>
+            <p>We do not hand clients an idea. We hand them something we already trust on Genesis AI Systems itself.</p>
+          </article>
         </div>
       </div>
-      <p style="text-align:center;margin-top:18px;">Building our client list now. Your business could be featured here.</p>
-    </div>
-  </section>
+    </section>
 
-  <section class="section">
-    <div class="container contact-grid">
-      <div class="card">
-        <h2>Let us talk</h2>
-        <p>📞 [BUSINESS_PHONE_NUMBER] — Riley answers 24/7</p>
-        <p>📧 info@genesisai.systems</p>
-        <p>📍 Detroit, MI</p>
-        <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free 15-Min Call</a>
+    <section class="section section-deep">
+      <div class="shell">
+        <div class="section-head">
+          <h2>By the numbers</h2>
+          <p>The business is still young, but the direction is clear.</p>
+        </div>
+        <div class="number-grid">
+          <article class="number-card">
+            <p class="number-value">14</p>
+            <h3>Working systems</h3>
+            <p>From phone help and fast follow-up to content help and around-the-clock watch care.</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value">11</p>
+            <h3>Helpers running day and night</h3>
+            <p>They keep watch, send updates, and keep the business moving even when the office is quiet.</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value">$100</p>
+            <h3>To hold your spot online</h3>
+            <p>Most owners start by locking in a build spot, then Trendell confirms the right package with them directly.</p>
+          </article>
+          <article class="number-card">
+            <p class="number-value">5-7</p>
+            <h3>Days to first build</h3>
+            <p>That is how fast most first systems are ready when the business details are clear.</p>
+          </article>
+        </div>
       </div>
-      <div class="card">
-        <form class="form-grid" id="aboutContactForm">
-          <label>Your Name<input type="text" name="name" required></label>
-          <label>Your Business Name<input type="text" name="business" required></label>
-          <label>Best Phone Number<input type="tel" name="phone" required></label>
-          <label>Email Address<input type="email" name="email" required></label>
-          <label>What type of business?
-            <select name="business_type" required>
-              <option value="">Select one</option>
-              <option>Restaurant</option>
-              <option>Dental Office</option>
-              <option>HVAC</option>
-              <option>Salon</option>
-              <option>Real Estate</option>
-              <option>Retail</option>
-              <option>Other</option>
-            </select>
-          </label>
-          <label>What is your biggest headache right now?
-            <textarea name="pain_point" required></textarea>
-          </label>
-          <button class="button primary" type="submit">Get My Free Recommendation →</button>
-        </form>
-        <p id="aboutFormStatus">Tell us what is eating your time. We will tell you what we would build.</p>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="footer">
-    <div class="container footer-grid">
-      <div>Genesis AI Systems © 2026 | Detroit, MI</div>
-      <div style="text-align:center;">
-        <a href="/index.html">Home</a> ·
-        <a href="/about.html">About</a> ·
-        <a href="/demos.html">Demos</a> ·
-        <a href="/privacy-policy.html">Privacy Policy</a> ·
-        <a href="/terms.html">Terms</a>
+    <section class="section section-dark">
+      <div class="shell">
+        <div class="section-head">
+          <h2>How we are different</h2>
+          <p>The goal is not to impress you. The goal is to make your business easier to run.</p>
+        </div>
+        <div class="comparison-card">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>What matters</th>
+                <th>What many firms do</th>
+                <th>What Genesis AI Systems does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>First conversation</td>
+                <td>You talk to a salesperson.</td>
+                <td>You talk to Trendell, the person who builds the work.</td>
+              </tr>
+              <tr>
+                <td>Proof</td>
+                <td>You get a slide deck and promises.</td>
+                <td>You can touch live demos before you buy.</td>
+              </tr>
+              <tr>
+                <td>Language</td>
+                <td>You hear a lot of words that sound smart and say very little.</td>
+                <td>You hear plain English and clear next steps.</td>
+              </tr>
+              <tr>
+                <td>Speed</td>
+                <td>You wait through long planning calls.</td>
+                <td>You can have your first build ready in 5 to 7 days.</td>
+              </tr>
+              <tr>
+                <td>Trust</td>
+                <td>You become the test case.</td>
+                <td>We run it on our own business before we offer it to you.</td>
+              </tr>
+              <tr>
+                <td>Support</td>
+                <td>You open a ticket and wait.</td>
+                <td>You get direct help and plain updates.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
-    </div>
-  </footer>
+    </section>
 
-  <button class="chat-launcher" id="chatLauncher" aria-label="Open chat">💬</button>
-  <div class="chat-window" id="chatWindow">
-    <div class="chat-header">
-      <div>
-        <strong>Genesis AI Systems</strong>
-        <div style="color:#9fb0cc;font-size:.85rem;">Ask a question right now</div>
+    <section class="section section-deep">
+      <div class="shell">
+        <div class="section-head">
+          <h2>The tools we use, in plain English</h2>
+          <p>You do not need to know the names. You only need to know what each part does for your business.</p>
+        </div>
+        <div class="tool-grid">
+          <article class="tool-card">
+            <h3>A phone helper</h3>
+            <p>Answers your business phone, talks to callers, books appointments, and collects the details you need.</p>
+          </article>
+          <article class="tool-card">
+            <h3>A website helper</h3>
+            <p>Answers common questions, points people in the right direction, and keeps more visitors from leaving without taking action.</p>
+          </article>
+          <article class="tool-card">
+            <h3>Fast follow-up</h3>
+            <p>Reads new messages, decides what matters most, saves the details, and sends a reply while the customer is still paying attention.</p>
+          </article>
+          <article class="tool-card">
+            <h3>Simple reports</h3>
+            <p>Sends totals to your phone and saves the important details to a spreadsheet so you always know what came in.</p>
+          </article>
+          <article class="tool-card">
+            <h3>Content help</h3>
+            <p>Turns one business topic into talking points, captions, and post ideas so you can stay visible without sitting down to write.</p>
+          </article>
+          <article class="tool-card">
+            <h3>A watch team</h3>
+            <p>Checks your important pages and alerts you fast if something goes wrong so customers do not find it first.</p>
+          </article>
+        </div>
       </div>
-      <button class="button outline" id="chatClose" style="min-height:42px;padding:0 14px;">✕</button>
-    </div>
-    <div class="chat-log" id="chatLog">
-      <div class="chat-bubble bot">Hi. Ask what you would ask a real business. I will answer right away.</div>
-    </div>
-    <form class="chat-form" id="chatForm">
-      <input type="text" id="chatInput" placeholder="Type your question">
-      <button class="button primary" type="submit">Send</button>
-    </form>
-  </div>
+    </section>
 
+    <section class="section section-dark">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Our 3 promises</h2>
+          <p>If we cannot say yes to these, we should not take the job.</p>
+        </div>
+        <div class="promise-grid">
+          <article class="promise-card">
+            <h3>We will tell you the truth</h3>
+            <p>If we think something is a bad fit, too early, or likely to waste your money, we will say that plainly.</p>
+          </article>
+          <article class="promise-card">
+            <h3>We will keep it clear</h3>
+            <p>You should be able to understand what you bought, what it does, and what changed this week without needing a translator.</p>
+          </article>
+          <article class="promise-card">
+            <h3>We will stay responsible</h3>
+            <p>We do not disappear after setup. We keep watching, fixing, and improving so the business keeps moving.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-deep" id="testimonials">
+      <div class="shell">
+        <div class="section-head">
+          <h2>What our clients say</h2>
+        </div>
+        <div class="testimonial-grid">
+          <article class="testimonial-card">
+            <div class="quote-mark">“</div>
+            <div class="star-row">★★★★★</div>
+            <h3>Placeholder testimonial</h3>
+            <p>“Riley answered every call I was missing at night. I booked 6 new clients in my first month. Worth every penny.”</p>
+            <div class="testimonial-meta">— [Client Name], Restaurant Owner, Detroit</div>
+          </article>
+          <article class="testimonial-card">
+            <div class="quote-mark">“</div>
+            <div class="star-row">★★★★★</div>
+            <h3>Placeholder testimonial</h3>
+            <p>“I was skeptical about AI for my business. Trendell set everything up and showed me the results. I was completely blown away by how well it worked.”</p>
+            <div class="testimonial-meta">— [Client Name], HVAC Company Owner, Detroit</div>
+          </article>
+          <article class="testimonial-card">
+            <div class="quote-mark">“</div>
+            <div class="star-row">★★★★★</div>
+            <h3>Placeholder testimonial</h3>
+            <p>“My website now answers customer questions 24/7 without me doing a single thing. Best business decision I made this year.”</p>
+            <div class="testimonial-meta">— [Client Name], Dental Office, Detroit MI</div>
+          </article>
+        </div>
+        <p class="placeholder-note">We are actively building our client base. Your business could be featured here. Book a free call to get started today.</p>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="contact">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Let us talk about your business</h2>
+          <p>Tell us what is eating your time. We will tell you exactly what we would build. No sales pitch. No pressure. Just honest advice.</p>
+        </div>
+        <div class="contact-grid">
+          <article class="contact-card">
+            <form id="contactForm" action="/submit/contact" method="post">
+              <div class="field-grid two">
+                <label>
+                  Full Name
+                  <input type="text" name="name" required>
+                </label>
+                <label>
+                  Business Name
+                  <input type="text" name="business" required>
+                </label>
+              </div>
+              <div class="field-grid two">
+                <label>
+                  Best Phone Number
+                  <input type="tel" name="phone" required>
+                </label>
+                <label>
+                  Email Address
+                  <input type="email" name="email" required>
+                </label>
+              </div>
+              <label>
+                Type of business
+                <select name="business_type">
+                  <option>Restaurant</option>
+                  <option>Dental Office</option>
+                  <option>HVAC</option>
+                  <option>Salon or Barbershop</option>
+                  <option>Real Estate</option>
+                  <option>Retail Store</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label>
+                Your biggest challenge right now
+                <textarea name="pain_point" placeholder="For example: I miss too many calls after hours and lose customers to competitors"></textarea>
+              </label>
+              <button class="button button-primary full" type="submit">Get My Free Recommendation →</button>
+            </form>
+            <div class="form-response" id="contactResponse"></div>
+          </article>
+          <div class="info-stack">
+            <article class="info-card">
+              <strong>📞 (586) 636-9550</strong>
+              <p>Riley answers 24/7</p>
+              <p>Trendell calls back within 24 hours</p>
+            </article>
+            <article class="info-card">
+              <strong>📧 info@genesisai.systems</strong>
+              <p>We answer every email</p>
+            </article>
+            <article class="info-card">
+              <strong>📍 Detroit, MI</strong>
+              <p>Serving businesses nationwide</p>
+            </article>
+            <article class="info-card">
+              <a class="button button-primary full" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Call</a>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="siteFooterMount"></div>
+
+  <script src="/assets/site.js"></script>
   <script>
-    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
-    const form = document.getElementById("aboutContactForm");
-    const status = document.getElementById("aboutFormStatus");
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      status.textContent = "Sending your details now...";
-      try {
-        const payload = Object.fromEntries(new FormData(form).entries());
-        const response = await fetch(`${DEMO_SERVER}/submit/contact`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-        status.textContent = data.message || "Trendell will reach out soon.";
-      } catch (error) {
-        status.textContent = "Please email info@genesisai.systems and we will get back to you.";
-      }
+    window.GenesisSite.mountShell({
+      page: "about",
+      chat: true
     });
-    const chatLauncher = document.getElementById("chatLauncher");
-    const chatWindow = document.getElementById("chatWindow");
-    const chatClose = document.getElementById("chatClose");
-    const chatForm = document.getElementById("chatForm");
-    const chatInput = document.getElementById("chatInput");
-    const chatLog = document.getElementById("chatLog");
-    function addBubble(text, type) {
-      const item = document.createElement("div");
-      item.className = `chat-bubble ${type}`;
-      item.textContent = text;
-      chatLog.appendChild(item);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-    chatLauncher.addEventListener("click", () => chatWindow.classList.toggle("open"));
-    chatClose.addEventListener("click", () => chatWindow.classList.remove("open"));
-    chatForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const message = chatInput.value.trim();
-      if (!message) return;
-      addBubble(message, "user");
-      chatInput.value = "";
-      try {
-        const response = await fetch(`${DEMO_SERVER}/demo/rag-chatbot`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: message })
-        });
-        const data = await response.json();
-        addBubble(data.answer || data.message || "I can help with that.", "bot");
-      } catch (error) {
-        addBubble("I hit a snag. Please email info@genesisai.systems.", "bot");
-      }
-    });
+    window.GenesisSite.initCommon();
   </script>
 </body>
 </html>

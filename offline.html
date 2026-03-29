@@ -2,265 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're Offline — Genesis AI Systems</title>
-  <meta name="description" content="You are offline. Cached content from Genesis AI Systems is available.">
-  <meta name="theme-color" content="#2563eb">
+  <title>You Are Offline | Genesis AI Systems</title>
+  <meta name="description" content="You are offline right now. Here is how to get back to Genesis AI Systems when your connection returns.">
   <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <style>
-    :root {
-      --navy: #0f172a;
-      --blue: #2563eb;
-      --white: #fff;
-      --light: #f4f8fb;
-    }
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      background: var(--navy);
-      color: var(--white);
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-      font-size: 1.08rem;
-      min-height: 100vh;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 38px 16px 64px 16px;
-    }
-    .logo {
-      font-size: 2.1rem;
-      font-weight: 700;
-      margin-bottom: 0.38em;
-      letter-spacing: 0.012em;
-      color: var(--blue);
-      text-shadow: 0 2px 8px rgba(37, 99, 235, 0.14);
-    }
-    .offline-status {
-      font-size: 1.35rem;
-      font-weight: 500;
-      color: var(--white);
-      background: rgba(37, 99, 235, 0.15);
-      border-radius: 13px;
-      padding: 1em 1.55em;
-      margin-bottom: 1.2em;
-      display: inline-block;
-      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.07);
-      animation: statusPulse 1.5s infinite;
-      position: relative;
-    }
-    .offline-status .blink {
-      display:inline-block;
-      width:1ch;
-      animation:blinkCursor 1.4s steps(1) infinite;
-      color: var(--blue);
-      margin-left:2px;
-    }
-    @keyframes statusPulse {
-      0%   { box-shadow: 0 0 0 0 var(--blue, #2563eb), 0 4px 24px rgba(15, 23, 42, 0.07); }
-      40%  { box-shadow: 0 0 0 7px rgba(37,99,235,0.15), 0 4px 24px rgba(15, 23, 42, 0.07); }
-      80%  { box-shadow: 0 0 0 0 var(--blue, #2563eb), 0 4px 24px rgba(15, 23, 42, 0.07); }
-      100% { box-shadow: 0 0 0 0 var(--blue, #2563eb), 0 4px 24px rgba(15, 23, 42, 0.07); }
-    }
-    .contact-block {
-      margin: 1.5em 0 2em 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 1.07em;
-      color: var(--light);
-      align-items: center;
-    }
-    .contact-block a {
-      color: var(--white);
-      text-decoration: underline;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .contact-block a:hover {
-      color: var(--blue);
-    }
-    .stillworks {
-      font-size: 1.12rem;
-      color: var(--blue);
-      font-weight: 700;
-      margin-bottom: 1.4em;
-    }
-    .offline-list {
-      list-style: none;
-      padding-left: 0;
-      margin: 0 0 2.1em 0;
-    }
-    .offline-list li {
-      line-height: 1.55;
-      color: var(--white);
-      opacity: 0.84;
-      font-size: 0.97rem;
-      margin-bottom: 2px;
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-    }
-    .offline-list li:before {
-      content: "\2713";
-      color: var(--blue);
-      font-size: 1.1em;
-      margin-right: 8px;
-      margin-top: -1px;
-    }
-    .founder-block {
-      margin-top: 1.7em;
-      color: #abc7fa;
-      font-size: 1em;
-      opacity: 0.92;
-    }
-    .founder-block strong {
-      color: var(--white);
-    }
-    @media (max-width: 390px) {
-      .logo { font-size: 1.4rem; }
-      .offline-status { font-size: 1.02rem; padding: 0.7em 0.5em; }
-      .stillworks { font-size: 1rem; }
-    }
-    @media (max-width: 600px) {
-      main { padding: 20px 4vw 70px 4vw; }
-    }
-    .footer {
-      width: 100%;
-      background: rgba(15,23,42,0.99);
-      color: var(--white);
-      font-size: 0.95rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border-top: 1px solid #222948;
-      padding: 22px 8px 11px 8px;
-    }
-    .footer-content {
-      width: 100%;
-      max-width: 1040px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px 0;
-    }
-    .footer-links {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      justify-content: center;
-    }
-    .footer-links a {
-      color: var(--blue);
-      text-decoration: underline;
-      font-weight: 500;
-      transition: color 0.15s;
-    }
-    .footer-links a:hover {
-      color: var(--white);
-      text-decoration: underline;
-    }
-    .footer-right {
-      color: var(--light);
-      font-weight: 500;
-      font-size: 0.96em;
-    }
-    .footer-aisys {
-      font-size: 0.94em;
-      color: #a3b5d1;
-      text-align: center;
-      margin-top: 8px;
-      font-style: italic;
-    }
-    @media (max-width: 700px) {
-      .footer-content {
-        flex-direction: column;
-        align-items: center;
-        gap: 6px 0;
-      }
-      .footer-right { order: 3; }
-      .footer-links { order: 2; }
-    }
-    @keyframes blinkCursor {
-      0% { opacity: 1; }
-      49% { opacity: 1; }
-      50% { opacity: 0; }
-      100% { opacity: 0; }
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://genesisai.systems/offline.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/site.css">
 </head>
 <body>
-  <main>
-    <div class="logo" aria-label="Genesis AI Systems logo text">Genesis AI Systems</div>
-    <div class="offline-status">
-      You're offline — but cached content available
-      <span class="blink" aria-hidden="true">|</span>
-    </div>
-    <section class="contact-block" aria-label="Contact Information">
-      <div><strong>Call:</strong> <a href="tel:+15866369550">(586) 636-9550</a></div>
-      <div><strong>Email:</strong> <a href="mailto:info@genesisai.systems">info@genesisai.systems</a></div>
-    </section>
-    <div class="stillworks">These still work offline</div>
-    <ul class="offline-list">
-      <li>Access recently visited demo pages from Genesis AI Systems</li>
-      <li>Initiate a phone call or email, if your device supports it</li>
-      <li>Your information stays safe — nothing is sent while offline</li>
-    </ul>
-    <div class="founder-block">
-      <strong>Founder:</strong> Trendell Fordham &bull; Detroit, MI
+  <div id="siteNavMount"></div>
+
+  <main class="page-offset offline-wrap">
+    <div class="shell center-panel">
+      <div class="eyebrow-pill">Offline</div>
+      <h1 style="font-family:'Space Grotesk',sans-serif;font-size:clamp(2.2rem,6vw,4rem);margin:20px 0 12px;">You are offline right now.</h1>
+      <p class="small-note" style="font-size:1.1rem;max-width:640px;margin:0 auto;">When your connection comes back, refresh the page or head home to keep exploring.</p>
+      <div class="next-steps" style="max-width:640px;margin-inline:auto;">
+        <div class="next-step"><strong>Call:</strong> <a href="tel:+15866369550">(586) 636-9550</a></div>
+        <div class="next-step"><strong>Email:</strong> <a href="mailto:info@genesisai.systems">info@genesisai.systems</a></div>
+        <div class="next-step"><strong>What still works:</strong><br><span class="small-note">Recently opened pages may still load from your browser until you reconnect.</span></div>
+      </div>
     </div>
   </main>
-  <footer class="footer" role="contentinfo">
-    <div class="footer-content">
-      <div>© 2026 Genesis AI Systems | Detroit MI</div>
-      <nav class="footer-links" aria-label="Footer Links">
-        <a href="/">Home</a>
-        <span>|</span>
-        <a href="/about.html">About</a>
-        <span>|</span>
-        <a href="/demos.html">Demos</a>
-        <span>|</span>
-        <a href="/#pricing">Pricing</a>
-        <span>|</span>
-        <a href="/dashboard.html">Dashboard</a>
-        <span>|</span>
-        <a href="/command.html">Command Center</a>
-        <span>|</span>
-        <a href="/privacy-policy.html">Privacy Policy</a>
-        <span>|</span>
-        <a href="/terms.html">Terms of Service</a>
-      </nav>
-      <div class="footer-right">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
-    </div>
-    <div class="footer-aisys">
-      All systems monitored by Genesis AI Systems Agent Infrastructure
-    </div>
-  </footer>
+
+  <div id="siteFooterMount"></div>
+
+  <script src="/assets/site.js"></script>
   <script>
-    // Prevent navigation except tel:/mailto:/privacy/terms links while offline
-    document.addEventListener('DOMContentLoaded', function() {
-      Array.from(document.querySelectorAll('a')).forEach(function(a) {
-        var allowed = a.href.startsWith('mailto:') || a.href.startsWith('tel:') || a.href.includes('privacy-policy.html') || a.href.includes('terms.html');
-        if (!allowed) {
-          a.addEventListener('click', function(e) {
-            e.preventDefault();
-          });
-        }
-      });
-    });
+    window.GenesisSite.mountShell({ page: "offline" });
+    window.GenesisSite.initCommon();
   </script>
 </body>
 </html>

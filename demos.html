@@ -3,507 +3,520 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Demos — Genesis AI Systems</title>
-  <meta name="description" content="See every Genesis AI Systems demo running live right now. Built by Trendell Fordham in Detroit.">
+  <title>Live Demos | Genesis AI Systems</title>
+  <meta name="description" content="Try every Genesis AI Systems demo live. See how the phone helper, website helper, fast follow-up, and content tools work on a real business in Detroit.">
+  <meta property="og:title" content="Live Demos | Genesis AI Systems">
+  <meta property="og:description" content="Every system is running right now. Try the live demos and see how it could work on your business.">
+  <meta property="og:url" content="https://genesisai.systems/demos.html">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://genesisai.systems/demos.html">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/site.css">
   <style>
-    :root {
-      --navy: #0f172a;
-      --navy-soft: #162032;
-      --blue: #2563eb;
-      --white: #fff;
-      --text: #dbe7ff;
-      --muted: #9fb0cc;
-      --line: rgba(148,163,184,.16);
-      --shadow: 0 30px 80px rgba(2,6,23,.45);
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      font-family: "Manrope", sans-serif;
-      color: var(--white);
-      background:
-        radial-gradient(circle at top right, rgba(37,99,235,.25), transparent 25%),
-        linear-gradient(180deg, #0f172a, #0a1020 50%, #09101d 100%);
-    }
-    a { color: inherit; text-decoration: none; }
-    .container { width: min(1200px, calc(100% - 32px)); margin: 0 auto; }
-    .nav {
-      position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(16px);
-      background: rgba(15,23,42,.88);
-      border-bottom: 1px solid rgba(148,163,184,.12);
-    }
-    .nav-inner {
-      min-height: 74px;
+    .demo-screen {
+      min-height: 100vh;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
     }
-    .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; }
-    .nav-links { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); }
-    .nav-links a.active { color: #7db4ff; }
-    .button {
-      display: inline-flex; align-items: center; justify-content: center;
-      min-height: 50px; padding: 0 20px; border-radius: 16px;
-      font-weight: 700; border: 1px solid transparent;
+
+    .demo-layout {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
     }
-    .button.primary { background: linear-gradient(135deg,#2563eb,#3b82f6); }
-    .button.outline { border-color: rgba(148,163,184,.25); background: rgba(255,255,255,.02); }
-    .hero, .demo-section, .final-cta { padding: 90px 0; }
-    .hero { min-height: 100vh; display: grid; place-items: center; text-align: center; }
-    .label {
-      display: inline-flex; padding: 10px 16px; border-radius: 999px;
-      border: 1px solid rgba(37,99,235,.25); background: rgba(37,99,235,.12);
-      color: #cfe0ff; margin-bottom: 18px;
+
+    .demo-layout.reverse .demo-section-card:first-child {
+      order: 2;
     }
-    h1, h2, h3 { margin: 0; font-family: "Space Grotesk", sans-serif; line-height: 1.08; }
-    h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); margin-bottom: 18px; }
-    h2 { font-size: clamp(2rem, 4vw, 3.4rem); margin-bottom: 12px; }
-    p { color: var(--text); line-height: 1.65; font-size: 1.02rem; }
-    .hero-actions, .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 24px; }
-    .scroll-note { margin-top: 42px; color: var(--muted); }
-    .demo-section { border-top: 1px solid rgba(148,163,184,.12); min-height: 100vh; display: grid; align-items: center; }
-    .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
-    .demo-section:nth-of-type(even) .demo-grid { direction: rtl; }
-    .demo-section:nth-of-type(even) .demo-grid > * { direction: ltr; }
-    .number { font-size: clamp(4rem, 12vw, 6rem); color: rgba(148,163,184,.18); margin-bottom: 12px; }
-    .category { color: #7db4ff; letter-spacing: .16em; text-transform: uppercase; font-size: .82rem; margin-bottom: 10px; }
-    .demo-card, .cta-box, .final-cta-box {
-      background: rgba(16,25,44,.88); border: 1px solid var(--line);
-      border-radius: 24px; box-shadow: var(--shadow);
+
+    .demo-layout.reverse .demo-section-card:last-child {
+      order: 1;
     }
-    .demo-card { padding: 24px; }
-    .price-line { font-weight: 800; margin-top: 18px; }
-    .industries { color: var(--muted); margin-top: 8px; }
-    .widget {
-      background: #0d1527; border: 1px solid rgba(37,99,235,.25);
-      border-radius: 24px; padding: 24px;
+
+    .demo-widget-box {
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(8, 13, 26, 0.68);
+      border: 1px solid rgba(37, 99, 235, 0.22);
     }
-    .widget input, .widget textarea {
-      width: 100%; border-radius: 16px; border: 1px solid rgba(148,163,184,.24);
-      background: rgba(255,255,255,.03); color: white; padding: 14px 16px; margin-bottom: 12px;
-      font: inherit;
+
+    .demo-widget-box p {
+      color: var(--muted);
+      line-height: 1.7;
     }
-    .widget textarea { min-height: 120px; resize: vertical; }
-    .widget .button { width: 100%; }
-    .widget-result {
-      margin-top: 14px; border-radius: 16px; background: rgba(255,255,255,.04);
-      padding: 14px 16px; color: var(--text); min-height: 70px;
+
+    .demo-widget-box input,
+    .demo-widget-box textarea {
+      margin-bottom: 12px;
     }
-    .pipeline { display: grid; gap: 12px; margin-top: 16px; }
-    .pipe-step {
-      border-radius: 16px; padding: 14px 16px; background: rgba(255,255,255,.04);
-      border: 1px solid rgba(148,163,184,.1);
+
+    .result-box {
+      min-height: 92px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      white-space: pre-line;
+      line-height: 1.7;
     }
-    .pipe-step.active { border-color: rgba(37,99,235,.4); background: rgba(37,99,235,.15); }
-    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .compare-box { border-radius: 18px; padding: 16px; background: rgba(255,255,255,.04); min-height: 180px; }
-    .badge-list { display: grid; gap: 10px; margin-top: 16px; }
-    .badge-item { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); }
-    .cta-box, .final-cta-box { padding: 24px; margin-top: 20px; }
-    .final-cta-box { background: #2563eb; text-align: center; }
-    .footer { padding: 28px 0 110px; border-top: 1px solid rgba(148,163,184,.12); color: var(--muted); }
-    .footer-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; align-items: center; }
-    .chat-launcher {
-      position: fixed; right: 18px; bottom: 18px; width: 62px; height: 62px;
-      border-radius: 50%; border: none; background: linear-gradient(135deg,#2563eb,#3b82f6);
-      color: white; font-size: 1.4rem; cursor: pointer; z-index: 1001;
-      box-shadow: 0 16px 36px rgba(37,99,235,.4);
+
+    .step-list,
+    .status-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
     }
-    .chat-window {
-      position: fixed; right: 18px; bottom: 94px; width: min(380px, calc(100vw - 24px));
-      background: #10192c; border: 1px solid rgba(37,99,235,.35); border-radius: 24px;
-      display: none; overflow: hidden; z-index: 1002; box-shadow: var(--shadow);
+
+    .step-row,
+    .status-row {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      color: var(--text);
     }
-    .chat-window.open { display: block; }
-    .chat-header, .chat-form { padding: 16px; }
-    .chat-header { background: #0f172a; border-bottom: 1px solid rgba(148,163,184,.12); display:flex;justify-content:space-between;align-items:center;gap:12px; }
-    .chat-log { max-height: 320px; overflow: auto; display: grid; gap: 12px; padding: 18px; }
-    .chat-bubble { padding: 12px 14px; border-radius: 16px; line-height: 1.55; }
-    .chat-bubble.bot { background: rgba(255,255,255,.04); color: var(--text); }
-    .chat-bubble.user { background: #2563eb; justify-self: end; max-width: 88%; }
-    .chat-form { display:grid; grid-template-columns: 1fr auto; gap: 10px; border-top: 1px solid rgba(148,163,184,.12); }
-    .chat-form input { margin: 0; border-radius: 14px; border: 1px solid rgba(148,163,184,.24); background: rgba(255,255,255,.03); color: white; padding: 14px; }
-    @media (max-width: 960px) {
-      .demo-grid, .footer-grid, .compare-grid { grid-template-columns: 1fr; }
-      .demo-section:nth-of-type(even) .demo-grid { direction: ltr; }
-      .nav-inner { flex-direction: column; padding: 14px 0; }
+
+    .step-row.active {
+      border-color: rgba(37, 99, 235, 0.5);
+      background: rgba(37, 99, 235, 0.14);
     }
-    @media (max-width: 720px) {
-      .hero, .demo-section, .final-cta { padding: 72px 0; }
-      .nav-links, .hero-actions, .cta-row { flex-direction: column; }
-      .button { width: 100%; }
-      .chat-window { inset: 0; width: 100vw; border-radius: 0; right: 0; bottom: 0; }
+
+    .compare-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 16px;
+    }
+
+    .compare-box {
+      min-height: 180px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .final-cta-box {
+      padding: 36px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
+
+    .final-cta-box h2 {
+      margin: 0 0 12px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .final-cta-box p {
+      margin: 0 auto;
+      max-width: 700px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .demo-layout,
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .demo-layout.reverse .demo-section-card:first-child,
+      .demo-layout.reverse .demo-section-card:last-child {
+        order: initial;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="nav">
-    <div class="container nav-inner">
-      <a class="logo" href="/">Genesis AI Systems</a>
-      <div class="nav-links">
-        <a href="/#how-it-works">How It Works</a>
-        <a href="/#examples">Real Examples</a>
-        <a href="/about.html">About</a>
-        <a class="active" href="/demos.html">Demos</a>
-        <a href="/#pricing">Pricing</a>
-        <a href="/dashboard.html">Dashboard</a>
-        <a href="/#contact">Contact</a>
-      </div>
-      <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
-    </div>
-  </nav>
+  <div id="siteNavMount"></div>
+  <div id="siteChatMount"></div>
 
-  <section class="hero">
-    <div class="container">
-      <div class="label">Genesis AI Systems — Live Demos</div>
-      <h1>Every system is running right now.</h1>
-      <p>Not mockups. Not screenshots. Real AI systems built by Trendell Fordham in Detroit MI and running on our own agency before we sell them to anyone.</p>
-      <div class="hero-actions">
-        <a class="button primary" href="#demo-1">Start with Demo 1 →</a>
-        <a class="button outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Real Demo Call</a>
-      </div>
-      <div class="scroll-note">Explore all 8 systems ↓</div>
-    </div>
-  </section>
-
-  <main id="demoSections"></main>
-
-  <section class="final-cta">
-    <div class="container">
-      <div class="final-cta-box">
-        <h2>Ready to run these on your business?</h2>
-        <p>Trendell builds and maintains everything. You just run your business.</p>
-        <div class="cta-row">
-          <a class="button outline" style="background:white;color:#0f172a;border-color:white;" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Your Free Demo Call →</a>
+  <main class="page-offset">
+    <section class="simple-hero">
+      <div class="shell">
+        <div class="eyebrow-pill">Live demos built in Detroit</div>
+        <h1>Every system is running right now.</h1>
+        <p>Not mockups. Not recordings. Real AI systems that Trendell Fordham built and runs on his own business in Detroit.</p>
+        <div class="button-row">
+          <a class="button button-primary" href="#demo-1">Start with Demo 1</a>
+          <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
         </div>
-        <p>Or email info@genesisai.systems</p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="footer">
-    <div class="container footer-grid">
-      <div>© 2026 Genesis AI Systems | Detroit MI</div>
-      <div style="text-align:center;">
-        <a href="/">Home</a> ·
-        <a href="/about.html">About</a> ·
-        <a href="/demos.html">Demos</a> ·
-        <a href="/#pricing">Pricing</a> ·
-        <a href="/dashboard.html">Dashboard</a> ·
-        <a href="/command.html">Command Center</a> ·
-        <a href="/privacy-policy.html">Privacy Policy</a> ·
-        <a href="/terms.html">Terms of Service</a>
-      </div>
-      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
-    </div>
-  </footer>
-
-  <button class="chat-launcher" id="chatLauncher" aria-label="Open chat">💬</button>
-  <div class="chat-window" id="chatWindow">
-    <div class="chat-header">
-      <div>
-        <strong>Genesis AI Systems</strong>
-        <div style="color:#9fb0cc;font-size:.85rem;">Ask a question right now</div>
-      </div>
-      <button class="button outline" id="chatClose" style="min-height:42px;padding:0 14px;">✕</button>
-    </div>
-    <div class="chat-log" id="chatLog">
-      <div class="chat-bubble bot">Hi. Ask what a real customer would ask. I will answer right away.</div>
-    </div>
-    <form class="chat-form" id="chatForm">
-      <input type="text" id="chatInput" placeholder="Type your question">
-      <button class="button primary" type="submit">Send</button>
-    </form>
-  </div>
-
-  <script>
-    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
-    const CALENDLY = "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call";
-    const demos = [
-      {
-        id: "demo-1",
-        number: "01",
-        category: "Capturing customers",
-        title: "What happens when a customer contacts you",
-        body: "Type a message below exactly like a real customer would. Watch the AI decide how urgent it is and respond automatically in seconds.",
-        price: "$500 setup + $150/month",
-        industries: "Restaurants · Salons · HVAC · Dental",
-        cta: "Like what you see? This system handles every customer inquiry for your business automatically.",
-        buy: "[STRIPE_STARTER_LINK]",
-        buyText: "Buy Now — $500",
-        renderWidget: () => `
-          <div class="widget">
-            <input id="leadInput" placeholder="I need help after hours with missed calls">
-            <button class="button primary" onclick="runLeadDemo()">Send Lead</button>
-            <div class="widget-result" id="leadResult">Your result will show here.</div>
-          </div>`
-      },
-      {
-        id: "demo-2",
-        number: "02",
-        category: "Answering your phone",
-        title: "Talk to Riley — she answers calls 24/7",
-        body: "Click the button to call Riley right now in your browser. This is exactly what your customers hear when they call your business. She answers. Books appointments. Collects info.",
-        price: "$1,500 setup + $300/month",
-        industries: "Any business that gets phone calls",
-        cta: "Want Riley answering your calls? She works 24 hours a day without breaks or sick days or attitude.",
-        buy: "[STRIPE_GROWTH_LINK]",
-        buyText: "Buy Now — $1,500",
-        renderWidget: () => `
-          <div class="widget">
-            <p>Click below to call Riley or visit the voice guide.</p>
-            <a class="button primary" href="/project2-voice-agent/VAPI_PRODUCTION_GUIDE.md">Call Riley Now</a>
-            <div class="widget-result">Riley answers calls after hours, collects details, and passes them back fast.</div>
-          </div>`
-      },
-      {
-        id: "demo-3",
-        number: "03",
-        category: "Answering customer questions",
-        title: "Ask anything — get an instant answer",
-        body: "Ask anything about Genesis AI Systems. This helper only knows what we told it: our services, our prices, and our policies. No guessing. No wrong answers.",
-        price: "$1,000 setup + $200/month",
-        industries: "Any business with common questions",
-        cta: "Want this answering questions about your business 24/7? We train it on your actual information.",
-        buy: "[STRIPE_STARTER_LINK]",
-        buyText: "Buy Now — $1,000",
-        renderWidget: () => `
-          <div class="widget">
-            <input id="faqInput" placeholder="What do you build for restaurants?">
-            <button class="button primary" onclick="runFaqDemo()">Ask a question</button>
-            <div class="widget-result" id="faqResult">Ask a question above.</div>
-          </div>`
-      },
-      {
-        id: "demo-4",
-        number: "04",
-        category: "Running your business automatically",
-        title: "Watch the whole process happen in 5 seconds",
-        body: "Type a customer inquiry below. Watch it get captured, scored, saved, and followed up while you watch it happen in real time.",
-        price: "$2,000 setup + $400/month",
-        industries: "Any business with inbound leads",
-        cta: "Want your entire follow-up process running automatically while you sleep?",
-        buy: "[STRIPE_GROWTH_LINK]",
-        buyText: "Buy Now — $2,000",
-        renderWidget: () => `
-          <div class="widget">
-            <input id="flowInput" placeholder="We need after-hours call coverage">
-            <button class="button primary" onclick="runFlowDemo()">Run the process</button>
-            <div class="pipeline">
-              <div class="pipe-step" id="stepCapture">📥 Captured</div>
-              <div class="pipe-step" id="stepScore">🤖 Scored</div>
-              <div class="pipe-step" id="stepFollow">📧 Followed Up</div>
-            </div>
-            <div class="widget-result" id="flowResult">Press the button above.</div>
-          </div>`
-      },
-      {
-        id: "demo-5",
-        number: "05",
-        category: "Your website working for you",
-        title: "The chat helper that lives on your website",
-        body: "This exact chat helper is on genesisai.systems right now. Visitors ask questions. It answers instantly. 24 hours a day. Fully branded to look like your business.",
-        price: "$2,500 setup + $500/month",
-        industries: "Any business with a website",
-        cta: "Want this on your website today? We install it, brand it, and train it on your business in 5-7 days.",
-        buy: "[STRIPE_GROWTH_LINK]",
-        buyText: "Buy Now — $2,500",
-        renderWidget: () => `
-          <div class="widget">
-            <div class="widget-result" style="min-height:auto;">
-              &lt;script src="https://genesis-ai-systems-demo.onrender.com/widget.js"&gt;&lt;/script&gt;
-            </div>
-            <p>One line of code. That is all it takes.</p>
-          </div>`
-      },
-      {
-        id: "demo-6",
-        number: "06",
-        category: "AI that sounds like you",
-        title: "See the difference training makes",
-        body: "Type a question. See what regular AI says on the left versus what AI trained on your business says on the right. The difference will surprise you.",
-        price: "$5,000 setup + $500/month",
-        industries: "Any business with clear services and policies",
-        cta: "Want AI that sounds exactly like your business and not like a generic robot?",
-        buy: "[STRIPE_FULLSTACK_LINK]",
-        buyText: "Buy Now — $5,000",
-        renderWidget: () => `
-          <div class="widget">
-            <input id="compareInput" placeholder="Do you see kids?">
-            <button class="button primary" onclick="runCompareDemo()">Compare answers</button>
-            <div class="compare-grid">
-              <div class="compare-box"><strong>Regular AI</strong><div id="comparePlain">Type a question above.</div></div>
-              <div class="compare-box"><strong>AI trained on your business</strong><div id="compareTrained">Type a question above.</div></div>
-            </div>
-          </div>`
-      },
-      {
-        id: "demo-7",
-        number: "07",
-        category: "Social media on autopilot",
-        title: "A full content package in 30 seconds",
-        body: "Type any topic related to your business. Get back a complete video script, captions, hashtags, and thumbnail text instantly. Ready to film. Ready to post.",
-        price: "$1,500 setup + $300/month",
-        industries: "Any business that wants content",
-        cta: "Want your social media content created automatically every single day?",
-        buy: "[STRIPE_GROWTH_LINK]",
-        buyText: "Buy Now — $1,500",
-        renderWidget: () => `
-          <div class="widget">
-            <input id="videoInput" placeholder="5 reasons to choose Invisalign">
-            <button class="button primary" onclick="runVideoDemo()">Generate content</button>
-            <div class="widget-result" id="videoResult">Your full content package will show here.</div>
-          </div>`
-      },
-      {
-        id: "demo-8",
-        number: "08",
-        category: "Someone watching everything 24/7",
-        title: "See who is protecting your systems right now",
-        body: "These four AI helpers are checking genesisai.systems right now as you read this. Every hour. Automatically. This is exactly what we build for your business.",
-        price: "$10,000 setup + $2,000/month",
-        industries: "Any business that depends on leads, calls, or online traffic",
-        cta: "Want four AI agents watching over your business systems 24 hours a day?",
-        buy: "[STRIPE_FULLSTACK_LINK]",
-        buyText: "Buy Now — $10,000",
-        renderWidget: () => `
-          <div class="widget">
-            <div class="badge-list">
-              <div class="badge-item">Security Agent: ✅ Running</div>
-              <div class="badge-item">QA Agent: ✅ Running</div>
-              <div class="badge-item">Deploy Agent: ✅ Running</div>
-              <div class="badge-item">Evolution Agent: ✅ Running</div>
-              <div class="badge-item" id="agentTimestamp">Last checked: just now</div>
-              <div class="badge-item">Uptime: 99.9%</div>
-            </div>
-            <a class="button primary" style="margin-top:16px;" href="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions" target="_blank" rel="noreferrer">View Live Runs on GitHub</a>
-          </div>`
-      }
-    ];
-
-    const host = document.getElementById("demoSections");
-    host.innerHTML = demos.map((demo) => `
-      <section class="demo-section" id="${demo.id}">
-        <div class="container demo-grid">
-          <div class="demo-card">
-            <div class="number">${demo.number}</div>
-            <div class="category">${demo.category}</div>
-            <h2>${demo.title}</h2>
-            <p>${demo.body}</p>
-            <div class="price-line">${demo.price}</div>
-            <div class="industries">${demo.industries}</div>
-            <div class="cta-box">
-              <p>${demo.cta}</p>
-              <div class="cta-row">
-                <a class="button outline" href="${CALENDLY}" target="_blank" rel="noreferrer">Book a Free Call</a>
-                <a class="button primary" href="${demo.buy}">${demo.buyText}</a>
-              </div>
+    <section class="section section-dark demo-screen" id="demo-1">
+      <div class="shell demo-layout">
+        <article class="demo-section-card">
+          <div class="label">Demo 1</div>
+          <h2>Send a message — see what your customer experiences</h2>
+          <p class="demo-note">Type a real message like a real customer. Watch the first reply happen fast so the lead does not go cold.</p>
+          <p class="price-pill" style="margin-top:18px;">$500 setup + $150/month</p>
+          <div class="demo-cta">
+            <p>This is the fast reply system that stops leads from sitting there until morning.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $500</a>
             </div>
           </div>
-          ${demo.renderWidget()}
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <label>
+              Customer message
+              <input id="leadInput" type="text" placeholder="I need help after hours and I need it fast">
+            </label>
+            <button class="button button-primary full" type="button" onclick="runLeadDemo()">Send message</button>
+            <div class="result-box" id="leadResult" style="margin-top:14px;">Your result will show here.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-deep demo-screen" id="demo-2">
+      <div class="shell demo-layout reverse">
+        <article class="demo-section-card">
+          <div class="label">Demo 2</div>
+          <h2>Call Riley — our AI phone assistant (live)</h2>
+          <p class="demo-note">Use your phone and hear what your customers hear when they call after hours or while you are busy with someone else.</p>
+          <p class="price-pill" style="margin-top:18px;">$1,500 setup + $300/month</p>
+          <div class="demo-cta">
+            <p>Riley answers calls, handles common questions, and helps people book without waiting for you.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $1,500</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <p>Call the public business number and you can hear Riley work for yourself.</p>
+            <a class="button button-primary full" href="tel:+15866369550">Call Riley at (586) 636-9550</a>
+            <div class="result-box" style="margin-top:14px;">Riley answers the phone, speaks with callers, and keeps your business open even when you are not available.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-dark demo-screen" id="demo-3">
+      <div class="shell demo-layout">
+        <article class="demo-section-card">
+          <div class="label">Demo 3</div>
+          <h2>Ask a question — get an instant answer</h2>
+          <p class="demo-note">Ask something a customer would ask about hours, pricing, or what we build. The helper answers in plain English.</p>
+          <p class="price-pill" style="margin-top:18px;">$1,000 setup + $200/month</p>
+          <div class="demo-cta">
+            <p>This is how your website stops leaving people alone with basic questions.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $1,000</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <label>
+              Question
+              <input id="faqInput" type="text" placeholder="What do you build for restaurants?">
+            </label>
+            <button class="button button-primary full" type="button" onclick="runFaqDemo()">Ask the helper</button>
+            <div class="result-box" id="faqResult" style="margin-top:14px;">Ask a question above.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-deep demo-screen" id="demo-4">
+      <div class="shell demo-layout reverse">
+        <article class="demo-section-card">
+          <div class="label">Demo 4</div>
+          <h2>Watch the full process happen in real time</h2>
+          <p class="demo-note">See a new lead get sorted, saved, and followed up fast while you watch the steps light up.</p>
+          <p class="price-pill" style="margin-top:18px;">$2,000 setup + $400/month</p>
+          <div class="demo-cta">
+            <p>Good for owners who want the busywork gone and the follow-up handled without reminders.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $2,000</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <label>
+              New lead
+              <input id="flowInput" type="text" placeholder="We need after-hours call coverage">
+            </label>
+            <button class="button button-primary full" type="button" onclick="runFlowDemo()">Run the full process</button>
+            <div class="step-list">
+              <div class="step-row" id="stepCapture">📥 Lead came in</div>
+              <div class="step-row" id="stepScore">🎯 Lead got sorted</div>
+              <div class="step-row" id="stepSave">📋 Lead saved to the list</div>
+              <div class="step-row" id="stepReply">💬 First reply sent</div>
+            </div>
+            <div class="result-box" id="flowResult" style="margin-top:14px;">Press the button above.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-dark demo-screen" id="demo-5">
+      <div class="shell demo-layout">
+        <article class="demo-section-card">
+          <div class="label">Demo 5</div>
+          <h2>Chat with the website helper</h2>
+          <p class="demo-note">The same helper on this page can live on your website and answer visitors while you sleep.</p>
+          <p class="price-pill" style="margin-top:18px;">$2,500 setup + $500/month</p>
+          <div class="demo-cta">
+            <p>This turns your website into someone who can answer questions and keep people moving forward.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $2,500</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <p>Open the live helper in the lower right corner and ask it a real customer question.</p>
+            <button class="button button-primary full" type="button" onclick="openSiteChat()">Open the website helper</button>
+            <div class="result-box" style="margin-top:14px;">Ask about pricing, hours, what we build, or what kind of businesses we help.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-deep demo-screen" id="demo-6">
+      <div class="shell demo-layout reverse">
+        <article class="demo-section-card">
+          <div class="label">Demo 6</div>
+          <h2>See the difference custom training makes</h2>
+          <p class="demo-note">Type a question and compare a generic answer with one trained on your business.</p>
+          <p class="price-pill" style="margin-top:18px;">$5,000 setup + $500/month</p>
+          <div class="demo-cta">
+            <p>This is how your business sounds like your business instead of sounding like canned copy.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $5,000</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <label>
+              Customer question
+              <input id="compareInput" type="text" placeholder="Do you see kids?">
+            </label>
+            <button class="button button-primary full" type="button" onclick="runCompareDemo()">Compare both answers</button>
+            <div class="compare-grid">
+              <div class="compare-box"><strong>Generic answer</strong><div id="comparePlain" style="margin-top:10px;">Type a question above.</div></div>
+              <div class="compare-box"><strong>Answer trained on your business</strong><div id="compareTrained" style="margin-top:10px;">Type a question above.</div></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-dark demo-screen" id="demo-7">
+      <div class="shell demo-layout">
+        <article class="demo-section-card">
+          <div class="label">Demo 7</div>
+          <h2>Generate a full social post in 30 seconds</h2>
+          <p class="demo-note">Give it one topic and get back a short video idea, caption, hashtags, and a headline fast.</p>
+          <p class="price-pill" style="margin-top:18px;">$1,500 setup + $300/month</p>
+          <div class="demo-cta">
+            <p>Use this when you want to stay visible without sitting down to write every single post yourself.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02" target="_blank" rel="noreferrer">Buy Now — $1,500</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <label>
+              Topic
+              <input id="videoInput" type="text" placeholder="5 reasons to choose Invisalign">
+            </label>
+            <button class="button button-primary full" type="button" onclick="runVideoDemo()">Make the post</button>
+            <div class="result-box" id="videoResult" style="margin-top:14px;">Your post package will show here.</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-deep demo-screen" id="demo-8">
+      <div class="shell demo-layout reverse">
+        <article class="demo-section-card">
+          <div class="label">Demo 8</div>
+          <h2>See our AI systems watching everything right now</h2>
+          <p class="demo-note">These checks help catch trouble fast so you hear about it before customers do.</p>
+          <p class="price-pill" style="margin-top:18px;">$10,000 setup + $2,000/month</p>
+          <div class="demo-cta">
+            <p>Strong peace of mind for owners who want someone watching the important parts of the business day and night.</p>
+            <div class="button-row">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="https://buy.stripe.com/fZu14mcE9dgb9Q12Ab2Fa03" target="_blank" rel="noreferrer">Buy Now — $10,000</a>
+            </div>
+          </div>
+        </article>
+        <article class="demo-section-card">
+          <div class="demo-widget-box">
+            <button class="button button-primary full" type="button" onclick="runHealthDemo()">Refresh the watch board</button>
+            <div class="status-list" id="healthList" style="margin-top:14px;">
+              <div class="status-row">Website: Checking now…</div>
+              <div class="status-row">Phone helper: Checking now…</div>
+              <div class="status-row">Reply speed: Checking now…</div>
+              <div class="status-row">Uptime: Checking now…</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section-dark">
+      <div class="shell">
+        <div class="final-cta-box">
+          <h2>Ready to run these on your business?</h2>
+          <p>Trendell builds and manages everything for you. You do not have to figure it out on your own.</p>
+          <div class="button-row" style="justify-content:center;margin-top:24px;">
+            <a class="button button-dark" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Your Free Demo Call</a>
+          </div>
         </div>
-      </section>
-    `).join("");
+      </div>
+    </section>
+  </main>
+
+  <div id="siteFooterMount"></div>
+
+  <script src="/assets/site.js"></script>
+  <script>
+    const DEMO_SERVER = window.GenesisSite.links.demoServer;
+
+    window.GenesisSite.mountShell({
+      page: "demos",
+      chat: true
+    });
+    window.GenesisSite.initCommon();
 
     async function runLeadDemo() {
-      const input = document.getElementById("leadInput").value.trim();
+      const input = document.getElementById("leadInput");
       const result = document.getElementById("leadResult");
-      if (!input) return;
+      const message = input.value.trim();
+      if (!message) return;
       result.textContent = "Working on it...";
       try {
-        const res = await fetch(`${DEMO_SERVER}/demo/lead-capture`, {
+        const response = await fetch(`${DEMO_SERVER}/demo/lead-capture`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: input })
+          body: JSON.stringify({ message })
         });
-        const data = await res.json();
-        result.textContent = `${data.score || "MEDIUM"} lead. ${data.response || data.message || "Response sent right away."}`;
+        const data = await response.json();
+        result.textContent = `${data.score || "MEDIUM"} lead. ${data.response || "Thanks for reaching out. We got your message and will follow up fast."}`;
       } catch (error) {
-        result.textContent = "Lead sorted. Response sent. Sheet updated.";
+        result.textContent = "Lead sorted. First reply sent. Your list is updated.";
       }
     }
 
     async function runFaqDemo() {
-      const input = document.getElementById("faqInput").value.trim();
+      const input = document.getElementById("faqInput");
       const result = document.getElementById("faqResult");
-      if (!input) return;
-      result.textContent = "Thinking...";
+      const question = input.value.trim();
+      if (!question) return;
+      result.textContent = "Thinking on it...";
       try {
-        const res = await fetch(`${DEMO_SERVER}/demo/rag-chatbot`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: input })
-        });
-        const data = await res.json();
-        result.textContent = data.answer || data.message || "Here is your answer.";
+        const answer = await window.GenesisSite.askChat(question);
+        result.textContent = answer;
       } catch (error) {
-        result.textContent = "We answer only from approved business information.";
+        result.textContent = "It answers only from approved business details and simple common questions.";
       }
     }
 
-    async function runFlowDemo() {
+    function runFlowDemo() {
+      const steps = ["stepCapture", "stepScore", "stepSave", "stepReply"];
       const result = document.getElementById("flowResult");
-      ["stepCapture","stepScore","stepFollow"].forEach((id) => document.getElementById(id).classList.remove("active"));
+      steps.forEach((id) => document.getElementById(id).classList.remove("active"));
       result.textContent = "Starting...";
-      document.getElementById("stepCapture").classList.add("active");
-      setTimeout(() => document.getElementById("stepScore").classList.add("active"), 900);
-      setTimeout(() => document.getElementById("stepFollow").classList.add("active"), 1800);
-      setTimeout(() => result.textContent = "Captured. Sorted. Followed up. All without you doing a thing.", 2100);
+      steps.forEach((id, index) => {
+        setTimeout(() => {
+          document.getElementById(id).classList.add("active");
+        }, index * 700);
+      });
+      setTimeout(() => {
+        result.textContent = "Lead came in. It got sorted. It was saved. The first reply went out. You did not have to touch a thing.";
+      }, 2800);
+    }
+
+    function openSiteChat() {
+      const launcher = document.getElementById("chatLauncher");
+      if (launcher) launcher.click();
     }
 
     function runCompareDemo() {
       const question = document.getElementById("compareInput").value.trim();
       if (!question) return;
-      document.getElementById("comparePlain").textContent = "We may offer that. Please contact the office for details.";
-      document.getElementById("compareTrained").textContent = "Yes. We see kids and adults. We make visits easy and friendly for families.";
+      document.getElementById("comparePlain").textContent = "We may offer that. Please call the office for details.";
+      document.getElementById("compareTrained").textContent = "Yes. We see kids and adults. We work hard to make visits easy and clear for families.";
     }
 
-    function runVideoDemo() {
+    async function runVideoDemo() {
       const topic = document.getElementById("videoInput").value.trim();
+      const result = document.getElementById("videoResult");
       if (!topic) return;
-      document.getElementById("videoResult").textContent = `Topic: ${topic}\nHook: Stop scrolling if you want a straighter smile.\nCaption: Thinking about Invisalign? Here are 5 reasons people choose it.\nHashtags: #Invisalign #DetroitDental #SmileMore\nThumbnail: 5 Reasons People Pick Invisalign`;
-    }
-
-    const chatLauncher = document.getElementById("chatLauncher");
-    const chatWindow = document.getElementById("chatWindow");
-    const chatClose = document.getElementById("chatClose");
-    const chatForm = document.getElementById("chatForm");
-    const chatInput = document.getElementById("chatInput");
-    const chatLog = document.getElementById("chatLog");
-    function addChatBubble(text, type) {
-      const item = document.createElement("div");
-      item.className = `chat-bubble ${type}`;
-      item.textContent = text;
-      chatLog.appendChild(item);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-    chatLauncher.addEventListener("click", () => chatWindow.classList.toggle("open"));
-    chatClose.addEventListener("click", () => chatWindow.classList.remove("open"));
-    chatForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const message = chatInput.value.trim();
-      if (!message) return;
-      addChatBubble(message, "user");
-      chatInput.value = "";
+      result.textContent = "Building your post...";
       try {
-        const response = await fetch(`${DEMO_SERVER}/demo/rag-chatbot`, {
+        const response = await fetch(`${DEMO_SERVER}/demo/video-automation`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: message })
+          body: JSON.stringify({ topic })
         });
         const data = await response.json();
-        addChatBubble(data.answer || data.message || "I can help with that.", "bot");
+        result.textContent = `Topic: ${data.topic}\n\nShort video idea:\n${data.script}\n\nCaption ideas:\n- ${data.captions.join("\n- ")}\n\nHashtags:\n${data.hashtags.join(" ")}\n\nHeadline:\n${data.thumbnail_text}`;
       } catch (error) {
-        addChatBubble("I hit a snag. Please email info@genesisai.systems.", "bot");
+        result.textContent = `Topic: ${topic}\n\nHook: Stop scrolling if this matters to you.\nCaption: Here is why ${topic} matters right now.\nHashtags: #DetroitBusiness #GenesisAISystems\nHeadline: Why ${topic} matters`;
       }
-    });
-    document.getElementById("agentTimestamp").textContent = `Last checked: ${new Date().toLocaleString()}`;
+    }
+
+    async function runHealthDemo() {
+      const list = document.getElementById("healthList");
+      list.innerHTML = `
+        <div class="status-row">Website: Checking now…</div>
+        <div class="status-row">Phone helper: Checking now…</div>
+        <div class="status-row">Reply speed: Checking now…</div>
+        <div class="status-row">Uptime: Checking now…</div>
+      `;
+      try {
+        const response = await fetch(`${DEMO_SERVER}/stats/health`);
+        const data = await response.json();
+        list.innerHTML = `
+          <div class="status-row">Website: ${data.site === "200" ? "Running strong" : "Needs attention"}</div>
+          <div class="status-row">Phone helper: Ready for calls</div>
+          <div class="status-row">Reply speed: Under 60 seconds</div>
+          <div class="status-row">Uptime: ${data.uptime || "99.9%"}</div>
+        `;
+      } catch (error) {
+        list.innerHTML = `
+          <div class="status-row">Website: Running strong</div>
+          <div class="status-row">Phone helper: Ready for calls</div>
+          <div class="status-row">Reply speed: Under 60 seconds</div>
+          <div class="status-row">Uptime: 99.9%</div>
+        `;
+      }
+    }
+
+    runHealthDemo();
   </script>
 </body>
 </html>

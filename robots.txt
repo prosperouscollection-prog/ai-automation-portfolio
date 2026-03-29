@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /command.html
+Sitemap: https://genesisai.systems/sitemap.xml

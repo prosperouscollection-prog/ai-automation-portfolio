@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us — Genesis AI Systems</title>
+  <meta name="description" content="Contact Genesis AI Systems to get a free AI assessment, talk through your business, or send us the details we need to recommend the right setup.">
+  <link rel="canonical" href="https://genesisai.systems/contact.html">
+  <meta property="og:title" content="Contact Us — Genesis AI Systems">
+  <meta property="og:description" content="Get a free AI assessment, talk through your business, or send Genesis AI Systems the details needed to recommend the right setup.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://genesisai.systems/contact.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Contact Us — Genesis AI Systems">
+  <meta name="twitter:description" content="Talk through your business and get a clear recommendation from Genesis AI Systems.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy-soft: #162032;
+      --blue: #2563eb;
+      --blue-soft: rgba(37, 99, 235, 0.16);
+      --white: #ffffff;
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --line: rgba(148, 163, 184, 0.18);
+      --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+      --radius: 24px;
+      --max: 1240px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.24), transparent 30%),
+        linear-gradient(180deg, #0f172a 0%, #0b1324 45%, #09101f 100%);
+      color: var(--white);
+      font-family: "Manrope", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.88);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .site-nav-inner {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo,
+    h1,
+    h2,
+    h3 {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .logo {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 8px 10px;
+      border-radius: 999px;
+      transition: 0.2s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--white);
+      background: var(--blue-soft);
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      color: var(--white);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+    .button-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.28);
+    }
+    .button-outline {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .button-soft {
+      background: rgba(37, 99, 235, 0.14);
+      border-color: rgba(37, 99, 235, 0.25);
+    }
+
+    .hero,
+    .section {
+      padding: 88px 0;
+    }
+
+    .hero {
+      padding-top: 72px;
+      padding-bottom: 48px;
+    }
+
+    .hero-grid,
+    .contact-grid,
+    .steps-grid,
+    .footer-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-grid,
+    .contact-grid {
+      grid-template-columns: 1.05fr 0.95fr;
+      align-items: start;
+    }
+
+    .steps-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .footer-grid {
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    .pill,
+    .small-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: #bfd5ff;
+      background: rgba(255, 255, 255, 0.03);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      line-height: 1.04;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      max-width: 13ch;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      line-height: 1.08;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      line-height: 1.1;
+      font-size: 1.25rem;
+    }
+
+    p,
+    li,
+    .contact-note {
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .hero-copy p {
+      max-width: 34rem;
+      margin: 0 0 24px;
+    }
+
+    .hero-actions,
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .card,
+    .form-shell,
+    .hero-panel,
+    .step-card {
+      background: rgba(16, 25, 44, 0.88);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel,
+    .step-card,
+    .form-shell {
+      padding: 24px;
+    }
+
+    .hero-panel ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-panel li,
+    .step-card p {
+      margin: 0;
+    }
+
+    .step-card {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .step-number {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--blue-soft);
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(6, 10, 18, 0.45);
+      color: var(--white);
+      padding: 14px 16px;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .contact-links {
+      display: grid;
+      gap: 14px;
+      margin: 18px 0 24px;
+    }
+
+    .footer {
+      padding: 28px 0 60px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+    }
+
+    .footer-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px 16px;
+    }
+
+    @media (max-width: 960px) {
+      .site-nav-inner,
+      .hero-grid,
+      .contact-grid,
+      .steps-grid,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .site-nav-inner {
+        padding: 14px 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links,
+      .hero-actions,
+      .cta-row,
+      .footer-nav {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container site-nav-inner">
+      <a class="logo" href="/">Genesis AI Systems</a>
+      <div class="nav-links" aria-label="Primary">
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#examples">Real Examples</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/#pricing">Pricing</a>
+        <a class="active" href="/contact.html">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="pill">Contact Genesis AI Systems</div>
+          <h1>Tell us what is eating your time.</h1>
+          <p>Use this page if you want one place for the form, phone number, email, next steps, and booking links. We will tell you what we would automate first and which plan fits best.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+            <a class="button button-outline" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02">Reserve with $100 Deposit</a>
+            <a class="button button-soft" href="/faq.html">Read the FAQ</a>
+          </div>
+        </div>
+        <aside class="hero-panel">
+          <h3>What happens after you reach out</h3>
+          <ul>
+            <li>1. Riley answers right away and we log your business details.</li>
+            <li>2. Trendell reviews the pain point and recommends the best first system.</li>
+            <li>3. We confirm fit, scope, and the fastest path to launch.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:32px;">
+      <div class="container steps-grid">
+        <article class="step-card">
+          <div class="step-number">1</div>
+          <h3>Need a fast answer?</h3>
+          <p>Get the free AI assessment if you want the quickest path to a recommendation.</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number">2</div>
+          <h3>Ready to reserve your slot?</h3>
+          <p>The $100 deposit holds your place and gets the kickoff process moving.</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number">3</div>
+          <h3>Still comparing options?</h3>
+          <p>The FAQ covers setup, support, pricing, cancellation, and what happens next.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container contact-grid">
+        <div class="form-shell">
+          <div class="small-badge">Send Your Details</div>
+          <h2>Get a recommendation</h2>
+          <p>Tell us what kind of business you run and where the friction is. We will tell you what we would build first.</p>
+          <form class="form-grid" id="contactForm">
+            <label>Your Name
+              <input type="text" name="name" required>
+            </label>
+            <label>Your Business Name
+              <input type="text" name="business" required>
+            </label>
+            <label>Best Phone Number
+              <input type="tel" name="phone" required>
+            </label>
+            <label>Email Address
+              <input type="email" name="email" required>
+            </label>
+            <label>What type of business?
+              <select name="business_type" required>
+                <option value="">Select one</option>
+                <option>Restaurant</option>
+                <option>Dental Office</option>
+                <option>HVAC</option>
+                <option>Salon</option>
+                <option>Real Estate</option>
+                <option>Retail</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>What is your biggest headache right now?
+              <textarea name="pain_point" required placeholder="e.g. We miss too many calls after hours and our follow-up is too slow"></textarea>
+            </label>
+            <button class="button button-primary" type="submit">Get My Free Recommendation</button>
+          </form>
+          <p class="contact-note" id="contactStatus">We score your inquiry right away and get back to you fast.</p>
+        </div>
+
+        <div class="form-shell">
+          <div class="small-badge">Reach Us Directly</div>
+          <h2>Prefer phone or email?</h2>
+          <div class="contact-links">
+            <div>📞 <a href="tel:+15866369550">(586) 636-9550</a><br>Riley answers 24/7. Trendell follows up within 24 hours.</div>
+            <div>📧 <a href="mailto:info@genesisai.systems">info@genesisai.systems</a></div>
+            <div>📍 Built in Detroit. Serving businesses nationwide.</div>
+          </div>
+          <div class="cta-row">
+            <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book directly on Calendly</a>
+            <a class="button button-outline" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02">Reserve with $100 Deposit</a>
+          </div>
+          <p class="contact-note" style="margin-top:18px;">Questions before you talk to us? <a href="/faq.html" style="text-decoration:underline;">Open the FAQ</a>.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>© 2026 Genesis AI Systems | Built in Detroit | Serving businesses nationwide</div>
+      <div class="footer-nav">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="/activity.html">Activity</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
+    </div>
+  </footer>
+
+  <script>
+    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
+    const contactForm = document.getElementById("contactForm");
+    const contactStatus = document.getElementById("contactStatus");
+
+    contactForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      contactStatus.textContent = "Sending your details now...";
+      const payload = Object.fromEntries(new FormData(contactForm).entries());
+      try {
+        const response = await fetch(`${DEMO_SERVER}/submit/contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        contactStatus.textContent = data.message || "Thanks. Trendell will reach out soon.";
+        if (data.success) {
+          setTimeout(() => {
+            window.location.href = "/thank-you.html";
+          }, 3000);
+        }
+      } catch (error) {
+        contactStatus.textContent = "Please email info@genesisai.systems and we will get right back to you.";
+      }
+    });
+  </script>
+</body>
+</html>

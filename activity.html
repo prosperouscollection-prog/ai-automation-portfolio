@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Activity — Genesis AI Systems</title>
+  <meta name="description" content="See the Genesis AI Systems live activity view with recent inquiry handling, AI responses, uptime, and system status snapshots.">
+  <link rel="canonical" href="https://genesisai.systems/activity.html">
+  <meta property="og:title" content="Live Activity — Genesis AI Systems">
+  <meta property="og:description" content="See recent inquiry handling, AI responses, uptime, and system status snapshots from Genesis AI Systems.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://genesisai.systems/activity.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Live Activity — Genesis AI Systems">
+  <meta name="twitter:description" content="Recent inquiry handling, AI responses, uptime, and system snapshots from Genesis AI Systems.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy-soft: #162032;
+      --blue: #2563eb;
+      --blue-soft: rgba(37, 99, 235, 0.16);
+      --white: #ffffff;
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --line: rgba(148, 163, 184, 0.18);
+      --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+      --radius: 24px;
+      --max: 1240px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.25), transparent 24%),
+        linear-gradient(180deg, #0f172a 0%, #0b1324 45%, #09101f 100%);
+      color: var(--white);
+      font-family: "Manrope", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.88);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .site-nav-inner {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo,
+    h1,
+    h2,
+    h3 {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .logo {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-size: 0.95rem;
+      padding: 8px 10px;
+      border-radius: 999px;
+      transition: 0.2s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--white);
+      background: var(--blue-soft);
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      color: var(--white);
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+    .button-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.28);
+    }
+    .button-outline {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .button-soft {
+      background: rgba(37, 99, 235, 0.14);
+      border-color: rgba(37, 99, 235, 0.25);
+    }
+
+    .hero,
+    .section {
+      padding: 88px 0;
+    }
+
+    .hero {
+      padding-top: 72px;
+      padding-bottom: 40px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: #bfd5ff;
+      background: rgba(255, 255, 255, 0.03);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      line-height: 1.04;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      max-width: 12ch;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      line-height: 1.08;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      line-height: 1.1;
+      font-size: 1.2rem;
+    }
+
+    p,
+    li,
+    small {
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .hero-actions,
+    .activity-grid,
+    .page-grid,
+    .footer-grid,
+    .footer-nav {
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .page-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+    }
+
+    .activity-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 32px;
+    }
+
+    .footer-grid {
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    .footer-nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px 16px;
+    }
+
+    .card,
+    .activity-box,
+    .feed-shell,
+    .info-shell {
+      background: rgba(16, 25, 44, 0.88);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .activity-box,
+    .feed-shell,
+    .info-shell {
+      padding: 24px;
+    }
+
+    .activity-box h3 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .live-feed {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .live-feed li {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .contact-note {
+      margin-top: 16px;
+      color: var(--muted);
+    }
+
+    .footer {
+      padding: 28px 0 60px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+    }
+
+    @media (max-width: 960px) {
+      .site-nav-inner,
+      .page-grid,
+      .activity-grid,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .site-nav-inner {
+        padding: 14px 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links,
+      .hero-actions,
+      .footer-nav {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container site-nav-inner">
+      <a class="logo" href="/">Genesis AI Systems</a>
+      <div class="nav-links" aria-label="Primary">
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#examples">Real Examples</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="pill">Live Activity</div>
+        <h1>Your AI is already working.</h1>
+        <p>This content moved off the homepage so the landing page could stay tighter. If you want to see the operating view, recent activity, and system snapshots, this is the page for it.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="/demos.html">See Live Demos</a>
+          <a class="button button-outline" href="/contact.html">Talk to Us</a>
+          <a class="button button-soft" href="/faq.html">Read the FAQ</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:32px;">
+      <div class="container">
+        <div class="activity-grid">
+          <div class="activity-box">
+            <h3 id="statLeadsToday">--</h3>
+            <p>Inquiries handled today</p>
+            <small>All responded to in under 60 seconds</small>
+          </div>
+          <div class="activity-box">
+            <h3 id="statDemos">--</h3>
+            <p>Questions answered by AI</p>
+            <small>Without you lifting a finger</small>
+          </div>
+          <div class="activity-box">
+            <h3 id="statUptime">99.9%</h3>
+            <p>System uptime</p>
+            <small>Your AI never takes a day off</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container page-grid">
+        <div class="feed-shell">
+          <h2>Recent Activity</h2>
+          <ul class="live-feed" id="activityFeed">
+            <li>🎯 New inquiry from a restaurant group — Score: HIGH</li>
+            <li>💬 Chat helper answered 3 questions</li>
+            <li>📞 Riley handled an incoming call</li>
+            <li>✅ All systems checked and running perfectly</li>
+            <li>🎯 New inquiry from a home services company — Score: MEDIUM</li>
+          </ul>
+          <p class="contact-note">All customer information is kept private.</p>
+        </div>
+
+        <aside class="info-shell">
+          <h3>What this page is for</h3>
+          <p>It is the public operating snapshot, not the full client dashboard. It gives a fast sense of system responsiveness and recent activity without turning the homepage into a reporting page.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/contact.html">Get a Recommendation</a>
+            <a class="button button-outline" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02">Reserve with $100 Deposit</a>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>© 2026 Genesis AI Systems | Built in Detroit | Serving businesses nationwide</div>
+      <div class="footer-nav">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="/activity.html">Activity</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
+    </div>
+  </footer>
+
+  <script>
+    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
+
+    async function loadStats() {
+      try {
+        const [leadsResp, demosResp, recentResp] = await Promise.all([
+          fetch(`${DEMO_SERVER}/stats/leads-today`),
+          fetch(`${DEMO_SERVER}/stats/demos`),
+          fetch(`${DEMO_SERVER}/stats/recent-activity`)
+        ]);
+        const leads = await leadsResp.json();
+        const demosData = await demosResp.json();
+        const recent = await recentResp.json();
+
+        document.getElementById("statLeadsToday").textContent = leads.count ?? "--";
+        document.getElementById("statDemos").textContent = demosData.count ?? "--";
+        document.getElementById("statUptime").textContent = (demosData.uptime || "99.9%").toString();
+
+        if (Array.isArray(recent.items) && recent.items.length) {
+          document.getElementById("activityFeed").innerHTML = recent.items.slice(0, 6).map((item) => `<li>${item}</li>`).join("");
+        }
+      } catch (error) {
+        console.error("Activity load failed", error);
+      }
+    }
+
+    loadStats();
+  </script>
+</body>
+</html>

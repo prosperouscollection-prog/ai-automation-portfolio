@@ -3,160 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Command Center — Genesis AI Systems</title>
+  <title>Command Center | Genesis AI Systems</title>
+  <meta name="description" content="Command center for Genesis AI Systems. Send quick instructions, review the latest activity, and watch the business at a glance.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://genesisai.systems/command.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/site.css">
   <style>
-    :root{--navy:#0f172a;--blue:#2563eb;--white:#fff;--text:#dbe7ff;--muted:#9fb0cc;--line:rgba(148,163,184,.16);--green:#22c55e;--yellow:#f59e0b;--red:#ef4444}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0b1324;color:white}
-    .gate,.app{min-height:100vh}
-    .gate{display:grid;place-items:center;background:linear-gradient(180deg,#0f172a,#09101d)}
-    .card,.gate-card{background:rgba(16,25,44,.92);border:1px solid var(--line);border-radius:24px;padding:20px}
-    .gate-card{width:min(420px,calc(100% - 32px));text-align:center}
-    .gate-card input,.command-input input{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white}
-    .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:16px;border:1px solid transparent;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;font-weight:800;cursor:pointer}
-    .btn.secondary{background:rgba(255,255,255,.03);border-color:rgba(148,163,184,.22)}
-    .app{display:none;padding:16px}
-    .app.open{display:block}
-    .header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .status-big{font-size:1.5rem;font-weight:800}
-    .grid{display:grid;gap:12px}
-    .stats{grid-template-columns:repeat(3,1fr)}
-    .actions{grid-template-columns:repeat(2,1fr)}
-    .actions button{min-height:80px}
-    .list{display:grid;gap:10px}
-    .row{padding:14px;border-radius:16px;background:rgba(255,255,255,.04)}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}
-    .chip{padding:10px 12px;border-radius:999px;background:rgba(37,99,235,.16);border:1px solid rgba(37,99,235,.26);cursor:pointer}
-    .badge{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:.8rem;font-weight:700}
-    .high{background:rgba(34,197,94,.2)} .medium{background:rgba(245,158,11,.2)} .low{background:rgba(148,163,184,.2)}
-    .error{color:#fecaca;min-height:22px}
-    @media (max-width:700px){.stats,.actions{grid-template-columns:1fr 1fr}}
+    .command-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .command-grid.two {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 980px) {
+      .command-grid.two {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="gate" id="pinGate">
-    <div class="gate-card" id="gateCard">
-      <h1>Genesis AI Systems</h1>
-      <p>Command Center</p>
-      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="2575">
-      <div style="height:12px"></div>
-      <button class="btn" id="pinSubmit">Access Dashboard</button>
-      <p class="error" id="pinError"></p>
-    </div>
-  </div>
+  <div id="siteNavMount"></div>
 
-  <div class="app" id="commandApp">
-    <div class="card header">
-      <div>
-        <strong>Genesis AI Systems</strong>
-        <div style="color:var(--muted)">Command Center</div>
+  <main class="page-offset gate-wrap">
+    <div class="shell">
+      <div class="gate-card" id="commandGate">
+        <h1>Genesis AI Systems Command Center</h1>
+        <p>Enter the four-digit PIN to send a quick instruction and see the latest activity feed.</p>
+        <label style="margin-top:18px;">
+          Access PIN
+          <input id="commandPin" type="password" inputmode="numeric" maxlength="4" placeholder="2575">
+        </label>
+        <button class="button button-primary full" id="commandUnlock" style="margin-top:16px;">Open command center</button>
+        <p class="small-note" id="commandError" style="margin-top:12px;color:#fca5a5;"></p>
       </div>
-      <button class="btn secondary" style="width:auto;padding:0 16px" id="logoutButton">Logout</button>
-    </div>
 
-    <div class="card">
-      <div class="status-big" id="statusBig">🟢 All Systems Go</div>
-      <div class="grid stats" style="margin-top:14px">
-        <div class="row"><strong id="leadsToday">0</strong><br>Leads today</div>
-        <div class="row"><strong id="mrrValue">$0</strong><br>MRR</div>
-        <div class="row"><strong>99.9%</strong><br>Uptime</div>
+      <div class="internal-shell hidden" id="commandApp">
+        <section class="simple-hero" style="padding:36px 0 12px;">
+          <div class="shell" style="width:100%;margin:0;">
+            <div class="eyebrow-pill">Quick control</div>
+            <h1 style="font-size:clamp(2rem,5vw,3.2rem);margin-bottom:12px;">Send a quick instruction without leaving the browser</h1>
+            <p>Use the built-in actions below or type your own short command.</p>
+            <div class="button-row" style="margin-top:20px;">
+              <a class="button button-outline" href="/dashboard.html">Back to Dashboard</a>
+              <button class="button button-primary" id="commandLogout" type="button">Log out</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="command-grid two">
+          <article class="internal-card">
+            <h3>Quick actions</h3>
+            <div class="button-row" style="margin-top:18px;">
+              <button class="button button-soft" type="button" data-command="STATUS">STATUS</button>
+              <button class="button button-soft" type="button" data-command="LEADS">LEADS</button>
+              <button class="button button-soft" type="button" data-command="REPORT">REPORT</button>
+              <button class="button button-soft" type="button" data-command="PROSPECTS">PROSPECTS</button>
+              <button class="button button-soft" type="button" data-command="FOLLOWUP">FOLLOWUP</button>
+              <button class="button button-soft" type="button" data-command="CONTENT">CONTENT</button>
+            </div>
+          </article>
+          <article class="internal-card">
+            <h3>Send your own short command</h3>
+            <label>
+              Command
+              <input id="commandInput" type="text" placeholder="STATUS">
+            </label>
+            <button class="button button-primary full" id="commandSend" style="margin-top:16px;">Send command</button>
+            <p class="small-note" id="commandStatus" style="margin-top:12px;">The result will show here.</p>
+          </article>
+        </div>
+
+        <div class="command-grid two" style="margin-top:24px;">
+          <article class="internal-card">
+            <h3>Live activity</h3>
+            <div class="activity-feed" id="commandActivity">
+              <div class="activity-item"><span class="activity-dot"></span><span>Loading the latest updates...</span><span class="small-note">Now</span></div>
+            </div>
+          </article>
+          <article class="internal-card">
+            <h3>Latest leads</h3>
+            <div class="feature-list" id="commandLeads">
+              <div>Loading the latest leads...</div>
+            </div>
+          </article>
+        </div>
       </div>
     </div>
+  </main>
 
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <div class="grid actions">
-        <button class="btn" data-command="LEADS">🎯 Leads</button>
-        <button class="btn" data-command="LEAD 1">📞 Top Lead</button>
-        <button class="btn" data-command="DEPLOY">🚀 Deploy</button>
-        <button class="btn" data-command="REPORT">📊 Report</button>
-        <button class="btn" data-command="PROSPECTS">🔍 Prospects</button>
-        <button class="btn" data-command="CONTENT">📝 Content</button>
-      </div>
-    </div>
+  <div id="siteFooterMount"></div>
 
-    <div class="card">
-      <h2>Agent Status</h2>
-      <div class="list" id="agentList"></div>
-    </div>
-
-    <div class="card">
-      <h2>Recent Leads</h2>
-      <div class="list" id="leadList"></div>
-    </div>
-
-    <div class="card">
-      <h2>Send SMS Command</h2>
-      <div class="command-input"><input id="commandInput" placeholder="STATUS"></div>
-      <div style="height:12px"></div>
-      <button class="btn" id="sendCommand">Send Command</button>
-      <div class="chips" style="margin-top:14px">
-        <button class="chip" data-command="STATUS">STATUS</button>
-        <button class="chip" data-command="LEADS">LEADS</button>
-        <button class="chip" data-command="DEPLOY">DEPLOY</button>
-        <button class="chip" data-command="PROSPECTS">PROSPECTS</button>
-        <button class="chip" data-command="FOLLOWUP">FOLLOWUP</button>
-        <button class="chip" data-command="REPORT">REPORT</button>
-        <button class="chip" data-command="AGENTS">AGENTS</button>
-        <button class="chip" data-command="HELP">HELP</button>
-      </div>
-      <p id="commandStatus">Text commands go through the command center.</p>
-    </div>
-
-    <div class="card">
-      <h2>Live Activity Feed</h2>
-      <div class="list" id="activityList"></div>
-    </div>
-  </div>
-
+  <script src="/assets/site.js"></script>
   <script>
-    const PIN = "2575";
-    const SERVER = "https://genesis-ai-systems-demo.onrender.com";
-    function openApp(){sessionStorage.setItem("genesis_command_pin",PIN);document.getElementById("pinGate").style.display="none";document.getElementById("commandApp").classList.add("open");loadCommandCenter();}
-    document.getElementById("pinSubmit").addEventListener("click",()=>{const value=document.getElementById("pinInput").value.trim();document.getElementById("pinError").textContent=value===PIN?"":"Incorrect PIN. Try again.";if(value===PIN)openApp();});
-    if(sessionStorage.getItem("genesis_command_pin")===PIN)openApp();
-    document.getElementById("logoutButton").addEventListener("click",()=>{sessionStorage.removeItem("genesis_command_pin");location.reload();});
+    const COMMAND_PIN = "2575";
+    const COMMAND_KEY = "genesis_command_access";
+    const COMMAND_SERVER = window.GenesisSite.links.demoServer;
 
-    async function loadCommandCenter(){
-      let data={agents:[],leads:[],activity:[]};
-      try{
-        const response=await fetch(`${SERVER}/stats/command-center`);
-        if(response.ok)data=await response.json();
-      }catch(error){console.error(error)}
-      const agents=data.agents||[
-        {name:"Security Agent",status:"✅",last_run:"Just now"},
-        {name:"QA Agent",status:"✅",last_run:"Just now"},
-        {name:"Deploy Agent",status:"✅",last_run:"Just now"},
-        {name:"Scraper Agent",status:"✅",last_run:"5:00 AM"}
-      ];
-      const leads=data.leads||[
-        {score:"HIGH",name:"Alicia",business:"Detroit Diner",time:"10m ago"},
-        {score:"MEDIUM",name:"Dana",business:"Bright Smile Dental",time:"34m ago"}
-      ];
-      const activity=data.activity||["Security check passed","Riley handled an incoming call","Lead finder found 20 prospects","Morning summary sent"];
-      document.getElementById("leadsToday").textContent=leads.length;
-      document.getElementById("mrrValue").textContent="$0";
-      document.getElementById("agentList").innerHTML=agents.map((agent)=>`<div class="row">${agent.name} ${agent.status||"✅"} <div style="color:var(--muted)">${agent.last_run||"Just now"}</div></div>`).join("");
-      document.getElementById("leadList").innerHTML=leads.slice(0,5).map((lead)=>`<div class="row"><span class="badge ${String(lead.score||"LOW").toLowerCase()}">${lead.score||"LOW"}</span> ${lead.name||"Lead"} — ${lead.business||""} <div style="color:var(--muted)">${lead.time||"Today"}</div></div>`).join("");
-      document.getElementById("activityList").innerHTML=activity.slice(0,10).map((item)=>`<div class="row">${typeof item==="string"?item:item.text}</div>`).join("");
-      setTimeout(loadCommandCenter,30000);
+    window.GenesisSite.mountShell({ page: "dashboard" });
+    window.GenesisSite.initCommon();
+
+    const commandGate = document.getElementById("commandGate");
+    const commandApp = document.getElementById("commandApp");
+    const commandError = document.getElementById("commandError");
+
+    function openCommandCenter() {
+      sessionStorage.setItem(COMMAND_KEY, COMMAND_PIN);
+      commandGate.classList.add("hidden");
+      commandApp.classList.remove("hidden");
+      loadCommandCenter();
     }
 
-    async function sendCommand(command){
-      const status=document.getElementById("commandStatus");
-      status.textContent=`Sending ${command}...`;
-      try{
-        const response=await fetch(`${SERVER}/sms/incoming`,{
-          method:"POST",
-          headers:{"Content-Type":"application/x-www-form-urlencoded"},
-          body:new URLSearchParams({From:"+13134002575",Body:command})
-        });
-        status.textContent=response.ok?`${command} sent.`:`${command} may have failed.`;
-      }catch(error){
-        status.textContent=`${command} sent. Check actions for the result.`;
+    async function loadCommandCenter() {
+      try {
+        const response = await fetch(`${COMMAND_SERVER}/stats/command-center`);
+        const data = response.ok ? await response.json() : { leads: [], activity: [] };
+
+        document.getElementById("commandActivity").innerHTML = (data.activity || []).slice(0, 6).map((item, index) => `
+          <div class="activity-item">
+            <span class="activity-dot"></span>
+            <span>${typeof item === "string" ? item : item.text}</span>
+            <span class="small-note">${index === 0 ? "Now" : `${index * 8}m ago`}</span>
+          </div>
+        `).join("") || `<div class="activity-item"><span class="activity-dot"></span><span>No recent activity yet.</span><span class="small-note">Now</span></div>`;
+
+        document.getElementById("commandLeads").innerHTML = (data.leads || []).slice(0, 5).map((lead) => `
+          <div>✅ ${lead.name || "Lead"} — ${lead.business || ""} (${lead.score || "LOW"})</div>
+        `).join("") || `<div>No recent leads yet.</div>`;
+      } catch (error) {
+        commandError.textContent = "The live command board could not refresh right now.";
       }
     }
-    document.getElementById("sendCommand").addEventListener("click",()=>{const value=document.getElementById("commandInput").value.trim().toUpperCase();if(value)sendCommand(value);});
-    document.querySelectorAll("[data-command]").forEach((button)=>button.addEventListener("click",()=>sendCommand(button.dataset.command)));
+
+    async function sendCommand(command) {
+      const status = document.getElementById("commandStatus");
+      status.textContent = `Sending ${command}...`;
+      try {
+        const response = await fetch(`${COMMAND_SERVER}/stats/command-center`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ command })
+        });
+        const data = await response.json();
+        status.textContent = data.message || `${command} sent.`;
+        loadCommandCenter();
+      } catch (error) {
+        status.textContent = `${command} was sent, but the live reply did not come back yet.`;
+      }
+    }
+
+    document.getElementById("commandUnlock").addEventListener("click", () => {
+      if (document.getElementById("commandPin").value.trim() === COMMAND_PIN) {
+        commandError.textContent = "";
+        openCommandCenter();
+      } else {
+        commandError.textContent = "That PIN did not match.";
+      }
+    });
+
+    document.getElementById("commandLogout").addEventListener("click", () => {
+      sessionStorage.removeItem(COMMAND_KEY);
+      location.reload();
+    });
+
+    document.getElementById("commandSend").addEventListener("click", () => {
+      const value = document.getElementById("commandInput").value.trim().toUpperCase();
+      if (value) sendCommand(value);
+    });
+
+    document.querySelectorAll("[data-command]").forEach((button) => {
+      button.addEventListener("click", () => sendCommand(button.dataset.command));
+    });
+
+    if (sessionStorage.getItem(COMMAND_KEY) === COMMAND_PIN) {
+      openCommandCenter();
+    }
   </script>
 </body>
 </html>

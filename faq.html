@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — Genesis AI Systems</title>
+  <meta name="description" content="Common questions about Genesis AI Systems pricing, setup, support, deposits, cancellations, and how our done-for-you AI services work.">
+  <link rel="canonical" href="https://genesisai.systems/faq.html">
+  <meta property="og:title" content="FAQ — Genesis AI Systems">
+  <meta property="og:description" content="Get quick answers about pricing, setup, support, deposits, cancellations, and how Genesis AI Systems works.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://genesisai.systems/faq.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FAQ — Genesis AI Systems">
+  <meta name="twitter:description" content="Common questions about pricing, setup, support, and how Genesis AI Systems works.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09101d;
+      --panel: rgba(16, 25, 44, 0.88);
+      --panel-soft: rgba(22, 32, 50, 0.7);
+      --line: rgba(148, 163, 184, 0.16);
+      --blue: #2563eb;
+      --blue-soft: rgba(37, 99, 235, 0.12);
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --white: #ffffff;
+      --green: #22c55e;
+      --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--white);
+      background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.22), transparent 26%),
+        linear-gradient(180deg, #0f172a, #09101d);
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(1160px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .site-nav-inner {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo,
+    h1,
+    h2,
+    h3 {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .logo {
+      font-weight: 700;
+    }
+
+    .nav-links,
+    .jump-links,
+    .cta-row,
+    .footer-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+      align-items: center;
+    }
+
+    .nav-links {
+      color: var(--muted);
+    }
+
+    .nav-links a.active {
+      color: #7db4ff;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 0 20px;
+      border-radius: 16px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+    }
+
+    .button-outline {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(148, 163, 184, 0.25);
+    }
+
+    .hero {
+      padding: 96px 0 44px;
+    }
+
+    .pill {
+      display: inline-flex;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      background: var(--blue-soft);
+      color: #cfe0ff;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(2.6rem, 5vw, 4.6rem);
+      line-height: 1.04;
+      margin: 0 0 18px;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      margin: 0 0 14px;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      margin: 0;
+    }
+
+    p {
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .hero-grid,
+    .contact-grid,
+    .footer-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .hero-grid,
+    .contact-grid {
+      grid-template-columns: 1.25fr 0.75fr;
+      align-items: start;
+    }
+
+    .hero-copy p {
+      max-width: 720px;
+    }
+
+    .hero-card,
+    .faq-group,
+    .contact-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      background: linear-gradient(180deg, rgba(37, 99, 235, 0.16), rgba(16, 25, 44, 0.9));
+    }
+
+    .hero-card ul {
+      list-style: none;
+      margin: 20px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+      color: var(--text);
+    }
+
+    .jump-links {
+      margin-top: 28px;
+      color: var(--muted);
+    }
+
+    .jump-links a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+    }
+
+    .faq-shell {
+      padding: 24px 0 80px;
+    }
+
+    .faq-stack {
+      display: grid;
+      gap: 24px;
+    }
+
+    .faq-group p.section-copy {
+      margin-top: 0;
+      margin-bottom: 18px;
+      color: var(--muted);
+    }
+
+    details {
+      border-top: 1px solid var(--line);
+      padding: 18px 0;
+    }
+
+    details:first-of-type {
+      border-top: none;
+      padding-top: 6px;
+    }
+
+    summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      color: #7db4ff;
+      font-size: 1.35rem;
+      line-height: 1;
+      flex: none;
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    details p {
+      margin: 12px 0 0;
+      max-width: 860px;
+    }
+
+    .contact-section {
+      padding: 0 0 96px;
+    }
+
+    .contact-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--white);
+    }
+
+    .contact-card p {
+      margin: 0 0 14px;
+    }
+
+    .contact-card:last-child {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.12), rgba(16, 25, 44, 0.92));
+    }
+
+    .mini-label {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+    }
+
+    .footer {
+      padding: 28px 0 60px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      color: var(--muted);
+    }
+
+    .footer-grid {
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+
+    @media (max-width: 960px) {
+      .site-nav-inner,
+      .hero-grid,
+      .contact-grid,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .site-nav-inner {
+        padding: 16px 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav-links,
+      .jump-links,
+      .cta-row,
+      .footer-nav {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .hero {
+        padding-top: 72px;
+      }
+    }
+  </style>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need to know anything about technology?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Genesis AI Systems handles setup, training, testing, and ongoing maintenance for you. You tell us about your business and we do the technical work."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How fast can you set it up?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most Starter and Pro systems go live within 5 to 7 business days after kickoff. Larger builds can take longer, but we confirm scope and timeline with you before we start."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does the $100 deposit do?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The $100 deposit reserves your build slot and kickoff time. We confirm the right-fit plan with you on the kickoff call and apply that deposit toward your project."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens after I reserve or buy?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You get confirmation right away. Trendell follows up within 24 hours to confirm fit, timeline, business details, and kickoff steps."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Will the AI sound like my business?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. We train the system on your services, pricing, policies, tone, and common customer questions so it sounds aligned with your business instead of generic."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What if something breaks?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We monitor systems continuously and fix issues when they come up. Ongoing support is part of the service, so you are not left troubleshooting on your own."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I cancel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Monthly services can be canceled with 30 days written notice. Setup fees cover build work that has already been completed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you only work with Detroit businesses?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Genesis AI Systems is built in Detroit and serves service businesses nationwide."
+          }
+        }
+      ]
+    }
+  </script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container site-nav-inner">
+      <a class="logo" href="/">Genesis AI Systems</a>
+      <div class="nav-links" aria-label="Primary">
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#examples">Real Examples</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a class="active" href="/faq.html">FAQ</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/contact.html">Contact</a>
+      </div>
+      <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="pill">Questions before you reserve?</div>
+          <h1>Everything important, in one place.</h1>
+          <p>This page is where pricing, setup, support, cancellations, deposits, and rollout questions live now, so the rest of the site can stay focused and easier to scan.</p>
+          <div class="cta-row">
+            <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02">Reserve with $100 Deposit</a>
+            <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+          </div>
+          <div class="jump-links" aria-label="FAQ categories">
+            <a href="#getting-started">Getting Started</a>
+            <a href="#pricing-billing">Pricing &amp; Billing</a>
+            <a href="#support-operations">Support &amp; Operations</a>
+          </div>
+        </div>
+        <aside class="hero-card">
+          <h2>What this covers</h2>
+          <ul>
+            <li>Setup timelines and what happens after you pay</li>
+            <li>How the $100 deposit works</li>
+            <li>What is included in support and maintenance</li>
+            <li>How cancellation and plan changes work</li>
+            <li>Whether we only serve Detroit or work nationwide</li>
+            <li>How your AI gets trained on your business</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="faq-shell">
+      <div class="container faq-stack">
+        <section class="faq-group" id="getting-started">
+          <h2>Getting Started</h2>
+          <p class="section-copy">The practical questions people ask before booking or reserving.</p>
+
+          <details open>
+            <summary>Do I need to know anything about technology?</summary>
+            <p>No. We handle the setup, training, testing, and maintenance. You tell us about your business, your services, and what is eating your time. We build the system around that.</p>
+          </details>
+
+          <details>
+            <summary>How fast can you set it up?</summary>
+            <p>Most Starter and Pro builds are live in 5 to 7 business days after kickoff. Bigger builds can take longer, but we confirm the exact scope and timing before we begin.</p>
+          </details>
+
+          <details>
+            <summary>What happens after I reserve or buy?</summary>
+            <p>You get confirmation right away. Trendell follows up within 24 hours to confirm fit, gather the right business details, and schedule your kickoff so the build can start cleanly.</p>
+          </details>
+
+          <details>
+            <summary>Do you only work with Detroit businesses?</summary>
+            <p>No. Genesis AI Systems is built in Detroit and serves businesses nationwide. The Detroit part is where we are from, not a limit on who we work with.</p>
+          </details>
+
+          <details>
+            <summary>What kinds of businesses are the best fit?</summary>
+            <p>Service businesses that lose time to missed calls, repetitive questions, lead follow-up, or appointment scheduling are the strongest fit. Restaurants, HVAC, dental, salons, and real estate are the most obvious examples, but the model applies more broadly.</p>
+          </details>
+        </section>
+
+        <section class="faq-group" id="pricing-billing">
+          <h2>Pricing &amp; Billing</h2>
+          <p class="section-copy">How deposits, plans, and checkout decisions work.</p>
+
+          <details open>
+            <summary>What does the $100 deposit do?</summary>
+            <p>The $100 deposit reserves your build slot and kickoff time. We use the kickoff call to confirm the best-fit plan and apply that deposit toward the project. It is meant to create momentum without forcing you into the wrong package.</p>
+          </details>
+
+          <details>
+            <summary>Why does Pro still route to a call instead of online checkout?</summary>
+            <p>Pro usually needs a little more scoping before we lock the build. The call makes sure the follow-up logic, notifications, and reporting match how your business already operates.</p>
+          </details>
+
+          <details>
+            <summary>Which plan should I start with?</summary>
+            <p>Starter is best when you want one clear automation live fast. Pro is better when you need lead capture, scoring, and follow-up working together. Growth is for businesses that want the phone system and broader automation stack. Full Stack is the fully managed all-in build.</p>
+          </details>
+
+          <details>
+            <summary>Can I change plans later?</summary>
+            <p>Yes. Most clients start smaller, prove the value, and then add more systems. We can expand from Starter to Pro or Growth without rebuilding everything from scratch.</p>
+          </details>
+
+          <details>
+            <summary>Are setup fees refundable?</summary>
+            <p>Setup fees cover build work, configuration, testing, and rollout, so they are generally not refundable once the build has started. If we have not kicked off yet and something changed, talk to us early and we will work through it with you.</p>
+          </details>
+        </section>
+
+        <section class="faq-group" id="support-operations">
+          <h2>Support &amp; Operations</h2>
+          <p class="section-copy">What it is like once your system is live.</p>
+
+          <details open>
+            <summary>Will the AI sound like my business?</summary>
+            <p>Yes. We train it on your business details, pricing, policies, tone, and common questions so it answers in a way that feels aligned with your business instead of generic.</p>
+          </details>
+
+          <details>
+            <summary>What if something breaks?</summary>
+            <p>We monitor the systems and handle issues when they come up. You are not expected to debug tools, API changes, or automation failures yourself. That ongoing support is part of what you are paying for.</p>
+          </details>
+
+          <details>
+            <summary>Can the AI work with the tools I already use?</summary>
+            <p>Often yes. It depends on what you are using and what outcome you want, but we can usually work with common tools or create a lighter process that keeps your team from needing more software than necessary.</p>
+          </details>
+
+          <details>
+            <summary>Can I cancel?</summary>
+            <p>Yes. Monthly services can be canceled with 30 days written notice. We do not lock you into long-term contracts just to keep a client on the books.</p>
+          </details>
+
+          <details>
+            <summary>How do I know what was happening while I was busy?</summary>
+            <p>That depends on the system, but usually you get some combination of text alerts, summaries, booking confirmations, lead logs, or scheduled reports so you are not guessing what happened after hours.</p>
+          </details>
+        </section>
+      </div>
+    </section>
+
+    <section class="contact-section">
+      <div class="container contact-grid">
+        <div class="contact-card">
+          <span class="mini-label">Still not sure?</span>
+          <h2>Talk it through in 15 minutes.</h2>
+          <p>If your situation is more specific than a FAQ answer, the fastest path is still a short call. We can tell you what we would build, what plan fits, and whether you should start smaller.</p>
+          <div class="cta-row">
+            <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Free AI Assessment</a>
+            <a class="button button-outline" href="/contact.html">Open Contact Page</a>
+          </div>
+        </div>
+
+        <div class="contact-card">
+          <span class="mini-label">Direct Contact</span>
+          <strong>Genesis AI Systems</strong>
+          <p>Built in Detroit. Serving businesses nationwide.</p>
+          <p>Phone: <a href="tel:+15866369550">(586) 636-9550</a></p>
+          <p>Email: <a href="mailto:info@genesisai.systems">info@genesisai.systems</a></p>
+          <p>Prefer to start with a small commitment? Reserve your slot with the $100 deposit and we will confirm the right plan on kickoff.</p>
+          <a class="button button-primary" href="https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02">Reserve with $100 Deposit</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>© 2026 Genesis AI Systems | Built in Detroit | Serving businesses nationwide</div>
+      <div class="footer-nav">
+        <a href="/">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="/activity.html">Activity</a>
+        <a href="/faq.html">FAQ</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
+    </div>
+  </footer>
+</body>
+</html>
