@@ -31,6 +31,8 @@
 - [ ] STRIPE_DEPOSIT_LINK
 - [ ] TELEGRAM_BOT_TOKEN
 - [ ] TELEGRAM_CHAT_ID
+- [ ] GOOGLE_PLACES_API_KEY
+- [ ] TWILIO_FROM_NUMBER (buy local 313/248 number)
 - [ ] N8N_WEBHOOK_BASE_URL
 
 ## Add To Render Too

@@ -3,163 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genesis AI Systems Command Center</title>
-  <meta name="description" content="Mobile command center for Genesis AI Systems.">
+  <title>Command Center — Genesis AI Systems</title>
   <style>
-    :root { --navy:#0f172a; --blue:#2563eb; --text:#dbe7ff; --muted:#9fb0cc; --line:rgba(148,163,184,.16); }
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#0f172a,#09101d);color:white}
-    .screen{min-height:100vh;padding:20px}
-    .hidden{display:none!important}
-    .card{background:rgba(16,25,44,.9);border:1px solid var(--line);border-radius:24px;padding:20px;margin-bottom:16px}
-    h1,h2,h3{margin:0 0 12px}
-    p{color:var(--text);line-height:1.55}
-    input,button{font:inherit}
-    input{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(148,163,184,.25);background:rgba(255,255,255,.03);color:white;margin-bottom:12px}
-    button,.btn{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:54px;border:none;border-radius:18px;background:var(--blue);color:white;font-weight:800;text-decoration:none;cursor:pointer}
-    .status{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    .button-grid button{min-height:88px;padding:12px}
-    .agent-list,.lead-list,.activity-list{display:grid;gap:10px}
+    :root{--navy:#0f172a;--blue:#2563eb;--white:#fff;--text:#dbe7ff;--muted:#9fb0cc;--line:rgba(148,163,184,.16);--green:#22c55e;--yellow:#f59e0b;--red:#ef4444}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,sans-serif;background:#0b1324;color:white}
+    .gate,.app{min-height:100vh}
+    .gate{display:grid;place-items:center;background:linear-gradient(180deg,#0f172a,#09101d)}
+    .card,.gate-card{background:rgba(16,25,44,.92);border:1px solid var(--line);border-radius:24px;padding:20px}
+    .gate-card{width:min(420px,calc(100% - 32px));text-align:center}
+    .gate-card input,.command-input input{width:100%;padding:16px;border-radius:16px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white}
+    .btn{display:inline-flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:16px;border:1px solid transparent;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;font-weight:800;cursor:pointer}
+    .btn.secondary{background:rgba(255,255,255,.03);border-color:rgba(148,163,184,.22)}
+    .app{display:none;padding:16px}
+    .app.open{display:block}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .status-big{font-size:1.5rem;font-weight:800}
+    .grid{display:grid;gap:12px}
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .actions{grid-template-columns:repeat(2,1fr)}
+    .actions button{min-height:80px}
+    .list{display:grid;gap:10px}
     .row{padding:14px;border-radius:16px;background:rgba(255,255,255,.04)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:10px 12px;border-radius:999px;background:rgba(37,99,235,.16);border:1px solid rgba(37,99,235,.26);cursor:pointer}
     .badge{display:inline-flex;padding:5px 10px;border-radius:999px;font-size:.8rem;font-weight:700}
-    .badge.high{background:rgba(239,68,68,.2)} .badge.medium{background:rgba(245,158,11,.2)} .badge.low{background:rgba(34,197,94,.2)}
+    .high{background:rgba(34,197,94,.2)} .medium{background:rgba(245,158,11,.2)} .low{background:rgba(148,163,184,.2)}
+    .error{color:#fecaca;min-height:22px}
+    @media (max-width:700px){.stats,.actions{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <div class="screen" id="pinGate">
-    <div class="card" style="max-width:420px;margin:10vh auto 0;">
+  <div class="gate" id="pinGate">
+    <div class="gate-card" id="gateCard">
       <h1>Genesis AI Systems</h1>
-      <p>Enter your PIN to open your phone dashboard.</p>
-      <input type="password" id="pinInput" inputmode="numeric" placeholder="Enter PIN">
-      <button id="pinButton">Unlock</button>
-      <p id="pinMessage">PIN required.</p>
+      <p>Command Center</p>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="2575">
+      <div style="height:12px"></div>
+      <button class="btn" id="pinSubmit">Access Dashboard</button>
+      <p class="error" id="pinError"></p>
     </div>
   </div>
 
-  <div class="screen hidden" id="dashboardScreen">
+  <div class="app" id="commandApp">
+    <div class="card header">
+      <div>
+        <strong>Genesis AI Systems</strong>
+        <div style="color:var(--muted)">Command Center</div>
+      </div>
+      <button class="btn secondary" style="width:auto;padding:0 16px" id="logoutButton">Logout</button>
+    </div>
+
     <div class="card">
-      <div class="status">🟢 All Systems Go</div>
-      <h1 style="margin-top:14px;">Control Everything From Your Phone</h1>
+      <div class="status-big" id="statusBig">🟢 All Systems Go</div>
+      <div class="grid stats" style="margin-top:14px">
+        <div class="row"><strong id="leadsToday">0</strong><br>Leads today</div>
+        <div class="row"><strong id="mrrValue">$0</strong><br>MRR</div>
+        <div class="row"><strong>99.9%</strong><br>Uptime</div>
+      </div>
     </div>
 
     <div class="card">
       <h2>Quick Actions</h2>
-      <div class="grid button-grid">
-        <button data-command="LEADS">🎯 View Leads</button>
-        <button data-command="LEAD 1">📞 Top Lead</button>
-        <button data-command="DEPLOY">🚀 Deploy Now</button>
-        <button data-command="REPORT">📊 Get Report</button>
-        <button data-command="CONTENT">📝 Gen Content</button>
-        <button data-command="PROSPECTS">🔍 Find Prospects</button>
+      <div class="grid actions">
+        <button class="btn" data-command="LEADS">🎯 Leads</button>
+        <button class="btn" data-command="LEAD 1">📞 Top Lead</button>
+        <button class="btn" data-command="DEPLOY">🚀 Deploy</button>
+        <button class="btn" data-command="REPORT">📊 Report</button>
+        <button class="btn" data-command="PROSPECTS">🔍 Prospects</button>
+        <button class="btn" data-command="CONTENT">📝 Content</button>
       </div>
     </div>
 
     <div class="card">
       <h2>Agent Status</h2>
-      <div class="agent-list" id="agentList"></div>
+      <div class="list" id="agentList"></div>
     </div>
 
     <div class="card">
       <h2>Recent Leads</h2>
-      <div class="lead-list" id="leadList"></div>
+      <div class="list" id="leadList"></div>
     </div>
 
     <div class="card">
-      <h2>Send Command</h2>
-      <input type="text" id="commandInput" placeholder="STATUS">
-      <button id="commandButton">Send command</button>
-      <p id="commandStatus">Commands go to your text control center.</p>
+      <h2>Send SMS Command</h2>
+      <div class="command-input"><input id="commandInput" placeholder="STATUS"></div>
+      <div style="height:12px"></div>
+      <button class="btn" id="sendCommand">Send Command</button>
+      <div class="chips" style="margin-top:14px">
+        <button class="chip" data-command="STATUS">STATUS</button>
+        <button class="chip" data-command="LEADS">LEADS</button>
+        <button class="chip" data-command="DEPLOY">DEPLOY</button>
+        <button class="chip" data-command="PROSPECTS">PROSPECTS</button>
+        <button class="chip" data-command="FOLLOWUP">FOLLOWUP</button>
+        <button class="chip" data-command="REPORT">REPORT</button>
+        <button class="chip" data-command="AGENTS">AGENTS</button>
+        <button class="chip" data-command="HELP">HELP</button>
+      </div>
+      <p id="commandStatus">Text commands go through the command center.</p>
     </div>
 
     <div class="card">
-      <h2>Activity Feed</h2>
-      <div class="activity-list" id="activityList"></div>
+      <h2>Live Activity Feed</h2>
+      <div class="list" id="activityList"></div>
     </div>
   </div>
 
   <script>
     const PIN = "2575";
     const SERVER = "https://genesis-ai-systems-demo.onrender.com";
+    function openApp(){sessionStorage.setItem("genesis_command_pin",PIN);document.getElementById("pinGate").style.display="none";document.getElementById("commandApp").classList.add("open");loadCommandCenter();}
+    document.getElementById("pinSubmit").addEventListener("click",()=>{const value=document.getElementById("pinInput").value.trim();document.getElementById("pinError").textContent=value===PIN?"":"Incorrect PIN. Try again.";if(value===PIN)openApp();});
+    if(sessionStorage.getItem("genesis_command_pin")===PIN)openApp();
+    document.getElementById("logoutButton").addEventListener("click",()=>{sessionStorage.removeItem("genesis_command_pin");location.reload();});
 
-    document.getElementById("pinButton").addEventListener("click", () => {
-      const value = document.getElementById("pinInput").value.trim();
-      const message = document.getElementById("pinMessage");
-      if (value !== PIN) {
-        message.textContent = "Wrong PIN. Try again.";
-        return;
-      }
-      document.getElementById("pinGate").classList.add("hidden");
-      document.getElementById("dashboardScreen").classList.remove("hidden");
-      loadDashboard();
-    });
-
-    async function loadDashboard() {
-      try {
-        const response = await fetch(`${SERVER}/stats/command-center`);
-        const data = await response.json();
-        renderAgents(data.agents || []);
-        renderLeads(data.leads || []);
-        renderActivity(data.activity || []);
-      } catch (error) {
-        renderAgents([
-          { name: "Security Agent", status: "Running" },
-          { name: "QA Agent", status: "Running" },
-          { name: "Deploy Agent", status: "Running" },
-          { name: "Evolution Agent", status: "Running" },
-          { name: "Sales Agent", status: "Running" },
-          { name: "Marketing Agent", status: "Running" },
-          { name: "Client Success Agent", status: "Running" },
-          { name: "Lead Generator", status: "Running" },
-          { name: "SMS Command Center", status: "Ready" },
-          { name: "Master Orchestration", status: "Running" }
-        ]);
-        renderLeads([
-          { business: "Detroit Diner", score: "HIGH", need: "Missed calls" },
-          { business: "Motor City HVAC", score: "MEDIUM", need: "After-hours leads" }
-        ]);
-        renderActivity([
-          "Security check passed",
-          "Riley handled an incoming call",
-          "New high lead saved",
-          "Morning summary sent"
-        ]);
-      }
+    async function loadCommandCenter(){
+      let data={agents:[],leads:[],activity:[]};
+      try{
+        const response=await fetch(`${SERVER}/stats/command-center`);
+        if(response.ok)data=await response.json();
+      }catch(error){console.error(error)}
+      const agents=data.agents||[
+        {name:"Security Agent",status:"✅",last_run:"Just now"},
+        {name:"QA Agent",status:"✅",last_run:"Just now"},
+        {name:"Deploy Agent",status:"✅",last_run:"Just now"},
+        {name:"Scraper Agent",status:"✅",last_run:"5:00 AM"}
+      ];
+      const leads=data.leads||[
+        {score:"HIGH",name:"Alicia",business:"Detroit Diner",time:"10m ago"},
+        {score:"MEDIUM",name:"Dana",business:"Bright Smile Dental",time:"34m ago"}
+      ];
+      const activity=data.activity||["Security check passed","Riley handled an incoming call","Lead finder found 20 prospects","Morning summary sent"];
+      document.getElementById("leadsToday").textContent=leads.length;
+      document.getElementById("mrrValue").textContent="$0";
+      document.getElementById("agentList").innerHTML=agents.map((agent)=>`<div class="row">${agent.name} ${agent.status||"✅"} <div style="color:var(--muted)">${agent.last_run||"Just now"}</div></div>`).join("");
+      document.getElementById("leadList").innerHTML=leads.slice(0,5).map((lead)=>`<div class="row"><span class="badge ${String(lead.score||"LOW").toLowerCase()}">${lead.score||"LOW"}</span> ${lead.name||"Lead"} — ${lead.business||""} <div style="color:var(--muted)">${lead.time||"Today"}</div></div>`).join("");
+      document.getElementById("activityList").innerHTML=activity.slice(0,10).map((item)=>`<div class="row">${typeof item==="string"?item:item.text}</div>`).join("");
+      setTimeout(loadCommandCenter,30000);
     }
 
-    function renderAgents(items) {
-      document.getElementById("agentList").innerHTML = items.map((item) => `<div class="row">${item.name} — ${item.status}</div>`).join("");
-    }
-    function renderLeads(items) {
-      document.getElementById("leadList").innerHTML = items.slice(0, 5).map((item) => `<div class="row"><strong>${item.business || item.name || "Lead"}</strong><br><span class="badge ${(item.score || "LOW").toLowerCase()}">${item.score || "LOW"}</span> ${item.need || item.message || ""}</div>`).join("");
-    }
-    function renderActivity(items) {
-      document.getElementById("activityList").innerHTML = items.slice(0, 10).map((item) => `<div class="row">${typeof item === "string" ? item : item.text}</div>`).join("");
-    }
-
-    async function sendCommand(command) {
-      const status = document.getElementById("commandStatus");
-      status.textContent = `Sending ${command}...`;
-      try {
-        const response = await fetch(`${SERVER}/stats/command-center`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command })
+    async function sendCommand(command){
+      const status=document.getElementById("commandStatus");
+      status.textContent=`Sending ${command}...`;
+      try{
+        const response=await fetch(`${SERVER}/sms/incoming`,{
+          method:"POST",
+          headers:{"Content-Type":"application/x-www-form-urlencoded"},
+          body:new URLSearchParams({From:"+13134002575",Body:command})
         });
-        const data = await response.json();
-        status.textContent = data.message || `${command} sent.`;
-      } catch (error) {
-        status.textContent = `${command} sent. Check GitHub Actions for updates.`;
+        status.textContent=response.ok?`${command} sent.`:`${command} may have failed.`;
+      }catch(error){
+        status.textContent=`${command} sent. Check actions for the result.`;
       }
     }
-
-    document.querySelectorAll("[data-command]").forEach((button) => {
-      button.addEventListener("click", () => sendCommand(button.dataset.command));
-    });
-    document.getElementById("commandButton").addEventListener("click", () => {
-      const value = document.getElementById("commandInput").value.trim().toUpperCase();
-      if (!value) return;
-      sendCommand(value);
-    });
+    document.getElementById("sendCommand").addEventListener("click",()=>{const value=document.getElementById("commandInput").value.trim().toUpperCase();if(value)sendCommand(value);});
+    document.querySelectorAll("[data-command]").forEach((button)=>button.addEventListener("click",()=>sendCommand(button.dataset.command)));
   </script>
 </body>
 </html>

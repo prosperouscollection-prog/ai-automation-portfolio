@@ -6,7 +6,7 @@
 ## What We Are
 
 A real freelance AI agency.  
-14 AI systems. 10 agents.  
+14 AI systems. 12 agents.  
 Founded March 2026. Detroit MI.  
 Customer Zero: Genesis AI Systems itself.
 
@@ -31,7 +31,7 @@ Total setup fees: $39,500
 Total monthly: $7,600/month  
 Year 1 all 14: $131,700
 
-## 10 Agents Running
+## 12 Agents Running
 
 1. Security Agent — hourly
 2. QA Agent — hourly
@@ -43,6 +43,8 @@ Year 1 all 14: $131,700
 8. Client Success Agent — daily 9am
 9. SMS Command Center — on demand
 10. Lead Generator — daily 6am
+11. Scraper Agent — daily 5am
+12. Telegram Bot — real time
 
 ## Third Party Tools Used
 
@@ -61,6 +63,7 @@ Year 1 all 14: $131,700
 ## Communication Channels
 
 - SMS: text updates and commands
+- Telegram: @GenesisAISystemsBot
 - Dashboard: genesisai.systems/dashboard.html
 - Command Center: genesisai.systems/command.html
 - Email: daily and weekly reports

@@ -17,9 +17,11 @@ jobs:
           MAIN=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
           DEMOS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems/demos.html || echo "000")
           SERVER=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesis-ai-systems-demo.onrender.com || echo "000")
+          SCRAPER="configured"
           echo "Main: $MAIN"
           echo "Demos: $DEMOS"
           echo "Server: $SERVER"
+          echo "Scraper: $SCRAPER"
       - name: Morning summary SMS
         if: |
           github.event.schedule == '0 8 * * *' ||

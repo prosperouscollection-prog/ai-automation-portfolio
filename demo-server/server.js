@@ -625,12 +625,25 @@ app.post('/sms/incoming', express.urlencoded({ extended: false }), async (req, r
   res.type('text/xml').send(response.toString());
 });
 
-app.post('/telegram/webhook', (req, res) => {
-  saveActivity('💬 Telegram message received');
-  res.json(standardResponse({
-    success: true,
-    message: 'Telegram message received.'
-  }));
+app.post('/telegram/webhook', express.json(), async (req, res) => {
+  res.json({ ok: true });
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
+    return;
+  }
+  try {
+    const { spawn } = require('child_process');
+    const python = spawn('python3', [
+      path.join(__dirname, '..', '.github', 'workflows', 'scripts', 'telegram_bot.py'),
+      JSON.stringify(req.body)
+    ]);
+    python.stdout.on('data', (data) => console.log(data.toString()));
+    python.stderr.on('data', (data) => console.error(data.toString()));
+    saveActivity('💬 Telegram message received');
+  } catch (error) {
+    console.error('Telegram webhook error:', error.message);
+  }
 });
 
 app.listen(PORT, () => {

@@ -46,6 +46,7 @@
     }
     .logo { font-family: "Space Grotesk", sans-serif; font-weight: 700; }
     .nav-links { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); }
+    .nav-links a.active { color: #7db4ff; }
     .button {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 50px; padding: 0 20px; border-radius: 16px;
@@ -144,14 +145,17 @@
 <body>
   <nav class="nav">
     <div class="container nav-inner">
-      <a class="logo" href="/index.html">Genesis AI Systems</a>
+      <a class="logo" href="/">Genesis AI Systems</a>
       <div class="nav-links">
-        <a href="/index.html">Home</a>
-        <a href="#demo-1">Demo 1</a>
-        <a href="#demo-8">Demo 8</a>
+        <a href="/#how-it-works">How It Works</a>
+        <a href="/#examples">Real Examples</a>
         <a href="/about.html">About</a>
+        <a class="active" href="/demos.html">Demos</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/#contact">Contact</a>
       </div>
-      <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Real Demo Call</a>
+      <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
     </div>
   </nav>
 
@@ -185,14 +189,18 @@
 
   <footer class="footer">
     <div class="container footer-grid">
-      <div>Genesis AI Systems © 2026 | Detroit, MI</div>
+      <div>© 2026 Genesis AI Systems | Detroit MI</div>
       <div style="text-align:center;">
-        <a href="/index.html">Home</a> ·
+        <a href="/">Home</a> ·
         <a href="/about.html">About</a> ·
         <a href="/demos.html">Demos</a> ·
-        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/#pricing">Pricing</a> ·
+        <a href="/dashboard.html">Dashboard</a> ·
+        <a href="/command.html">Command Center</a> ·
+        <a href="/privacy-policy.html">Privacy Policy</a> ·
+        <a href="/terms.html">Terms of Service</a>
       </div>
-      <div style="text-align:right;">📞 [BUSINESS_PHONE_NUMBER]<br>📧 info@genesisai.systems</div>
+      <div style="text-align:right;">📞 (586) 636-9550<br>📧 info@genesisai.systems</div>
     </div>
   </footer>
 

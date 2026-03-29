@@ -54,6 +54,9 @@
 - [ ] Email at info@genesisai.systems received
 - [ ] All 4 badges passing in README
 - [ ] genesisai.systems loading correctly
+- [ ] Scraper Agent activated
+- [ ] Telegram Bot configured
+- [ ] SMS commands working
 
 ## Phase 7 — Ongoing
 - [ ] Check Actions daily first week
