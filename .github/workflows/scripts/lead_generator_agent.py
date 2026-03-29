@@ -116,6 +116,12 @@ class LeadGeneratorAgent:
     def notify_trendell(self, hot_prospects: list[dict[str, str]], industry: str) -> None:
         if not hot_prospects:
             return
+        
+        # Skip if Twilio not configured
+        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
+            print("⏭️  Twilio not configured — skipping SMS notification")
+            return
+        
         try:
             from twilio.rest import Client
 
@@ -143,7 +149,7 @@ class LeadGeneratorAgent:
             )
             print("✅ Morning SMS sent to Trendell")
         except Exception as error:
-            print(f"Notify failed: {error}")
+            print(f"⚠️  Notification failed: {error}")
 
     def generate_outreach(self, prospects: list[dict[str, str]], industry: str) -> list[dict[str, str]]:
         outreach_templates = {

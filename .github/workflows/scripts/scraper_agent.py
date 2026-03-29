@@ -374,6 +374,11 @@ class ScraperAgent:
         self.send_sms("\n".join(lines))
 
     def send_sms(self, message: str) -> None:
+        # Skip if Twilio not configured
+        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
+            print("⏭️  Twilio not configured — skipping SMS")
+            return
+        
         try:
             from twilio.rest import Client
 
@@ -387,7 +392,7 @@ class ScraperAgent:
             )
             print("✅ SMS sent to Trendell")
         except Exception as error:
-            print(f"SMS failed: {error}")
+            print(f"⚠️  SMS failed: {error}")
 
 
 if __name__ == "__main__":

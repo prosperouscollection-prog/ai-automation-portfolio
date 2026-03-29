@@ -62,9 +62,9 @@ class Settings:
         webhook_raw = os.getenv("WEBHOOK_URLS", "").strip()
         return cls(
             anthropic_api_key=_require("ANTHROPIC_API_KEY"),
-            claude_model=os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514"),
+            claude_model=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
             crewai_model=os.getenv(
-                "CREWAI_MODEL", "anthropic/claude-sonnet-4-20250514"
+                "CREWAI_MODEL", "anthropic/claude-3-5-sonnet-20241022"
             ),
             target_repo_path=Path(_require("TARGET_REPO_PATH")).expanduser().resolve(),
             google_service_account_json=os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"),

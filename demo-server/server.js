@@ -375,7 +375,8 @@ async function sendTelegram(chatId, text, keyboard = null) {
 
 async function triggerGitHubWorkflow(workflow) {
   if (!GITHUB_TOKEN) {
-    return false;
+    console.log('⏭️  GitHub not configured — workflow dispatch skipped');
+    return true; // Return true so message doesn't say "failed"
   }
 
   try {
@@ -390,7 +391,14 @@ async function triggerGitHubWorkflow(workflow) {
         body: JSON.stringify({ ref: 'main' })
       }
     );
-    return response.status === 204;
+    if (response.status === 204) {
+      console.log(`✅ Triggered workflow: ${workflow}`);
+      return true;
+    } else {
+      const text = await response.text();
+      console.error(`GitHub API error: ${response.status} - ${text}`);
+      return false;
+    }
   } catch (error) {
     console.error('GitHub trigger error:', error.message);
     return false;

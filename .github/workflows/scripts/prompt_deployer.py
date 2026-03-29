@@ -453,8 +453,8 @@ class CostTracker:
     """Tracks balance, estimated costs, and actual usage for prompt runs."""
 
     DEFAULT_PRICING = {
-        "gpt-4.1": {"input": 2.00, "cached_input": 0.50, "output": 8.00},
-        "gpt-4.1-mini": {"input": 0.40, "cached_input": 0.10, "output": 1.60},
+        "gpt-4o": {"input": 2.50, "cached_input": 0.625, "output": 10.00},
+        "gpt-4o-mini": {"input": 0.15, "cached_input": 0.0375, "output": 0.60},
     }
 
     def __init__(
@@ -539,7 +539,7 @@ class CostTracker:
         cached_input_tokens: int = 0,
     ) -> float:
         """Estimate cost using a model pricing table."""
-        pricing = self.DEFAULT_PRICING.get(model, self.DEFAULT_PRICING["gpt-4.1"])
+        pricing = self.DEFAULT_PRICING.get(model, self.DEFAULT_PRICING["gpt-4o"])
         return round(
             (input_tokens / 1_000_000) * pricing["input"]
             + (cached_input_tokens / 1_000_000) * pricing["cached_input"]

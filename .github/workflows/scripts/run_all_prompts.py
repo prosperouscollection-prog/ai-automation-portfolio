@@ -36,7 +36,7 @@ def main() -> int:
         prompts_dir=Path("/Users/genesisai/portfolio/.github/workflows/prompts"),
         portfolio_dir=Path("/Users/genesisai/portfolio"),
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
-        model=os.getenv("PROMPT_MODEL", "gpt-4.1"),
+        model=os.getenv("PROMPT_MODEL", "gpt-4o"),
         max_output_tokens=int(os.getenv("PROMPT_MAX_OUTPUT_TOKENS", "32000")),
         twilio_sid=os.getenv("TWILIO_ACCOUNT_SID"),
         twilio_token=os.getenv("TWILIO_AUTH_TOKEN"),

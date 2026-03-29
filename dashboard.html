@@ -277,10 +277,7 @@
         "Prospects found: 20"
       ].map((item) => `<div class="list-item">${item}</div>`).join("");
 
-      const rows = ((leadData.items || commandData?.leads || [
-        { timestamp: new Date().toISOString(), name: "Alicia", business: "Detroit Diner", email: "owner@example.com", phone: "(313) 555-0110", business_type: "Restaurant", score: "HIGH" },
-        { timestamp: new Date().toISOString(), name: "Dana", business: "Bright Smile Dental", email: "hello@example.com", phone: "(248) 555-0198", business_type: "Dental Office", score: "MEDIUM" }
-      ])).slice(0, 10);
+      const rows = ((leadData.items || commandData?.leads) || []).slice(0, 10);
       document.getElementById("leadsTable").innerHTML = table(
         ["Date", "Name", "Business", "Email", "Phone", "Type", "Score", "Stage", "Follow Up", "Actions"],
         rows.map((lead) => [

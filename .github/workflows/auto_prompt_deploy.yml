@@ -38,7 +38,7 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
           PROMPT_NUMBER: ${{ github.event.inputs.prompt_number || '0' }}
-          PROMPT_MODEL: gpt-4.1
+          PROMPT_MODEL: gpt-4o
           MIN_BALANCE: "2.00"
         run: |
           cd .github/workflows/scripts

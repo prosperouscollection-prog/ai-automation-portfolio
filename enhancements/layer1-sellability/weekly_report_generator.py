@@ -81,7 +81,7 @@ class WeeklyReportConfig:
             from_email=_require_env("SMTP_FROM_EMAIL"),
             from_name=os.getenv("SMTP_FROM_NAME", "Genesis AI Systems"),
             business_name=os.getenv("BUSINESS_NAME", "Genesis AI Systems Client"),
-            claude_model=os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514"),
+            claude_model=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
         )
 

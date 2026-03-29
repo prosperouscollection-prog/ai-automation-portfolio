@@ -76,7 +76,7 @@ class ROIConfig:
             report_to=_require_env("ROI_REPORT_TO"),
             drive_folder_id=os.getenv("GOOGLE_DRIVE_FOLDER_ID") or None,
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY") or None,
-            claude_model=os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514"),
+            claude_model=os.getenv("CLAUDE_MODEL", "claude-3-5-sonnet-20241022"),
             business_name=os.getenv("BUSINESS_NAME", "Genesis AI Systems Client"),
             avg_deal_value=float(os.getenv("ROI_AVG_DEAL_VALUE", "500")),
             vapi_metrics_path=Path(os.getenv("ROI_VAPI_METRICS_PATH", "./vapi_monthly_metrics.json")).expanduser(),

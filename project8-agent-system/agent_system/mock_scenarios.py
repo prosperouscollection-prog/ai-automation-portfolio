@@ -122,8 +122,8 @@ def _build_success_summary(source: str) -> RunSummary:
                     reason="Model remains valid; prompt tightening recommended instead of version change.",
                 ),
                 EvolutionChange(
-                    current_model="claude-sonnet-4-20250514",
-                    suggested_model="claude-sonnet-4-20250514",
+                    current_model="claude-3-5-sonnet-20241022",
+                    suggested_model="claude-3-5-sonnet-20241022",
                     reason="No forced upgrade needed; changelog review suggests keeping prompts shorter and more structured.",
                 ),
             ],

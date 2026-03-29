@@ -168,6 +168,11 @@ class SalesAgent:
 
     def alert_trendell(self, lead: Lead) -> None:
         """Text Trendell when a lead sounds ready now."""
+        # Skip if Twilio not configured
+        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
+            print("⏭️  Twilio not configured — skipping alert")
+            return
+        
         try:
             from twilio.rest import Client
 
@@ -188,7 +193,7 @@ class SalesAgent:
                 to=os.getenv("ALERT_PHONE_NUMBER"),
             )
         except Exception as error:
-            print(f"HOT lead SMS failed: {error}")
+            print(f"⚠️  HOT lead alert failed: {error}")
 
     def update_hubspot(self, lead: Lead) -> None:
         """Print what would be sent to HubSpot."""

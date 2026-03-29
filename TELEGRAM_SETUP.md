@@ -29,10 +29,20 @@ gh secret set TELEGRAM_CHAT_ID --body "your_chat_id"
 
 ## Step 5: Set the webhook
 
+Use **single quotes** to avoid shell interpretation of brackets:
+
 ```bash
-curl -X POST "https://api.telegram.org/bot[YOUR_TOKEN]/setWebhook" \
-  -d "url=https://genesis-ai-systems-demo.onrender.com/telegram/webhook"
+curl -X POST 'https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook' \
+  -d 'url=https://genesis-ai-systems-demo.onrender.com/telegram/webhook'
 ```
+
+Replace `<YOUR_BOT_TOKEN>` with your actual bot token, e.g.:
+```bash
+curl -X POST 'https://api.telegram.org/bot8785951790:AAH6EpabJeUnig5w8XyQayn-J5vldvFZ9Fg/setWebhook' \
+  -d 'url=https://genesis-ai-systems-demo.onrender.com/telegram/webhook'
+```
+
+Expected response: `{"ok":true,"result":true,"description":"Webhook is already set"}`
 
 ## Step 6: Test it
 

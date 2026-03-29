@@ -69,7 +69,7 @@ class MarketingAgent:
                     "content-type": "application/json",
                 },
                 json={
-                    "model": "claude-sonnet-4-6",
+                    "model": "claude-3-5-sonnet-20241022",
                     "max_tokens": 800,
                     "messages": [{"role": "user", "content": prompt}],
                 },
@@ -167,6 +167,11 @@ Include call to action: Link in bio → genesisai.systems
         (self.output_dir / f"{stamp}_outreach.txt").write_text(outreach)
 
     def notify_trendell(self, preview: str) -> None:
+        # Skip if Twilio not configured
+        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
+            print("⏭️  Twilio not configured — skipping SMS notification")
+            return
+        
         try:
             from twilio.rest import Client
 
@@ -184,7 +189,7 @@ Include call to action: Link in bio → genesisai.systems
                 to=os.getenv("ALERT_PHONE_NUMBER"),
             )
         except Exception as error:
-            print(f"Notify failed: {error}")
+            print(f"⚠️  Notification failed: {error}")
 
 
 if __name__ == "__main__":

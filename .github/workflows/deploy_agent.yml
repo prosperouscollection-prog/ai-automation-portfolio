@@ -30,24 +30,25 @@ jobs:
           pip install twilio -q
           python3 - << 'PYEOF'
           import os
-          from twilio.rest import Client
-          try:
-              client = Client(
-                  os.getenv('TWILIO_ACCOUNT_SID'),
-                  os.getenv('TWILIO_AUTH_TOKEN')
-              )
-              client.messages.create(
-                  body=(
-                      "🚨 Genesis AI Systems Alert\n"
-                      "An agent just FAILED.\n"
-                      "Check GitHub Actions:\n"
-                      "github.com/prosperouscollection-prog/"
-                      "ai-automation-portfolio/actions"
-                  ),
-                  from_=os.getenv('TWILIO_FROM_NUMBER'),
-                  to=os.getenv('ALERT_PHONE_NUMBER')
-              )
-              print('✅ Failure SMS sent')
-          except Exception as e:
-              print(f'SMS failed: {e}')
+          if os.getenv('TWILIO_ACCOUNT_SID') and os.getenv('TWILIO_AUTH_TOKEN'):
+              from twilio.rest import Client
+              try:
+                  client = Client(
+                      os.getenv('TWILIO_ACCOUNT_SID'),
+                      os.getenv('TWILIO_AUTH_TOKEN')
+                  )
+                  client.messages.create(
+                      body=(
+                          "🚨 Genesis AI Systems Alert\n"
+                          "An agent just FAILED.\n"
+                          "Check GitHub Actions:\n"
+                          "github.com/prosperouscollection-prog/"
+                          "ai-automation-portfolio/actions"
+                      ),
+                      from_=os.getenv('TWILIO_FROM_NUMBER'),
+                      to=os.getenv('ALERT_PHONE_NUMBER')
+                  )
+                  print('✅ Failure SMS sent')
+              except Exception as e:
+                  print(f'SMS failed: {e}')
           PYEOF

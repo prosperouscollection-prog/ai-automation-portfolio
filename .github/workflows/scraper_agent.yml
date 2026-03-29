@@ -22,10 +22,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install deps
-        run: |
-          pip install requests twilio python-dotenv beautifulsoup4 playwright lxml google-api-python-client google-auth
-          playwright install chromium
       - name: Run scraper
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -41,6 +37,8 @@ jobs:
           INDUSTRY: ${{ github.event.inputs.industry || 'restaurant' }}
           MAX_RESULTS: ${{ github.event.inputs.max_results || '50' }}
         run: |
+          pip install requests twilio python-dotenv beautifulsoup4 playwright lxml google-api-python-client google-auth -q
+          playwright install chromium
           cd .github/workflows/scripts
           python3 scraper_agent.py
       - name: SMS on failure
@@ -54,16 +52,19 @@ jobs:
           pip install twilio -q
           python3 - << 'PYEOF'
           import os
-          from twilio.rest import Client
-          try:
-              Client(
-                  os.getenv('TWILIO_ACCOUNT_SID'),
-                  os.getenv('TWILIO_AUTH_TOKEN')
-              ).messages.create(
-                  body="🚨 Scraper Agent FAILED\nCheck GitHub Actions",
-                  from_=os.getenv('TWILIO_FROM_NUMBER'),
-                  to=os.getenv('ALERT_PHONE_NUMBER')
-              )
-          except Exception:
+          if os.getenv('TWILIO_ACCOUNT_SID') and os.getenv('TWILIO_AUTH_TOKEN'):
+              from twilio.rest import Client
+              try:
+                  Client(
+                      os.getenv('TWILIO_ACCOUNT_SID'),
+                      os.getenv('TWILIO_AUTH_TOKEN')
+                  ).messages.create(
+                      body="🚨 Scraper Agent FAILED\nCheck GitHub Actions",
+                      from_=os.getenv('TWILIO_FROM_NUMBER'),
+                      to=os.getenv('ALERT_PHONE_NUMBER')
+                  )
+              except Exception:
+                  pass
+          PYEOF
               pass
           PYEOF

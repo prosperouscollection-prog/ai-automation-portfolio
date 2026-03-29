@@ -12,8 +12,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install deps
-        run: pip install requests twilio python-dotenv
       - name: Run client success
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
@@ -22,5 +20,6 @@ jobs:
           TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
           ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
+          pip install requests twilio python-dotenv -q
           cd .github/workflows/scripts
           python3 client_success_agent.py
