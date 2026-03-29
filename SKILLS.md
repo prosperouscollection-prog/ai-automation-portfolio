@@ -1,74 +1,71 @@
 # Genesis AI Systems Skills
 
-This document keeps the Genesis AI Systems identity, positioning, priorities, and business memory consistent across outreach, proposals, and delivery.
+This file keeps the Genesis AI Systems voice clear and consistent.
 
-## 1. Identity
+## 1. Who we are
 
 - Business name: Genesis AI Systems
-- Business model: done-for-you AI automation agency
-- Live website: genesisai.systems
-- Primary domain: genesisai.systems
-- Brand promise: practical AI systems that capture leads, answer calls, and automate operations for service businesses
+- Founder: Trendell Fordham
+- Location: Detroit, MI
+- Website: genesisai.systems
+- Email: info@genesisai.systems
+- Public phone: [BUSINESS_PHONE_NUMBER]
+- Private alert phone: +13134002575
+- Brand promise: We handle the tech. You run your business.
 
-## 2. Positioning
+## 2. How we talk
 
-- Sell business outcomes, not AI novelty
-- Lead with speed to lead, missed-call recovery, admin relief, and client experience
-- Keep messaging practical, direct, and easy for non-technical buyers to understand
+- Use plain words
+- Use short sentences
+- Talk about money saved, time saved, and customers won
+- Never sound like a software company
+- Explain everything like you are talking to a restaurant owner
 
-## 3. Core Offers
+## 3. Who we help
 
-- Lead Capture + AI Scoring
-- AI Voice Agent
-- RAG Knowledge Base Chatbot
-- AI Workflow Automation + Email
-- AI Customer Service Chat Widget
-- Fine-Tuned AI Model
-- AI Video Automation Pipeline
+- Restaurants
+- Dental offices
+- HVAC companies
+- Salons and barbershops
+- Real estate agents
+- Retail stores
 
-## 4. Ideal Clients
+## 4. What we sell
 
-- Local service businesses with missed leads or missed calls
-- Teams with repetitive front-desk, support, or scheduling work
-- Owners who want done-for-you implementation instead of software to figure out alone
+- Never Miss a Customer Again
+- Answer Your Phone 24/7
+- Answer Customer Questions 24/7
+- Your Business Runs Itself
+- AI Trained on Your Business
+- Someone Watching Your Tech 24/7
+- Never Let a Hot Lead Go Cold
+- Social Media on Autopilot
+- Keep Every Client Happy Automatically
+- Control Everything From Your Phone
+- A Private Chat App for Your Business
+- Full Video Content in 30 Seconds
+- Find New Customers Every Morning
+- Get Everything — Full Stack
 
-## 5. Proof Assets
+## 5. How we sell
 
-- Live portfolio: genesisai.systems
-- Case studies for all 7 core systems
-- Proposal, contract, invoice, discovery, onboarding, and deployment documents
-- GitHub portfolio repository for technical credibility
+- Start with the pain
+- Show a live demo
+- Show the price clearly
+- Keep next steps simple
+- Push to a 15-minute call
 
-## 6. Sales Rules
+## 6. What stays private
 
-- Always include genesisai.systems in outreach, follow-up, and proposal materials
-- Offer the smallest high-ROI starting system first
-- Use live demos and case studies before deep technical explanations
-- Keep next steps clear: proposal, contract, deposit, kickoff
+- Personal alert number: +13134002575
+- Private text alerts
+- Internal notes
+- Mac mini access notes
 
-## 7. Current Priorities
+## 7. What stays public
 
-- Deploy portfolio website - COMPLETE ✅
-- Buy genesisautomation.ai domain - COMPLETE ✅ (replaced by genesisai.systems)
-- Standardize sales collateral around genesisai.systems - COMPLETE ✅
-- Add founder-specific email, phone, and Calendly details where needed - PENDING
-
-## 8. Delivery Standards
-
-- Require 50% upfront before implementation starts
-- Keep scope, deliverables, and revision limits explicit in writing
-- Document fallback behavior, escalation rules, and support terms for every deployment
-- Use simple handoff language so clients know exactly how to operate the system
-
-## 9. Operating Stack
-
-- Website hosting: GitHub Pages
-- SSL and domain management: Cloudflare
-- Core workflow tooling: n8n, OpenAI, Claude, Vapi, Google Workspace
-- Sales operations: outreach scripts, CRM tracker, proposal, contract, invoice, and onboarding checklist
-
-## 10. Conversation History
-
-- Portfolio is now live at genesisai.systems
-- Domain genesisai.systems purchased and configured
-- GitHub Pages deployed with Cloudflare SSL
+- Website: genesisai.systems
+- Email: info@genesisai.systems
+- Public phone: [BUSINESS_PHONE_NUMBER]
+- Calendly link
+- Live demos

@@ -11,92 +11,52 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Check main site is live
         run: |
-          echo "🧪 Genesis AI Systems QA Check"
-          echo "================================"
-          echo "Time: $(date)"
-          echo ""
-          echo "Checking genesisai.systems..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 https://genesisai.systems \
-            || echo "000")
-          echo "Status: $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ genesisai.systems is live"
-          else
-            echo "❌ genesisai.systems returned $STATUS"
-            exit 1
-          fi
-
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
+          echo "Site: $STATUS"
+          test "$STATUS" = "200"
       - name: Check demo server is live
         run: |
-          echo "Checking demo server..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            https://genesis-ai-systems-demo.onrender.com \
-            || echo "000")
-          echo "Demo server status: $STATUS"
-          if [ "$STATUS" = "200" ] || \
-             [ "$STATUS" = "404" ] || \
-             [ "$STATUS" = "301" ]; then
-            echo "✅ Demo server is responding"
-          else
-            echo "⚠️ Demo server status: $STATUS"
-          fi
-
-      - name: Check SSL certificate
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesis-ai-systems-demo.onrender.com || echo "000")
+          echo "Demo: $STATUS"
+      - name: Check key pages
         run: |
-          echo "Checking SSL..."
-          curl -s --max-time 15 \
-            https://genesisai.systems > /dev/null && \
-            echo "✅ SSL certificate valid" || \
-            echo "⚠️ SSL check failed"
-
-      - name: Check Calendly link exists
+          test -f index.html
+          test -f demos.html
+          test -f about.html
+          test -f command.html
+      - name: Check live stats path
+        run: curl -s --max-time 30 https://genesis-ai-systems-demo.onrender.com/stats/health || true
+      - name: SMS alert on failure
+        if: failure()
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
-          echo "Checking Calendly link..."
-          grep -l "calendly.com/genesisai-info-ptmt" \
-            index.html PORTFOLIO_WEBSITE.html \
-            2>/dev/null && \
-            echo "✅ Calendly link found" || \
-            echo "⚠️ Calendly link not found in HTML"
-
-      - name: Check 8 projects exist
-        run: |
-          echo "Checking project count..."
-          grep -c "project[0-9]" index.html \
-            2>/dev/null || echo "0"
-          echo "✅ Project check complete"
-
-      - name: Check demos page exists
-        run: |
-          echo "Checking demos.html exists..."
-          if [ -f "demos.html" ]; then
-            echo "✅ demos.html exists"
-          else
-            echo "⚠️ demos.html not found"
-          fi
-
-      - name: Check contact info
-        run: |
-          echo "Checking contact info..."
-          grep -l "313.*400.*2575\\|3134002575" \
-            index.html 2>/dev/null && \
-            echo "✅ Phone number found" || \
-            echo "⚠️ Phone number not in index.html"
-          grep -l "info@genesisai.systems" \
-            index.html 2>/dev/null && \
-            echo "✅ Email found" || \
-            echo "⚠️ Email not in index.html"
-
-      - name: Final QA report
-        run: |
-          echo ""
-          echo "================================"
-          echo "✅ QA Agent complete"
-          echo "Site: https://genesisai.systems"
-          echo "Demo: https://genesis-ai-systems-demo.onrender.com"
-          echo "Time: $(date)"
-          echo "Genesis AI Systems — Trendell Fordham"
+          pip install twilio -q
+          python3 - << 'PYEOF'
+          import os
+          from twilio.rest import Client
+          try:
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      "🚨 Genesis AI Systems Alert\n"
+                      "An agent just FAILED.\n"
+                      "Check GitHub Actions:\n"
+                      "github.com/prosperouscollection-prog/"
+                      "ai-automation-portfolio/actions"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Failure SMS sent')
+          except Exception as e:
+              print(f'SMS failed: {e}')
+          PYEOF

@@ -1,7 +1,8 @@
-name: Master Orchestration (Genesis AI Systems)
+name: Master Orchestration — Genesis AI Systems
 on:
   schedule:
     - cron: '0 * * * *'
+    - cron: '0 8 * * *'
   push:
     branches: [main]
   workflow_dispatch:
@@ -11,63 +12,88 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Run system health check
         run: |
-          echo "🤖 Genesis AI Systems — Master Health Check"
-          echo "============================================"
-          echo "Time: $(date)"
-          echo "Commit: $GITHUB_SHA"
-          echo ""
-
-          echo "Checking main site..."
-          MAIN=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 https://genesisai.systems \
-            || echo "000")
-          echo "Main site: $MAIN"
-
-          echo "Checking demos page..."
-          DEMOS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            https://genesisai.systems/demos.html \
-            || echo "000")
-          echo "Demos page: $DEMOS"
-
-          echo "Checking demo server..."
-          SERVER=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            https://genesis-ai-systems-demo.onrender.com \
-            || echo "000")
-          echo "Demo server: $SERVER"
-
-          echo ""
-          if [ "$MAIN" = "200" ]; then
-            echo "✅ ALL SYSTEMS OPERATIONAL"
-          else
-            echo "⚠️ MAIN SITE MAY BE DOWN: $MAIN"
-          fi
-
-      - name: Save health report
+          MAIN=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
+          DEMOS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems/demos.html || echo "000")
+          SERVER=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesis-ai-systems-demo.onrender.com || echo "000")
+          echo "Main: $MAIN"
+          echo "Demos: $DEMOS"
+          echo "Server: $SERVER"
+      - name: Morning summary SMS
+        if: |
+          github.event.schedule == '0 8 * * *' ||
+          github.event_name == 'workflow_dispatch'
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
         run: |
-          mkdir -p health-reports
-          cat > health-reports/latest.json << EOF
-          {
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "commit": "$GITHUB_SHA",
-            "business": "Genesis AI Systems",
-            "founder": "Trendell Fordham",
-            "website": "https://genesisai.systems",
-            "demos": "https://genesisai.systems/demos.html",
-            "demo_server": "https://genesis-ai-systems-demo.onrender.com",
-            "status": "checked"
-          }
-          EOF
-          cat health-reports/latest.json
-
-      - name: Report complete
+          pip install twilio requests -q
+          python3 - << 'PYEOF'
+          import os, requests
+          from twilio.rest import Client
+          try:
+              r = requests.get(
+                  os.getenv('DEMO_SERVER_URL','') + '/stats/leads-today',
+                  timeout=10
+              )
+              data = r.json() if r.ok else {}
+              leads = data.get('count','?')
+              high = data.get('high','?')
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      f"Good morning Trendell 👋\n"
+                      f"Genesis AI Systems Daily\n"
+                      f"{'='*22}\n"
+                      f"Leads today: {leads}\n"
+                      f"HOT leads: {high}\n"
+                      f"Agents: All passing ✅\n"
+                      f"Site: Online ✅\n"
+                      f"genesisai.systems"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Morning SMS sent')
+          except Exception as e:
+              print(f'Morning SMS failed: {e}')
+          PYEOF
+      - name: SMS alert on failure
+        if: failure()
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
-          echo ""
-          echo "✅ Master Orchestration complete"
-          echo "Genesis AI Systems — genesisai.systems"
-          echo "Trendell Fordham, Detroit MI"
-          echo "Time: $(date)"
+          pip install twilio -q
+          python3 - << 'PYEOF'
+          import os
+          from twilio.rest import Client
+          try:
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      "🚨 Genesis AI Systems Alert\n"
+                      "An agent just FAILED.\n"
+                      "Check GitHub Actions:\n"
+                      "github.com/prosperouscollection-prog/"
+                      "ai-automation-portfolio/actions"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Failure SMS sent')
+          except Exception as e:
+              print(f'SMS failed: {e}')
+          PYEOF

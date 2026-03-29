@@ -3,2000 +3,1479 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genesis AI Systems — AI Automation</title>
-  <meta
-    name="description"
-    content="Genesis AI Systems — Done-for-you AI automation for local businesses. Built by Trendell Fordham, Detroit, MI. Visit genesisai.systems"
-  >
+  <title>Genesis AI Systems — Detroit AI for Local Businesses</title>
+  <meta name="description" content="Genesis AI Systems helps local businesses answer calls, capture leads, and book appointments even while you sleep. Built in Detroit by Trendell Fordham.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-  <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web/dist/vapi.js"></script>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#2563eb">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Genesis AI Systems">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f172a;
-      --bg-deep: #0a0f1e;
-      --panel: #111c35;
-      --panel-2: #162444;
-      --line: rgba(148, 163, 184, 0.18);
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --soft: #94a3b8;
+      --navy: #0f172a;
+      --navy-soft: #162032;
       --blue: #2563eb;
-      --blue-2: #3b82f6;
-      --blue-3: rgba(37, 99, 235, 0.18);
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --error: #ef4444;
+      --blue-soft: rgba(37, 99, 235, 0.16);
+      --white: #ffffff;
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --line: rgba(148, 163, 184, 0.18);
       --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
       --radius: 24px;
-      --max: 1180px;
+      --max: 1240px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
-      font-family: "Inter", sans-serif;
-      color: var(--text);
+      margin: 0;
       background:
-        radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.24), transparent 34%),
-        radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.16), transparent 32%),
-        linear-gradient(180deg, #07101f 0%, #0f172a 46%, #101b33 100%);
-      min-height: 100vh;
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 30%),
+        linear-gradient(180deg, #0f172a 0%, #0b1324 45%, #09101f 100%);
+      color: var(--white);
+      font-family: "Manrope", sans-serif;
     }
 
     a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
     img { max-width: 100%; display: block; }
 
     .container {
-      width: min(var(--max), calc(100% - 2rem));
+      width: min(var(--max), calc(100% - 32px));
       margin: 0 auto;
     }
 
-    .nav-wrap {
+    .pill,
+    .trust-badge,
+    .price-badge,
+    .tab-button,
+    .small-badge {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .site-nav {
       position: sticky;
       top: 0;
-      z-index: 20;
-      backdrop-filter: blur(16px);
-      background: rgba(7, 16, 31, 0.82);
-      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      z-index: 1000;
+      backdrop-filter: blur(18px);
+      background: rgba(15, 23, 42, 0.88);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
 
-    .nav {
-      display: flex;
+    .site-nav-inner {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 1rem 0;
+      gap: 16px;
     }
 
-    .brand {
+    .logo {
       font-family: "Space Grotesk", sans-serif;
+      font-size: 1.05rem;
       font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
     }
 
     .nav-links {
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
       color: var(--muted);
       font-size: 0.95rem;
+      padding: 8px 10px;
+      border-radius: 999px;
+      transition: 0.2s ease;
     }
 
     .nav-links a:hover,
-    .nav-links a:focus {
-      color: var(--text);
+    .nav-links a.active {
+      color: var(--white);
+      background: var(--blue-soft);
+    }
+
+    .nav-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--white);
     }
 
     .button {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.55rem;
-      min-height: 50px;
-      padding: 0 1.25rem;
-      border-radius: 999px;
-      font-weight: 600;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 22px;
+      border-radius: 16px;
       border: 1px solid transparent;
+      color: var(--white);
       cursor: pointer;
-    }
-
-    .button:focus {
-      outline: 2px solid var(--blue);
-      outline-offset: 3px;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease, border 0.2s ease;
     }
 
     .button:hover { transform: translateY(-1px); }
-
     .button-primary {
-      background: linear-gradient(135deg, var(--blue), var(--blue-2));
-      box-shadow: 0 18px 45px rgba(37, 99, 235, 0.35);
-      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      box-shadow: 0 18px 40px rgba(37, 99, 235, 0.28);
+    }
+    .button-outline {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .button-soft {
+      background: rgba(37, 99, 235, 0.14);
+      border-color: rgba(37, 99, 235, 0.25);
+    }
+    .button.full { width: 100%; }
+
+    .mobile-menu {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      background: rgba(7, 12, 22, 0.98);
+      display: none;
+      padding: 24px;
     }
 
-    .button-secondary {
-      background: rgba(255, 255, 255, 0.03);
-      border-color: rgba(255, 255, 255, 0.14);
+    .mobile-menu.open { display: block; }
+    .mobile-panel {
+      max-width: 420px;
+      margin-left: auto;
+      background: #10192c;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .mobile-links {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .mobile-links a {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #162032;
       color: var(--text);
     }
 
+    .section {
+      padding: 88px 0;
+    }
+
     .hero {
-      padding: 5rem 0 2.75rem;
+      position: relative;
+      padding: 72px 0 56px;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 180px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(7, 12, 22, 0.88) 100%);
+      pointer-events: none;
     }
 
     .hero-grid {
+      position: relative;
+      z-index: 2;
       display: grid;
       grid-template-columns: 1.1fr 0.9fr;
-      gap: 2rem;
+      gap: 32px;
       align-items: center;
     }
 
-    .eyebrow {
+    .pill {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.45rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid rgba(59, 130, 246, 0.25);
-      background: rgba(15, 23, 42, 0.75);
-      color: #bfdbfe;
-      font-size: 0.84rem;
-      letter-spacing: 0.03em;
-      margin-bottom: 1rem;
+      gap: 8px;
+      padding: 10px 16px;
+      color: #bfd5ff;
+      background: rgba(255, 255, 255, 0.03);
+      margin-bottom: 18px;
     }
 
-    .hero h1 {
+    h1, h2, h3 {
+      margin: 0;
+      line-height: 1.05;
       font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(2.6rem, 5vw, 4.6rem);
-      line-height: 0.98;
-      letter-spacing: -0.05em;
-      margin-bottom: 1rem;
     }
 
-    .hero p {
-      color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.8;
-      max-width: 58ch;
+    h1 {
+      font-size: clamp(2.7rem, 6vw, 4.9rem);
+      max-width: 12ch;
+      margin-bottom: 18px;
     }
 
-    .hero-actions {
+    .hero-copy p,
+    .section-lead,
+    .card p,
+    .story-text,
+    .faq-item p,
+    .contact-note,
+    .demo-note,
+    .price-card p,
+    .about-text p {
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 1.02rem;
+    }
+
+    .hero-copy p {
+      max-width: 32rem;
+      margin: 0 0 24px;
+    }
+
+    .hero-actions,
+    .price-actions,
+    .result-actions,
+    .cta-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.9rem;
-      margin-top: 1.6rem;
+      gap: 12px;
     }
 
-    .hero-meta {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
     }
 
-    .metric-card,
-    .info-card,
-    .pricing-card,
-    .study-card {
-      background: rgba(17, 28, 53, 0.84);
+    .trust-badge {
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .hero-panel,
+    .card,
+    .story-panel,
+    .step-card,
+    .demo-card,
+    .faq-item,
+    .price-card,
+    .form-shell,
+    .result-card,
+    .activity-box,
+    .case-card,
+    .about-card {
+      background: rgba(16, 25, 44, 0.88);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 1.1rem 1.15rem;
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
-    }
-
-    .metric-card span {
-      display: block;
-      color: #60a5fa;
-      font-size: 0.84rem;
-      margin-bottom: 0.35rem;
-    }
-
-    .metric-card strong {
-      font-size: 1.8rem;
-      font-family: "Space Grotesk", sans-serif;
     }
 
     .hero-panel {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(17, 28, 53, 0.92));
-      border: 1px solid rgba(96, 165, 250, 0.16);
-      border-radius: 28px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
+      padding: 28px;
     }
 
-    .panel-label {
+    .hero-panel-header {
       display: flex;
       justify-content: space-between;
+      gap: 12px;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      color: #bfdbfe;
-      font-size: 0.9rem;
+      margin-bottom: 16px;
+      color: #bfd5ff;
+      font-weight: 700;
     }
 
-    .hero-stack {
+    .hero-list {
       display: grid;
-      gap: 0.9rem;
+      gap: 12px;
     }
 
-    .stack-item {
-      background: rgba(30, 41, 59, 0.76);
-      border: 1px solid rgba(59, 130, 246, 0.16);
+    .hero-list-item {
+      padding: 16px;
       border-radius: 18px;
-      padding: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.12);
     }
 
-    .stack-item strong {
+    .hero-list-item strong {
       display: block;
-      margin-bottom: 0.4rem;
+      margin-bottom: 8px;
       font-size: 1rem;
     }
 
-    .stack-item span {
-      color: var(--soft);
-      font-size: 0.93rem;
-      line-height: 1.55;
-    }
-
-    .section-shell {
-      padding: 1.2rem 0 4rem;
-    }
-
-    .section-header {
+    .section-head {
+      max-width: 760px;
+      margin: 0 auto 40px;
       text-align: center;
-      margin-bottom: 2rem;
     }
 
-    .section-header h2 {
-      font-family: "Space Grotesk", sans-serif;
+    .section-head h2 {
       font-size: clamp(2rem, 4vw, 3rem);
-      margin-bottom: 0.55rem;
+      margin-bottom: 14px;
     }
 
-    .section-header p {
-      color: var(--soft);
-      max-width: 60ch;
-      margin: 0 auto;
-      line-height: 1.7;
-    }
-
-    .three-grid,
-    .pricing-grid {
+    .problem-grid,
+    .steps-grid,
+    .pricing-grid,
+    .activity-grid,
+    .featured-grid,
+    .footer-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.2rem;
+      gap: 20px;
     }
 
-    .study-card h3,
-    .pricing-card h3,
-    .info-card h3 {
-      font-size: 1.1rem;
-      margin-bottom: 0.65rem;
+    .problem-grid { grid-template-columns: repeat(3, 1fr); }
+    .steps-grid { grid-template-columns: repeat(3, 1fr); }
+    .pricing-grid { grid-template-columns: repeat(3, 1fr); }
+    .activity-grid { grid-template-columns: repeat(3, 1fr); }
+    .featured-grid { grid-template-columns: repeat(3, 1fr); }
+    .footer-grid { grid-template-columns: repeat(3, 1fr); align-items: center; }
+
+    .solutions-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
     }
 
-    .study-card p,
-    .pricing-card p,
-    .info-card p {
-      color: var(--soft);
-      line-height: 1.7;
-      font-size: 0.95rem;
+    .card {
+      padding: 24px;
     }
 
-    .pricing-card strong {
-      display: block;
+    .icon {
       font-size: 2rem;
-      font-family: "Space Grotesk", sans-serif;
-      margin-bottom: 0.35rem;
-      color: #fff;
+      margin-bottom: 12px;
     }
 
-    .pricing-card ul {
-      list-style: none;
-      margin-top: 0.95rem;
+    .card h3 {
+      font-size: 1.42rem;
+      margin-bottom: 12px;
+    }
+
+    .card p { margin: 0 0 14px; }
+    .card em {
+      display: block;
+      color: #c8d9ff;
+      margin-bottom: 18px;
+      font-style: italic;
+    }
+
+    .price-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--blue-soft);
+      color: #d9e7ff;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .card-actions {
       display: grid;
-      gap: 0.5rem;
-      color: var(--muted);
-      font-size: 0.95rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    .pricing-card li::before {
-      content: "•";
-      color: var(--blue-2);
-      margin-right: 0.45rem;
-    }
-
-    .contact-panel {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 1.25rem;
-      align-items: stretch;
-    }
-
-    .contact-actions {
+    .tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-top: 1.2rem;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 26px;
     }
 
-    .contact-list {
-      list-style: none;
+    .tab-button {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+      padding: 12px 18px;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: var(--white);
+    }
+
+    .story-panel {
       display: grid;
-      gap: 0.8rem;
-      color: var(--muted);
-      line-height: 1.6;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 24px;
+      padding: 28px;
     }
 
-    .contact-list strong {
-      display: block;
-      color: #fff;
-      margin-bottom: 0.2rem;
+    .story-text h3 {
+      font-size: 1.8rem;
+      margin-bottom: 14px;
     }
 
-    .demo-section {
-      padding: 80px 20px;
-      background: #0a0f1e;
+    .check-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--text);
+      font-weight: 700;
     }
 
-    .demo-section-header {
-      text-align: center;
-      margin-bottom: 48px;
+    .result-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 14px;
     }
 
-    .demo-section-header h2 {
-      color: white;
-      font-size: 36px;
-      font-weight: 500;
-      margin-bottom: 8px;
+    .big-number {
+      font-size: 4rem;
+      font-family: "Space Grotesk", sans-serif;
+      color: #7db4ff;
+      line-height: 1;
     }
 
-    .demo-section-header p {
-      color: #94a3b8;
-      font-size: 16px;
-      margin-top: 8px;
-      line-height: 1.7;
+    .step-card,
+    .demo-card,
+    .price-card,
+    .faq-item,
+    .form-shell,
+    .case-card,
+    .about-card {
+      padding: 24px;
+    }
+
+    .step-number {
+      width: 58px;
+      height: 58px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      background: var(--blue-soft);
+      color: #7db4ff;
+      font-size: 1.5rem;
+      font-family: "Space Grotesk", sans-serif;
+      margin-bottom: 14px;
     }
 
     .demo-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-      box-sizing: border-box;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
     }
 
-    @media (min-width: 768px) {
-      .demo-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .demo-card h3,
+    .price-card h3,
+    .faq-item h3,
+    .case-card h3,
+    .about-card h3 {
+      font-size: 1.35rem;
+      margin-bottom: 12px;
     }
 
-    @media (min-width: 1200px) {
-      .demo-grid {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 1100px;
-      }
-    }
-
-    .demo-card {
-      background: #0f172a;
-      border: 1px solid #1e3a8a;
-      border-radius: 12px;
-      padding: 28px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      min-height: 320px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .demo-card h3 {
-      color: white;
-      font-size: 18px;
-      margin: 0 0 8px;
-      padding-right: 56px;
-    }
-
-    .demo-card p {
-      color: #94a3b8;
-      font-size: 14px;
-      margin: 0 0 12px;
-      line-height: 1.7;
-    }
-
-    .live-badge {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #22c55e;
-      color: white;
-      font-size: 10px;
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 1px;
-    }
-
-    .demo-input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 12px 16px;
-      background: #1e293b;
+    .demo-cta {
+      margin-top: 18px;
+      background: #162032;
       border: 1px solid #2563eb;
-      border-radius: 8px;
-      color: white;
-      font-size: 14px;
-      margin: 12px 0;
+      border-radius: 12px;
+      padding: 24px;
     }
 
-    .demo-input:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    .live-feed {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+      padding: 0;
+      margin: 20px 0 0;
     }
 
-    .demo-btn {
-      width: 100%;
-      box-sizing: border-box;
-      background: #2563eb;
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 500;
-      margin-top: 8px;
+    .live-feed li {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
     }
 
-    .demo-btn:hover,
-    .demo-btn:focus {
-      background: #1d4ed8;
-      transform: translateY(-1px);
+    .price-card.featured {
+      border-color: rgba(37, 99, 235, 0.55);
+      transform: translateY(-6px);
     }
 
-    .demo-btn:focus {
-      outline: 2px solid #93c5fd;
-      outline-offset: 3px;
-    }
-
-    .demo-btn-call {
+    .small-badge {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-    }
-
-    .demo-result {
-      margin-top: 16px;
-      padding: 12px;
-      background: #1e293b;
-      border-radius: 8px;
-      color: #e2e8f0;
-      font-size: 13px;
-      min-height: 60px;
-      line-height: 1.6;
-      word-break: break-word;
-    }
-
-    .demo-label {
-      font-size: 11px;
-      color: #475569;
-      margin-top: 12px;
-      text-align: center;
-    }
-
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #2563eb;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 10px auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .demo-score {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .score-high { background: #22c55e; color: white; }
-    .score-medium { background: #f59e0b; color: white; }
-    .score-low { background: #94a3b8; color: white; }
-
-    .demo-response {
-      color: #e2e8f0;
-      line-height: 1.65;
-    }
-
-    .pipeline {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin: 16px 0;
-      flex-wrap: nowrap;
-    }
-
-    @media (max-width: 480px) {
-      .pipeline {
-        flex-wrap: wrap;
-      }
-    }
-
-    .pipeline-step {
-      background: #1e293b;
-      color: #475569;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      transition: all 0.3s;
-    }
-
-    .pipeline-step.active {
-      background: #2563eb;
-      color: white;
-      box-shadow: 0 0 0 1px rgba(147, 197, 253, 0.28);
-    }
-
-    .pipeline-arrow {
-      color: #475569;
-      font-size: 16px;
-    }
-
-    .comparison {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-top: 12px;
-    }
-
-    @media (max-width: 480px) {
-      .comparison {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .comparison-col h4 {
-      color: #94a3b8;
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .content-section {
+      padding: 8px 12px;
+      color: #cfe0ff;
+      background: rgba(37, 99, 235, 0.18);
       margin-bottom: 12px;
-      border-bottom: 1px solid #1e293b;
-      padding-bottom: 12px;
+      font-weight: 700;
     }
 
-    .content-section:last-child {
-      border-bottom: 0;
-      margin-bottom: 0;
-      padding-bottom: 0;
+    .faq-grid {
+      display: grid;
+      gap: 16px;
+      margin-top: 28px;
     }
 
-    .content-section h4 {
-      color: #2563eb;
-      font-size: 12px;
-      margin-bottom: 4px;
+    .about-preview {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      align-items: center;
     }
 
-    .demo-error {
-      color: #ef4444;
-      text-align: center;
-      padding: 8px;
-    }
-
-    .demo-logged {
-      color: #22c55e;
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .demo-source {
-      color: #2563eb;
-      font-size: 11px;
-      margin-top: 8px;
-    }
-
-    .agent-status {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin: 16px 0;
-    }
-
-    .agent-badge {
+    .founder-badge {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 8px;
-      color: #94a3b8;
-      font-size: 12px;
+      justify-content: center;
+      background: #162032;
+      border: 3px solid var(--blue);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 3.4rem;
+      margin: 0 auto;
     }
 
-    .agent-badge img {
-      height: 20px;
-    }
-
-    .widget-frame-wrap {
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(37, 99, 235, 0.28);
-      background: #0f172a;
-      min-height: 520px;
-    }
-
-    .widget-frame {
-      width: 100%;
-      height: 560px;
-      border: 0;
-      background: #0f172a;
-    }
-
-    .embed-snippet {
-      margin-top: 14px;
-      padding: 12px;
-      background: #020617;
-      border-radius: 10px;
-      color: #bfdbfe;
-      font-size: 12px;
-      overflow-x: auto;
-      border: 1px solid rgba(37, 99, 235, 0.16);
-    }
-
-    .meta-stack {
+    .contact-grid {
       display: grid;
-      gap: 0.6rem;
+      grid-template-columns: 1fr 1.1fr;
+      gap: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: #d8e6ff;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(6, 10, 18, 0.45);
+      color: var(--white);
+      padding: 14px 16px;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .contact-note { margin-top: 16px; }
+    .contact-links {
+      display: grid;
+      gap: 16px;
+      margin-top: 20px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .footer {
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      padding: 28px 0 110px;
       color: var(--muted);
-      margin-top: 1rem;
     }
 
-    footer {
-      background: #0f172a;
-      color: #cbd5e1;
-      padding: 2.2rem 0 1.1rem;
-      border-top: 1px solid rgba(59, 130, 246, 0.11);
-      margin-top: 4rem;
-      font-size: 1rem;
-    }
-
-    .footer-inner {
+    .footer-nav {
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.9em;
-      font-size: 1.04em;
+      gap: 12px;
+      justify-content: center;
     }
 
-    .footer-inner > div {
-      flex: 1 1 250px;
-      min-width: 170px;
-      text-align: center;
-    }
-
-    .footer-inner a {
-      color: #60a5fa;
-      transition: color 0.15s;
-    }
-
-    .footer-inner a:focus,
-    .footer-inner a:hover {
-      color: #fff;
-      text-decoration: underline;
-    }
-
-    .footer-monitoring {
-      margin-top: 0.6em;
-      color: #94a3b8;
-      font-size: 0.97em;
-      text-align: center;
-      letter-spacing: -0.01em;
-    }
-
-    #pwa-install-banner {
+    .floating-mobile-bar {
       position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 999;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1001;
       display: none;
-      background: linear-gradient(90deg, #0f172a 65%, #2563eb 200%);
-      color: #fff;
-      box-shadow: 0 -2px 24px rgba(15, 23, 42, 0.14);
-      padding: 0.85em 1.12em;
-      border-radius: 18px 18px 0 0;
-      font-size: 1.09em;
+      gap: 10px;
       align-items: center;
       justify-content: space-between;
-      gap: 1.1em;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(10, 16, 29, 0.96);
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      box-shadow: var(--shadow);
     }
 
-    #pwa-install-banner-content {
-      display: flex;
-      align-items: center;
-      gap: 0.7em;
-    }
-
-    #pwa-install-banner .pwa-icon {
-      width: 36px;
-      height: 36px;
-      display: inline-block;
-      background: url('/icons/icon-192.png') center center / cover no-repeat;
-      border-radius: 12px;
-      border: 1.5px solid #2563eb99;
-    }
-
-    #pwa-install-banner button {
-      background: linear-gradient(90deg, #2563eb, #3b82f6 100%);
-      color: #fff;
-      border: 0;
-      border-radius: 999px;
-      padding: 0.6em 1.5em;
-      font-weight: bold;
-      font-size: 0.99em;
-      margin-left: 1.15em;
-      box-shadow: 0 1px 10px rgba(37, 99, 235, 0.11);
-      cursor: pointer;
-    }
-
-    #pwa-install-banner .close {
-      background: transparent;
-      color: #a5b4fc;
-      border: none;
-      font-size: 1.35em;
-      margin-left: 1.16em;
-      cursor: pointer;
-      padding: 0 0.1em;
+    .floating-mobile-bar span {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.95rem;
     }
 
     .chat-launcher {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 56px;
-      height: 56px;
-      background: #2563eb;
+      right: 18px;
+      bottom: 96px;
+      z-index: 1002;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
-      z-index: 9999;
-      transition: transform 0.2s;
       border: none;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: var(--white);
+      font-size: 1.4rem;
+      box-shadow: 0 16px 36px rgba(37, 99, 235, 0.45);
+      cursor: pointer;
     }
-
-    .chat-launcher:hover { transform: scale(1.1); }
 
     .chat-window {
       position: fixed;
-      bottom: 96px;
-      right: 24px;
-      width: 360px;
-      height: 500px;
-      background: #0f172a;
-      border: 1px solid #1e3a8a;
-      border-radius: 16px;
-      display: none;
-      flex-direction: column;
-      z-index: 9998;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .chat-window.open { display: flex; }
-
-    .chat-header {
-      background: #1e293b;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #1e3a8a;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-input-row {
-      padding: 12px 16px;
-      border-top: 1px solid #1e3a8a;
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .chat-input-field {
-      flex: 1;
-      background: #1e293b;
-      border: 1px solid #2563eb;
+      right: 18px;
+      bottom: 172px;
+      z-index: 1003;
+      width: min(380px, calc(100vw - 24px));
+      background: #10192c;
+      border: 1px solid rgba(37, 99, 235, 0.35);
       border-radius: 24px;
-      padding: 10px 16px;
-      color: white;
-      font-size: 14px;
-      outline: none;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: none;
     }
 
-    .chat-send-btn {
-      width: 40px;
-      height: 40px;
-      min-width: 40px;
-      background: #2563eb;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      color: white;
-      font-size: 16px;
+    .chat-window.open { display: block; }
+    .chat-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
+      padding: 16px 18px;
+      background: #0f172a;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
 
-    .message-bubble {
-      max-width: 82%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 13px;
-      line-height: 1.5;
-      word-wrap: break-word;
+    .chat-header strong { display: block; }
+    .chat-header span { color: var(--muted); font-size: 0.85rem; }
+    .chat-log {
+      max-height: 320px;
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      padding: 18px;
     }
 
-    .message-ai {
-      background: #1e293b;
-      color: #e2e8f0;
-      align-self: flex-start;
-      border-bottom-left-radius: 4px;
+    .chat-bubble {
+      padding: 12px 14px;
+      border-radius: 16px;
+      line-height: 1.55;
+      font-size: 0.95rem;
     }
 
-    .message-user {
-      background: #2563eb;
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 4px;
+    .chat-bubble.bot {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
     }
 
-    .chat-powered-by {
-      text-align: center;
-      font-size: 10px;
-      color: #475569;
-      padding: 6px;
-      background: #0a0f1e;
+    .chat-bubble.user {
+      background: var(--blue);
+      justify-self: end;
+      max-width: 88%;
     }
 
-    @media (max-width: 960px) {
+    .chat-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .chat-form input {
+      min-height: 48px;
+      padding: 0 14px;
+      border-radius: 14px;
+      margin: 0;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 1100px) {
       .hero-grid,
-      .contact-panel {
+      .story-panel,
+      .contact-grid,
+      .about-preview {
         grid-template-columns: 1fr;
       }
-
-      .three-grid,
-      .pricing-grid {
+      .problem-grid,
+      .solutions-grid,
+      .pricing-grid,
+      .activity-grid,
+      .featured-grid,
+      .steps-grid,
+      .demo-grid,
+      .footer-grid {
         grid-template-columns: 1fr;
+      }
+      .about-preview { text-align: center; }
+      .about-preview .button { justify-self: center; }
+      .site-nav-inner {
+        grid-template-columns: 1fr auto;
+      }
+      .nav-links,
+      .nav-actions .button {
+        display: none;
+      }
+      .nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 
-    @media (max-width: 780px) {
-      .nav {
+    @media (max-width: 720px) {
+      .section { padding: 68px 0; }
+      .hero { padding-top: 48px; }
+      .card-actions,
+      .hero-actions,
+      .price-actions,
+      .cta-row,
+      .result-actions {
+        grid-template-columns: 1fr;
         flex-direction: column;
-        align-items: flex-start;
       }
-
-      .nav-links {
-        justify-content: flex-start;
-      }
-
-      .hero {
-        padding-top: 3rem;
-      }
-
-      .hero-meta {
-        grid-template-columns: 1fr;
-      }
-
-      .demo-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-inner {
-        flex-direction: column;
-        gap: 1em;
-        font-size: 1em;
-      }
-
-      .footer-inner > div {
-        min-width: 130px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      #pwa-install-banner {
-        font-size: 1em;
-        padding: 0.88em 0.55em 0.88em 0.62em;
-      }
-
-      .demo-section {
-        padding: 68px 14px;
-      }
-
-      .demo-card {
-        padding: 20px;
-      }
-    }
-
-    @media (max-width: 480px) {
+      .button { width: 100%; }
+      .trust-row { flex-direction: column; }
       .chat-window {
+        inset: 0;
         width: 100vw;
-        height: 100vh;
+        border-radius: 0;
         bottom: 0;
         right: 0;
-        border-radius: 0;
       }
-
-      .chat-launcher {
-        bottom: 16px;
-        right: 16px;
-      }
+      .chat-launcher { bottom: 90px; }
     }
   </style>
 </head>
 <body>
-  <div class="nav-wrap">
-    <div class="container nav">
-      <a class="brand" href="#top" aria-label="Genesis AI Systems home">Genesis AI Systems</a>
-      <nav aria-label="Primary Navigation">
-        <div class="nav-links">
-          <a href="#projects">Projects</a>
-          <a href="/demos.html">Demos</a>
-          <a href="#case-studies">Case Studies</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#contact">Contact</a>
-        </div>
-      </nav>
+  <nav class="site-nav">
+    <div class="container site-nav-inner">
+      <a class="logo" href="#top">Genesis AI Systems</a>
+      <div class="nav-links" aria-label="Primary">
+        <a href="#how-it-works" class="active">How It Works</a>
+        <a href="#solutions">Examples</a>
+        <a href="#about-preview">About</a>
+        <a href="#live-demos">Demos</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <div class="mobile-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
+        <strong class="logo">Genesis AI Systems</strong>
+        <button class="nav-toggle" id="closeMenu" aria-label="Close menu">✕</button>
+      </div>
+      <div class="mobile-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#solutions">Examples</a>
+        <a href="#about-preview">About</a>
+        <a href="#live-demos">Demos</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact">Contact</a>
+        <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+      </div>
     </div>
   </div>
 
   <main id="top">
-    <section class="hero" id="projects">
+    <section class="hero">
       <div class="container hero-grid">
-        <div>
-          <div class="eyebrow">Detroit-built AI automation for local businesses</div>
-          <h1>Genesis AI Systems runs on its own products first.</h1>
-          <p>
-            Every live demo below is wired into the Genesis AI Systems stack. Lead capture,
-            voice, RAG, workflow automation, chat, fine-tuning, content generation, and
-            self-healing agents are all part of the same production portfolio.
-          </p>
+        <div class="hero-copy">
+          <div class="pill">Detroit-built AI for local businesses</div>
+          <h1>Your business answers calls, captures leads, and books appointments — even while you sleep.</h1>
+          <p>We build simple AI tools that handle the repetitive work for you. No tech knowledge needed. We handle everything from start to finish.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#demos">Explore Live Demos</a>
-            <a
-              class="button button-secondary"
-              href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
-              target="_blank"
-              rel="noopener"
-            >
-              Book a Free Demo
-            </a>
+            <a class="button button-primary" href="#solutions">See How It Works</a>
+            <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free 15-Min Call</a>
+            <a class="button button-soft" href="[STRIPE_STARTER_LINK]">Buy Now — Starting at $500</a>
           </div>
-          <div class="hero-meta">
-            <div class="metric-card">
-              <span>Systems Running</span>
-              <strong>8</strong>
-            </div>
-            <div class="metric-card">
-              <span>Founder</span>
-              <strong>Trendell Fordham</strong>
-            </div>
-            <div class="metric-card">
-              <span>Response Window</span>
-              <strong>24/7</strong>
-            </div>
-            <div class="metric-card">
-              <span>Starting Price</span>
-              <strong>$500</strong>
-            </div>
+          <div class="trust-row">
+            <div class="trust-badge">⚡ Setup in 5-7 days</div>
+            <div class="trust-badge">🏙️ Built in Detroit, MI</div>
+            <div class="trust-badge">💰 Starting at $500</div>
           </div>
         </div>
-
-        <aside class="hero-panel" aria-label="Genesis AI Systems stack overview">
-          <div class="panel-label">
-            <span>Live Production Stack</span>
-            <span style="color:#22c55e;">Online</span>
+        <div class="hero-panel">
+          <div class="hero-panel-header">
+            <span>What you wake up to</span>
+            <span>Updated every day</span>
           </div>
-          <div class="hero-stack">
-            <div class="stack-item">
-              <strong>Lead Capture + AI Scoring</strong>
-              <span>Inbound leads go from browser to webhook to AI scoring and live sheets logging.</span>
+          <div class="hero-list">
+            <div class="hero-list-item">
+              <strong>Calls answered after hours</strong>
+              <span>Riley answers while you are busy, closed, or asleep.</span>
             </div>
-            <div class="stack-item">
-              <strong>Riley Voice Agent</strong>
-              <span>Web calling and phone workflows route to Riley for appointment capture and qualification.</span>
+            <div class="hero-list-item">
+              <strong>New leads already sorted</strong>
+              <span>The hot ones are flagged first. The rest are followed up fast.</span>
             </div>
-            <div class="stack-item">
-              <strong>Self-Healing Monitoring</strong>
-              <span>Security, QA, deploy, and orchestration agents watch the site and surface issues fast.</span>
+            <div class="hero-list-item">
+              <strong>Questions answered for you</strong>
+              <span>Your website does not sit there silent anymore.</span>
             </div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="demo-section" id="demos" aria-labelledby="demo-section-title">
-      <div class="container">
-        <div class="demo-section-header">
-          <h2 id="demo-section-title">Live Demos</h2>
-          <p>
-            Every system below is running live right now.<br>
-            Genesis AI Systems runs on its own products.
-          </p>
-        </div>
-
-        <div class="demo-grid">
-          <div class="demo-card" id="demo1">
-            <span class="live-badge">LIVE</span>
-            <h3>Lead Capture + AI Scoring</h3>
-            <p>Type a message and watch the AI score it instantly</p>
-            <input
-              type="text"
-              id="demo1-input"
-              placeholder="e.g. I want to book an appointment"
-              class="demo-input"
-            >
-            <button type="button" onclick="runDemo1()" class="demo-btn">Send Lead</button>
-            <div id="demo1-result" class="demo-result" aria-live="polite"></div>
-            <p class="demo-label">Live — this data is saved to a real Google Sheet</p>
-          </div>
-
-          <div class="demo-card" id="demo2">
-            <span class="live-badge">LIVE</span>
-            <h3>AI Voice Agent (Riley)</h3>
-            <p>Click to talk to Riley, our AI appointment assistant</p>
-            <button type="button" onclick="startVapiCall()" class="demo-btn demo-btn-call">
-              📞 Call Riley (AI Demo)
-            </button>
-            <div id="demo2-status" class="demo-result" aria-live="polite"></div>
-            <p class="demo-label">Talk to our AI voice agent live</p>
-          </div>
-
-          <div class="demo-card" id="demo3">
-            <span class="live-badge">LIVE</span>
-            <h3>RAG Knowledge Chatbot</h3>
-            <p>Ask anything about Genesis AI Systems</p>
-            <input
-              type="text"
-              id="demo3-input"
-              placeholder="e.g. What services do you offer?"
-              class="demo-input"
-            >
-            <button type="button" onclick="runDemo3()" class="demo-btn">Ask Question</button>
-            <div id="demo3-result" class="demo-result" aria-live="polite"></div>
-            <p class="demo-label">This AI only knows what we told it</p>
-          </div>
-
-          <div class="demo-card" id="demo4">
-            <span class="live-badge">LIVE</span>
-            <h3>AI Workflow Automation</h3>
-            <p>Watch the full pipeline run in real time</p>
-            <input
-              type="text"
-              id="demo4-input"
-              placeholder="e.g. I need a quote for HVAC service"
-              class="demo-input"
-            >
-            <button type="button" onclick="runDemo4()" class="demo-btn">Trigger Workflow</button>
-            <div id="demo4-pipeline" class="pipeline">
-              <div class="pipeline-step" id="step1">📥 Lead Captured</div>
-              <div class="pipeline-arrow" aria-hidden="true">→</div>
-              <div class="pipeline-step" id="step2">🤖 AI Scored</div>
-              <div class="pipeline-arrow" aria-hidden="true">→</div>
-              <div class="pipeline-step" id="step3">📧 Email Sent</div>
+            <div class="hero-list-item">
+              <strong>A daily summary on your phone</strong>
+              <span>You see what happened without digging through apps.</span>
             </div>
-            <div id="demo4-result" class="demo-result" aria-live="polite"></div>
-            <p class="demo-label">Full automation in under 5 seconds</p>
-          </div>
-
-          <div class="demo-card" id="demo5">
-            <span class="live-badge">LIVE</span>
-            <h3>AI Chat Widget</h3>
-            <p>Embed the same assistant on any website and let visitors self-serve 24/7.</p>
-            <div class="widget-frame-wrap">
-              <iframe
-                class="widget-frame"
-                src="https://genesis-ai-systems-demo.onrender.com/widget-preview"
-                title="Genesis AI Systems Chat Widget Demo"
-                loading="lazy"
-              ></iframe>
-            </div>
-            <div class="embed-snippet">
-              <code>&lt;script src="https://genesis-ai-systems-demo.onrender.com/widget.js"&gt;&lt;/script&gt;</code>
-            </div>
-            <p class="demo-label">Embeddable on any website</p>
-          </div>
-
-          <div class="demo-card" id="demo6">
-            <span class="live-badge">LIVE</span>
-            <h3>Fine-tuned AI Model</h3>
-            <p>See the difference custom training makes</p>
-            <input
-              type="text"
-              id="demo6-input"
-              placeholder="e.g. Do you see children?"
-              class="demo-input"
-            >
-            <button type="button" onclick="runDemo6()" class="demo-btn">Compare Models</button>
-            <div class="comparison">
-              <div class="comparison-col">
-                <h4>Base GPT</h4>
-                <div id="demo6-base" class="demo-result" aria-live="polite"></div>
-              </div>
-              <div class="comparison-col">
-                <h4>Genesis AI Trained</h4>
-                <div id="demo6-trained" class="demo-result" aria-live="polite"></div>
-              </div>
-            </div>
-            <p class="demo-label">See the difference training makes</p>
-          </div>
-
-          <div class="demo-card" id="demo7">
-            <span class="live-badge">LIVE</span>
-            <h3>AI Video Automation</h3>
-            <p>Generate a complete content package instantly</p>
-            <input
-              type="text"
-              id="demo7-input"
-              placeholder="e.g. 5 reasons to choose Invisalign"
-              class="demo-input"
-            >
-            <button type="button" onclick="runDemo7()" class="demo-btn">Generate Content</button>
-            <div id="demo7-result" class="demo-result" aria-live="polite"></div>
-            <p class="demo-label">Full content package in 30 seconds</p>
-          </div>
-
-          <div class="demo-card" id="demo8">
-            <span class="live-badge">LIVE</span>
-            <h3>Self-Healing Agent System</h3>
-            <p>4 AI agents monitoring this site right now</p>
-            <div class="agent-status">
-              <div class="agent-badge">
-                <img
-                  src="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/security_agent.yml/badge.svg"
-                  alt="Security Agent Status"
-                >
-                Security Agent
-              </div>
-              <div class="agent-badge">
-                <img
-                  src="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/qa_agent.yml/badge.svg"
-                  alt="QA Agent Status"
-                >
-                QA Agent
-              </div>
-              <div class="agent-badge">
-                <img
-                  src="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/deploy_agent.yml/badge.svg"
-                  alt="Deploy Agent Status"
-                >
-                Deploy Agent
-              </div>
-            </div>
-            <div id="demo8-meta" class="demo-result" aria-live="polite">Loading live status…</div>
-            <a
-              href="https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions"
-              target="_blank"
-              rel="noopener"
-              class="demo-btn"
-              style="display:block; text-align:center; text-decoration:none; margin-top:12px;"
-            >
-              View Live Runs on GitHub
-            </a>
-            <p class="demo-label">These agents ran in the last hour</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section-shell" id="case-studies">
+    <section class="section" id="problem">
       <div class="container">
-        <div class="section-header">
-          <h2>Case Studies</h2>
-          <p>These are the same systems Genesis AI Systems ships to local businesses after proving them on our own agency stack.</p>
+        <div class="section-head">
+          <h2>Sound familiar?</h2>
         </div>
-        <div class="three-grid">
-          <article class="study-card">
-            <h3>Lead Capture That Scores in Real Time</h3>
-            <p>Inbound interest gets classified instantly so hot leads get human follow-up faster and low-intent traffic stops clogging the pipeline.</p>
+        <div class="problem-grid">
+          <article class="card">
+            <div class="icon">📞</div>
+            <h3>You miss calls when you are busy</h3>
+            <p>Every missed call is a missed customer. Most people do not leave voicemails. They just call your competitor instead.</p>
           </article>
-          <article class="study-card">
-            <h3>Workflow Automation That Closes the Loop</h3>
-            <p>Capture, scoring, email delivery, and CRM logging happen in one motion so the business owner sees outcomes instead of busywork.</p>
+          <article class="card">
+            <div class="icon">😴</div>
+            <h3>Customers ask questions at 2am</h3>
+            <p>Your website just sits there doing nothing. No response. No booking. That customer found someone else by morning.</p>
           </article>
-          <article class="study-card">
-            <h3>Monitoring That Protects Revenue</h3>
-            <p>Self-healing agents keep an eye on uptime, broken links, and deployment health so the website stays trustworthy after launch.</p>
+          <article class="card">
+            <div class="icon">📋</div>
+            <h3>You do the same tasks every single day</h3>
+            <p>Answering the same questions. Following up on the same leads. There is a better way and we built it.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section-shell" id="pricing">
+    <section class="section" id="solutions">
       <div class="container">
-        <div class="section-header">
-          <h2>Pricing</h2>
-          <p>Start with one system, prove ROI, then layer in the rest of the Genesis AI Systems stack.</p>
+        <div class="section-head">
+          <h2>Here is what we do for you</h2>
+          <p class="section-lead">Pick one to start. See the results. Add more when you are ready.</p>
+        </div>
+        <div class="solutions-grid" id="solutionCards"></div>
+      </div>
+    </section>
+
+    <section class="section" id="industries">
+      <div class="container">
+        <div class="section-head">
+          <h2>Businesses just like yours use this</h2>
+          <p class="section-lead">Click your industry to see exactly what we would build for you.</p>
+        </div>
+        <div class="tabs" id="industryTabs"></div>
+        <div class="story-panel" id="industryPanel"></div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-head">
+          <h2>How it works — 3 simple steps</h2>
+          <p class="section-lead">We do everything. You just approve it.</p>
+        </div>
+        <div class="steps-grid">
+          <article class="step-card">
+            <div class="step-number">1</div>
+            <h3>📞 We talk for 15 minutes</h3>
+            <p>Tell us about your business. Tell us what is eating your time. We tell you exactly what we would build.</p>
+            <a href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book that free call →</a>
+          </article>
+          <article class="step-card">
+            <div class="step-number">2</div>
+            <h3>🔨 We build it in 5-7 days</h3>
+            <p>You do not touch a thing. We build it, test it, and make sure it works before we show it to you.</p>
+          </article>
+          <article class="step-card">
+            <div class="step-number">3</div>
+            <h3>🚀 You turn it on and forget about it</h3>
+            <p>You get one simple view. You see your calls, leads, and results. If something breaks we fix it.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="live-demos">
+      <div class="container">
+        <div class="section-head">
+          <div class="pill" style="margin-inline:auto;">💡 Try typing what a real customer would send: I need to book an appointment</div>
+          <h2>Try it yourself — right now for free</h2>
+          <p class="section-lead">These are real AI systems running live. Not a video. Not a screenshot. The actual thing.</p>
+        </div>
+        <div class="demo-grid" id="demoCards"></div>
+      </div>
+    </section>
+
+    <section class="section" id="live-activity">
+      <div class="container">
+        <div class="section-head">
+          <h2>Your AI is already working</h2>
+          <p class="section-lead">Here is what happened in the last 24 hours.</p>
+        </div>
+        <div class="activity-grid">
+          <div class="activity-box">
+            <h3 id="statLeadsToday">--</h3>
+            <p>Inquiries handled today</p>
+            <small>All responded to in under 60 seconds</small>
+          </div>
+          <div class="activity-box">
+            <h3 id="statDemos">--</h3>
+            <p>Questions answered by AI</p>
+            <small>Without you lifting a finger</small>
+          </div>
+          <div class="activity-box">
+            <h3 id="statUptime">99.9%</h3>
+            <p>System uptime</p>
+            <small>Your AI never takes a day off</small>
+          </div>
+        </div>
+        <ul class="live-feed" id="activityFeed">
+          <li>🎯 New inquiry from a Detroit restaurant — Score: HIGH</li>
+          <li>💬 Chat helper answered 3 questions</li>
+          <li>📞 Riley handled an incoming call</li>
+          <li>✅ All systems checked and running perfectly</li>
+          <li>🎯 New inquiry from an HVAC company — Score: MEDIUM</li>
+        </ul>
+        <p class="contact-note">All customer information is kept private.</p>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="container">
+        <div class="section-head">
+          <h2>Simple honest pricing</h2>
+          <p class="section-lead">Start with one system. Add more when you are ready. No long contracts. Cancel anytime with 30 days notice.</p>
         </div>
         <div class="pricing-grid">
-          <article class="pricing-card">
+          <article class="price-card featured">
+            <div class="small-badge">Most popular</div>
             <h3>Starter</h3>
-            <strong>$500</strong>
-            <p>Setup + $150/month</p>
-            <ul>
-              <li>Lead capture or chatbot deployment</li>
-              <li>Branding and intake workflow</li>
-              <li>Founder handoff and optimization</li>
-            </ul>
+            <p><strong>$500 setup + $150/month</strong></p>
+            <p>Best for businesses just getting started.</p>
+            <p>✅ One AI system — your choice</p>
+            <p>✅ Set up in 5-7 business days</p>
+            <p>✅ We handle all the technology</p>
+            <p>✅ Monthly check-in call with Trendell</p>
+            <p>✅ We fix anything that breaks</p>
+            <div class="price-actions">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Call</a>
+              <a class="button button-primary" href="[STRIPE_STARTER_LINK]">Buy Now — $500</a>
+            </div>
           </article>
-          <article class="pricing-card">
+          <article class="price-card">
             <h3>Growth</h3>
-            <strong>$3,500</strong>
-            <p>Setup + $650/month</p>
-            <ul>
-              <li>Voice + workflow automation bundle</li>
-              <li>AI follow-up and routing</li>
-              <li>Usage monitoring included</li>
-            </ul>
+            <p><strong>$3,500 setup + $650/month</strong></p>
+            <p>Best for businesses ready to automate more.</p>
+            <p>✅ Riley AI phone assistant</p>
+            <p>✅ Full lead capture and follow-up</p>
+            <p>✅ Everything in Starter</p>
+            <p>✅ Weekly performance report texted to you</p>
+            <p>✅ Priority support — same day</p>
+            <div class="price-actions">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Call</a>
+              <a class="button button-primary" href="[STRIPE_GROWTH_LINK]">Buy Now — $3,500</a>
+            </div>
           </article>
-          <article class="pricing-card">
-            <h3>Agency</h3>
-            <strong>$8,000</strong>
-            <p>Setup + $1,200/month</p>
-            <ul>
-              <li>Multi-system deployment</li>
-              <li>Content automation and reporting</li>
-              <li>Monthly strategy support</li>
-            </ul>
+          <article class="price-card">
+            <h3>Full Stack</h3>
+            <p><strong>$39,500 setup + $7,600/month</strong></p>
+            <p>Best for businesses that want everything done.</p>
+            <p>✅ All 14 AI systems</p>
+            <p>✅ AI trained to sound like your business</p>
+            <p>✅ 24/7 monitoring watching everything</p>
+            <p>✅ Daily reports sent to your phone</p>
+            <p>✅ Dedicated support from Trendell</p>
+            <div class="price-actions">
+              <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Call</a>
+              <a class="button button-primary" href="[STRIPE_FULLSTACK_LINK]">Buy Now — $39,500</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="faq-grid">
+          <article class="faq-item">
+            <h3>Do I need to know anything about technology?</h3>
+            <p>No. We handle absolutely everything. You just tell us about your business and we build it for you.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What if something breaks?</h3>
+            <p>We monitor everything 24/7. If something breaks we fix it, usually before you even notice.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Can I cancel?</h3>
+            <p>Yes. Just give us 30 days written notice. No long-term contracts required.</p>
+          </article>
+          <article class="faq-item">
+            <h3>How fast can you set it up?</h3>
+            <p>Most systems are live within 5-7 business days from the time you sign up.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Will it sound like my business?</h3>
+            <p>Yes. We train the AI on your services, prices, and personality. It sounds like you, not a robot.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What happens after I click Buy Now?</h3>
+            <p>You get a confirmation email right away. Trendell personally calls you within 24 hours to get started.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section id="contact" style="padding:80px 20px; background:#0a0f1e;">
-      <div style="max-width:600px;margin:0 auto; text-align:center;">
-        <h2 style="color:white;font-size:36px; font-weight:700;margin-bottom:12px;">
-          Work With Genesis AI Systems
-        </h2>
-        <p style="color:#94a3b8;font-size:16px; margin-bottom:40px;">
-          Trendell Fordham builds done-for-you AI automation
-          systems for local businesses that want faster
-          follow-up, cleaner operations, and fewer
-          missed opportunities.
-        </p>
-        <div style="background:#0f172a;border:1px solid #1e3a8a;
-                    border-radius:16px;padding:32px;
-                    text-align:left;">
-          <div style="display:grid;gap:16px;">
-            <input type="text" id="contactName"
-              placeholder="Your Full Name *"
-              aria-label="Your Full Name"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'"/>
-            <input type="text" id="contactBusiness"
-              placeholder="Business Name *"
-              aria-label="Business Name"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'"/>
-            <input type="email" id="contactEmail"
-              placeholder="Email Address *"
-              aria-label="Email Address"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'"/>
-            <input type="tel" id="contactPhone"
-              placeholder="Phone Number *"
-              aria-label="Phone Number"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'"/>
-            <select id="contactNeed"
-              aria-label="What do you need"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;
-                     cursor:pointer;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'">
-              <option value="">What do you need? *</option>
-              <option value="Lead Capture System">
-                Lead Capture System — $500
-              </option>
-              <option value="AI Voice Agent">
-                AI Voice Agent — $1,500
-              </option>
-              <option value="AI Chatbot">
-                AI Chatbot — $1,000
-              </option>
-              <option value="Workflow Automation">
-                Workflow Automation — $2,000
-              </option>
-              <option value="Full Agency Package">
-                Full Agency Package — $24,000
-              </option>
-              <option value="Not sure yet">
-                Not sure yet — let's talk
-              </option>
-            </select>
-            <textarea id="contactMessage"
-              placeholder="Tell us about your business (optional)"
-              aria-label="Tell us about your business"
-              rows="3"
-              style="width:100%;box-sizing:border-box;
-                     padding:14px 16px;background:#1e293b;
-                     border:1px solid #334155;border-radius:8px;
-                     color:white;font-size:15px;outline:none;
-                     resize:vertical;"
-              onfocus="this.style.borderColor='#2563eb'"
-              onblur="this.style.borderColor='#334155'"></textarea>
-            <button onclick="submitContactForm()"
-              id="contactSubmitBtn"
-              style="width:100%;padding:16px;background:#2563eb;
-                     color:white;border:none;border-radius:8px;
-                     font-size:16px;font-weight:600;
-                     cursor:pointer;">
-              Book My Free Demo →
-            </button>
-            <div id="contactResult" style="display:none;
-              padding:16px;border-radius:8px;
-              text-align:center;font-size:15px;">
-            </div>
+    <section class="section" id="about-preview">
+      <div class="container">
+        <div class="section-head">
+          <h2>Built by a Detroiter for local businesses</h2>
+        </div>
+        <div class="about-preview about-card">
+          <div class="founder-badge">TF</div>
+          <div class="about-text">
+            <h3>Trendell Fordham</h3>
+            <p><strong>Founder and CEO, Genesis AI Systems</strong></p>
+            <p>I started Genesis AI Systems because I kept watching great local businesses lose customers to bigger companies, not because they were worse but because they could not respond fast enough.</p>
+            <p>Every system I sell runs on my own agency first. If it does not work for me I will not sell it to you.</p>
+            <a class="button button-primary" href="/about.html">Read Our Full Story →</a>
           </div>
         </div>
-        <div style="margin-top:32px;display:flex;
-                    flex-direction:column;gap:12px;
-                    align-items:center;">
-          <div style="color:#94a3b8;font-size:14px;">
-            Or reach out directly:
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="section-head">
+          <h2>Let us talk about your business</h2>
+          <p class="section-lead">Tell us what is eating your time. We will tell you exactly what we would build — free.</p>
+        </div>
+        <div class="contact-grid">
+          <div class="form-shell">
+            <form class="form-grid" id="contactForm">
+              <label>Your Name
+                <input type="text" name="name" required>
+              </label>
+              <label>Your Business Name
+                <input type="text" name="business" required>
+              </label>
+              <label>Best Phone Number
+                <input type="tel" name="phone" required>
+              </label>
+              <label>Email Address
+                <input type="email" name="email" required>
+              </label>
+              <label>What type of business?
+                <select name="business_type" required>
+                  <option value="">Select one</option>
+                  <option>Restaurant</option>
+                  <option>Dental Office</option>
+                  <option>HVAC</option>
+                  <option>Salon</option>
+                  <option>Real Estate</option>
+                  <option>Retail</option>
+                  <option>Other</option>
+                </select>
+              </label>
+              <label>What is your biggest headache right now?
+                <textarea name="pain_point" required placeholder="e.g. I miss too many calls after hours and lose customers to competitors"></textarea>
+              </label>
+              <button class="button button-primary full" type="submit">Get My Free Recommendation →</button>
+            </form>
+            <p class="contact-note" id="contactStatus">We score your lead right away and get back to you fast.</p>
           </div>
-          <a href="tel:3134002575"
-             style="color:#2563eb;text-decoration:none;
-                    font-size:15px;">
-            📞 (313) 400-2575
-          </a>
-          <a href="mailto:info@genesisai.systems"
-             style="color:#2563eb;text-decoration:none;
-                    font-size:15px;">
-            📧 info@genesisai.systems
-          </a>
-          <a href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
-             target="_blank" rel="noopener"
-             style="color:#2563eb;text-decoration:none;
-                    font-size:15px;">
-            📅 Book directly on Calendly
-          </a>
+          <div class="form-shell">
+            <h3>Reach us directly</h3>
+            <div class="contact-links">
+              <div>📞 [BUSINESS_PHONE_NUMBER]<br>Riley answers 24/7. Trendell calls back within 24 hours.</div>
+              <div>📧 info@genesisai.systems</div>
+              <div>📍 Detroit, MI — serving businesses nationwide</div>
+            </div>
+            <div class="cta-row" style="margin-top:24px;">
+              <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book directly on Calendly</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <div>&copy; 2026 Genesis AI Systems | Detroit, MI</div>
-      <div><a href="/privacy-policy.html">Privacy Policy</a> | <a href="/terms.html">Terms of Service</a></div>
-      <div><a href="https://genesisai.systems" target="_blank" rel="noopener">genesisai.systems</a></div>
-    </div>
-    <div class="footer-monitoring">
-      All systems monitored by Genesis AI Systems Agent Infrastructure
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>Genesis AI Systems © 2026 | Detroit, MI</div>
+      <div class="footer-nav">
+        <a href="/index.html">Home</a>
+        <a href="/about.html">About</a>
+        <a href="/demos.html">Demos</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/dashboard.html">Dashboard</a>
+        <a href="/privacy-policy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+      <div style="text-align:right;">📞 [BUSINESS_PHONE_NUMBER]<br>📧 info@genesisai.systems</div>
     </div>
   </footer>
 
-  <div id="pwa-install-banner" role="region" aria-label="Install Genesis AI Systems App" style="display:none;">
-    <div id="pwa-install-banner-content">
-      <span class="pwa-icon" aria-hidden="true"></span>
-      <span>Install Genesis AI Systems app</span>
+  <div class="floating-mobile-bar hidden" id="mobileBar">
+    <span>Genesis AI Systems</span>
+    <div style="display:flex;gap:10px;">
+      <a class="button button-outline" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+      <a class="button button-primary" href="[STRIPE_STARTER_LINK]">Buy Now — $500</a>
     </div>
-    <button id="pwa-install-btn" type="button">Install</button>
-    <button class="close" id="pwa-install-dismiss" aria-label="Dismiss banner">&times;</button>
   </div>
 
-  <!-- Floating Chat Widget -->
-  <div id="chatLauncher" class="chat-launcher"
-       onclick="toggleChat()"
-       title="Chat with Genesis AI Systems"
-       aria-label="Open chat with Genesis AI Systems"
-       role="button"
-       tabindex="0"
-       onkeypress="if(event.key==='Enter' || event.key===' ') toggleChat()">
-    <svg width="24" height="24" viewBox="0 0 24 24"
-         fill="none" stroke="white" stroke-width="2" aria-hidden="true">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    </svg>
-  </div>
-
-  <div id="chatWindow" class="chat-window" aria-label="Genesis AI Systems chat window">
+  <button class="chat-launcher" id="chatLauncher" aria-label="Open chat">💬</button>
+  <div class="chat-window" id="chatWindow" aria-live="polite">
     <div class="chat-header">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;background:#2563eb;
-                    border-radius:50%;display:flex;
-                    align-items:center;justify-content:center;
-                    font-weight:bold;font-size:12px;color:white;">
-          GAI
-        </div>
-        <div>
-          <div style="color:white;font-weight:500;font-size:14px;">
-            Genesis AI Systems
-          </div>
-          <div style="color:#22c55e;font-size:11px;">
-            ● Online
-          </div>
-        </div>
+      <div>
+        <strong>Genesis AI Systems</strong>
+        <span>Ask a question right now</span>
       </div>
-      <button onclick="toggleChat()"
-              aria-label="Close chat"
-              style="background:none;border:none;
-                     color:#94a3b8;cursor:pointer;
-                     font-size:20px;padding:4px;">
-        ×
-      </button>
+      <button class="nav-toggle" id="chatClose" aria-label="Close chat">✕</button>
     </div>
-    <div id="chatMessages" class="chat-messages">
-      <div class="message-bubble message-ai">
-        👋 Hi! I'm the Genesis AI Systems assistant.
-        How can I help you today?
-      </div>
+    <div class="chat-log" id="chatLog">
+      <div class="chat-bubble bot">Hi. Ask what you would ask a real business. I will answer right away.</div>
     </div>
-    <div class="chat-input-row">
-      <input type="text"
-             id="chatInput"
-             class="chat-input-field"
-             aria-label="Type your chat question"
-             placeholder="Type your question..."
-             onkeypress="if(event.key==='Enter')sendChat()"/>
-      <button class="chat-send-btn" onclick="sendChat()" aria-label="Send chat message">
-        ➤
-      </button>
-    </div>
-    <div class="chat-powered-by">
-      Powered by <a href="https://genesisai.systems"
-                    target="_blank" rel="noopener"
-                    style="color:#2563eb;">
-        Genesis AI Systems
-      </a>
-    </div>
+    <form class="chat-form" id="chatForm">
+      <input type="text" id="chatInput" placeholder="Type your question">
+      <button class="button button-primary" type="submit">Send</button>
+    </form>
   </div>
 
   <script>
-    const GENESIS_CONFIG = {
-      demoServer: "https://genesis-ai-systems-demo.onrender.com",
-      calendly: "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call",
-      email: "info@genesisai.systems",
-      phone: "(313) 400-2575",
-      website: "https://genesisai.systems",
-      github: "https://github.com/prosperouscollection-prog/ai-automation-portfolio"
+    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
+    const CALENDLY = "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call";
+
+    const solutionCards = [
+      ["🎯","Never Miss a Customer Again","When someone contacts your business our AI reads their message decides how urgent it is and sends them a response right away. You get a text alert for the hot ones.","A plumber gets 3x more callbacks because every inquiry gets answered in seconds.","$500 setup + $150/month","See Live Demo","Buy Now — $500","[STRIPE_STARTER_LINK]"],
+      ["📞","Answer Your Phone 24 Hours a Day","Riley is an AI that answers your business phone. She talks to customers answers their questions and books appointments. Day or night. She never misses a call.","A hair salon books 40% more appointments because Riley answers calls after hours.","$1,500 setup + $300/month","Call Riley Now","Buy Now — $1,500","[STRIPE_GROWTH_LINK]"],
+      ["💬","Answer Customer Questions 24/7","A small chat box lives on your website. When customers have questions it answers them instantly using only information about your business. No wrong answers.","A dental office cut phone calls by 60% because the chat helper answers all the common questions.","$1,000 setup + $200/month","Try It Live","Buy Now — $1,000","[STRIPE_STARTER_LINK]"],
+      ["⚡","Your Business Runs Itself","Someone fills out your form and instantly the AI reads it scores it saves it to a spreadsheet and sends them an email. You wake up to organized leads.","An HVAC company saves 15 hours per week on lead follow-up.","$2,000 setup + $400/month","See It Work","Buy Now — $2,000","[STRIPE_GROWTH_LINK]"],
+      ["🧠","AI Trained on YOUR Business","Most AI sounds generic and robotic. Ours is trained on your menu your services your prices and your policies. It sounds exactly like you.","A restaurant AI knows every dish every allergy note and every special.","$5,000 setup + $500/month","See the Difference","Buy Now — $5,000","[STRIPE_FULLSTACK_LINK]"],
+      ["🛡️","Someone Watching Your Tech 24/7","Four AI helpers check your systems every single hour. If something breaks you get a text immediately. If something needs updating it happens automatically.","A retail chain has had zero downtime since we set up the monitoring system.","$10,000 setup + $2,000/month","See It Live","Buy Now — $10,000","[STRIPE_FULLSTACK_LINK]"],
+      ["🎪","Never Let a Hot Lead Go Cold","When someone shows interest our AI follows up at exactly the right time with exactly the right message while you sleep. No lead falls through the cracks.","A real estate agent closed 3 extra deals in one month from automatic follow-ups.","$3,000 setup + $500/month","See How It Works","Buy Now — $3,000","[STRIPE_GROWTH_LINK]"],
+      ["📱","Social Media on Autopilot","Every day our AI writes your social posts captions and outreach emails. You approve them or let them post automatically. Your audience grows while you work.","A consultant grew from 200 to 2,000 followers in 90 days on autopilot.","$2,000 setup + $400/month","See Examples","Buy Now — $2,000","[STRIPE_GROWTH_LINK]"],
+      ["🤝","Keep Every Client Happy Automatically","Our AI checks in with your clients automatically sends them reports asks for referrals and spots problems before they become cancellations. You keep more clients longer.","An agency cut client cancellations by 40% in the first month.","$2,500 setup + $500/month","Learn More","Buy Now — $2,500","[STRIPE_GROWTH_LINK]"],
+      ["📲","Control Everything From Your Phone","Text one number to check your leads trigger your AI or get a full business report. From anywhere. Instantly. No laptop needed.","Text STATUS and get a complete business health report in seconds.","$1,000 setup + $200/month","See Commands","Buy Now — $1,000","[STRIPE_STARTER_LINK]"],
+      ["💬","A Private Chat App for Your Business","A private Telegram chat just for you and your AI systems. Tap buttons on your phone to manage leads check results and control everything without opening a laptop.","Tap one button to see all of today's leads with full contact details.","$1,000 setup + $200/month","See Demo","Buy Now — $1,000","[STRIPE_STARTER_LINK]"],
+      ["🎬","Full Video Content in 30 Seconds","Type any topic related to your business and get back a complete video script captions hashtags and thumbnail text in 30 seconds. Ready to film. Ready to post.","A dentist posts 5 videos per week without writing a single word.","$1,500 setup + $300/month","Try It Now","Buy Now — $1,500","[STRIPE_GROWTH_LINK]"],
+      ["🔍","Find New Customers Every Morning","Every morning our AI searches Google Maps for local businesses in your area that need your services. It finds their contact info scores them and texts you the top three.","Genesis AI Systems finds 20 fresh prospects every morning automatically.","$2,000 setup + $400/month","See It Work","Buy Now — $2,000","[STRIPE_GROWTH_LINK]"],
+      ["🚀","Get Everything — Full Agency Stack","All 14 AI systems work together. Your business captures leads answers calls creates content keeps clients finds prospects and runs itself. You just show up and serve customers.","Genesis AI Systems runs all 14 systems on its own agency and watches them 24/7.","$39,500 setup + $7,600/month","Book a Call","Buy Now — $39,500","[STRIPE_FULLSTACK_LINK]"]
+    ];
+
+    const demos = [
+      ["Send a message — see what your customers experience","Type a message like a real customer and watch the reply happen fast.","This helps you answer every inquiry before it goes cold.","$500","/demos.html#demo-1"],
+      ["Call Riley — our AI phone assistant","Customers hear a real friendly voice any time they call.","This helps you stop losing calls after hours.","$1,500","/demos.html#demo-2"],
+      ["Ask a question — get an instant AI answer","Visitors ask a question and get a clear answer right away.","This helps your staff stop repeating the same answers all day.","$1,000","/demos.html#demo-3"],
+      ["Watch the full automation happen in real time","See a new lead get sorted and followed up fast.","This helps your business run itself while you sleep.","$2,000","/demos.html#demo-4"],
+      ["Chat with the website helper","See the exact chat helper that can live on your site.","This helps your website work for you all day and night.","$2,500","/demos.html#demo-5"],
+      ["See the difference custom AI training makes","Compare regular AI to AI trained on your business.","This helps your business sound like you, not a robot.","$5,000","/demos.html#demo-6"],
+      ["Generate a full social media post in 30 seconds","Type a topic and get ready-to-use content back.","This helps you post more without doing the writing.","$1,500","/demos.html#demo-7"],
+      ["See our AI monitoring system running live","See the helpers checking everything and reporting back.","This helps you catch problems before customers do.","$10,000","/demos.html#demo-8"]
+    ];
+
+    const industries = {
+      restaurant: {
+        label: "🍕 Restaurant",
+        title: "For Restaurants",
+        story: "It is Friday night. Your restaurant is packed. Your phone rings non-stop. You cannot answer every call. Customers hang up and call somewhere else. With Genesis AI Systems, Riley answers every call and takes reservations. Your website chat answers menu questions instantly. Every inquiry gets a response in seconds. You get a daily summary every morning.",
+        checks: [
+          "AI answers your phone 24 hours a day",
+          "Takes reservations automatically",
+          "Answers menu and allergy questions",
+          "Saves every inquiry to a spreadsheet",
+          "Daily text summary every morning"
+        ],
+        number: "30%",
+        result: "More reservations",
+        sub: "Average result in first month",
+        cta: "Book a Free Call for Restaurants"
+      },
+      dental: {
+        label: "🦷 Dental",
+        title: "For Dental Offices",
+        story: "A patient needs to book an appointment. They call at 7pm after you are closed. No answer. They search another dentist nearby. You lost a patient worth thousands over time. With Genesis AI Systems, Riley books appointments after hours. The chat helper answers insurance questions. New patient inquiries get instant responses. Every lead is followed up without you lifting a finger.",
+        checks: [
+          "After-hours appointment booking",
+          "Insurance and procedure questions answered",
+          "New patient inquiries captured instantly",
+          "Automatic appointment reminders",
+          "Monthly report of recovered revenue"
+        ],
+        number: "10",
+        result: "Missed appointments recovered per month",
+        sub: "Average for dental office clients",
+        cta: "Book a Free Call for Dental Offices"
+      },
+      hvac: {
+        label: "🔧 HVAC",
+        title: "For HVAC Companies",
+        story: "It is August. Someone's AC breaks at 9pm. They need help right now. They fill out your contact form. Nobody responds until morning. They already hired your competitor. With Genesis AI Systems, emergency inquiries get an instant response. The AI figures out how urgent it is right away. You get a text immediately for emergency jobs. Non-urgent leads get scheduled automatically.",
+        checks: [
+          "24/7 emergency inquiry response",
+          "Instant lead qualification",
+          "Immediate text for emergency jobs",
+          "Automatic follow-up for non-urgent leads",
+          "Every lead saved automatically"
+        ],
+        number: "40%",
+        result: "More after-hours emergency jobs captured",
+        sub: "Average for HVAC clients",
+        cta: "Book a Free Call for HVAC"
+      },
+      salon: {
+        label: "💇 Salon",
+        title: "For Salons and Barbershops",
+        story: "Someone wants to book a cut for Saturday. It is midnight. You are asleep. They text your business number. No response. They book with someone else by morning. With Genesis AI Systems, Riley answers texts and books appointments. The chat helper shows your services and prices. Cancellations trigger automatic rebooking. You wake up to a full schedule every day.",
+        checks: [
+          "24/7 appointment booking via text and chat",
+          "Services and pricing answered instantly",
+          "Automatic reminders reduce no-shows",
+          "Cancellation waitlist management",
+          "Weekly booking summary report"
+        ],
+        number: "25%",
+        result: "Fewer no-shows",
+        sub: "Plus 40% more after-hours bookings",
+        cta: "Book a Free Call for Salons"
+      },
+      real_estate: {
+        label: "🏠 Real Estate",
+        title: "For Real Estate Agents",
+        story: "A buyer sees your listing at 11pm. They want to schedule a showing. You are not available. By morning they already toured a competitor's listing. With Genesis AI Systems, AI qualifies every buyer inquiry instantly. Showing requests get immediate responses. Hot buyers get texted to you right away. Every lead is logged and followed up.",
+        checks: [
+          "Instant response to showing requests",
+          "Buyer qualification automatically",
+          "Immediate alerts for serious buyers",
+          "Automatic follow-up sequences",
+          "All leads organized in one place"
+        ],
+        number: "20%",
+        result: "More deals closed",
+        sub: "By responding faster than competitors",
+        cta: "Book a Free Call for Real Estate"
+      },
+      retail: {
+        label: "🛍️ Retail",
+        title: "For Retail Stores",
+        story: "A customer has a question about a product. They visit your website. No chat. No instant answer. They buy from Amazon instead. With Genesis AI Systems, the chat helper answers product questions instantly. Returns and policies are explained automatically. Order questions are handled 24/7. Your customer service runs without extra staff.",
+        checks: [
+          "24/7 product question answering",
+          "Return and exchange policy handling",
+          "Inventory and availability questions",
+          "Customer service without extra staff",
+          "Every interaction logged automatically"
+        ],
+        number: "35%",
+        result: "Reduction in customer service volume",
+        sub: "Average for retail clients",
+        cta: "Book a Free Call for Retail"
+      }
     };
 
-    const DEMO_SERVER = GENESIS_CONFIG.demoServer.replace(/\/$/, "");
-
-    function demoUrl(path) {
-      return `${DEMO_SERVER}${path}`;
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
-
-    function showSpinner(element) {
-      element.innerHTML = '<div class="spinner" aria-label="Loading"></div>';
-    }
-
-    function showError(element, message) {
-      element.innerHTML = `<div class="demo-error">${escapeHtml(message)}</div>`;
-    }
-
-    function normalizeScore(score) {
-      if (!score) return "Medium";
-      const text = String(score).trim();
-      return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-    }
-
-    function delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
-    async function fetchJson(url, options) {
-      const response = await fetch(url, options);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || "Request failed");
-      }
-      return data;
-    }
-
-    async function runDemo1() {
-      const input = document.getElementById("demo1-input").value.trim();
-      const result = document.getElementById("demo1-result");
-      if (!input) {
-        showError(result, "Enter a message to score the lead.");
-        return;
-      }
-      showSpinner(result);
-      try {
-        const data = await fetchJson(demoUrl("/demo/lead-capture"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: input })
-        });
-        const score = normalizeScore(data.score);
-        result.innerHTML = `
-          <div class="demo-score score-${score.toLowerCase()}">Score: ${escapeHtml(score)}</div>
-          <div class="demo-response">${escapeHtml(data.response || "Lead captured successfully.")}</div>
-          <div class="demo-logged">✅ Logged to Google Sheets</div>
-        `;
-      } catch (error) {
-        showError(result, "Demo temporarily unavailable");
-      }
-    }
-
-    async function startVapiCall() {
-      const status = document.getElementById("demo2-status");
-      showSpinner(status);
-
-      try {
-        const data = await fetchJson(demoUrl("/demo/voice-agent-token"), { method: "GET" });
-        if (!window.Vapi) {
-          throw new Error("Vapi SDK unavailable");
-        }
-        if (!data.vapi_public_key) {
-          throw new Error("Vapi public key unavailable");
-        }
-        if (!data.assistant_id) {
-          throw new Error("Voice agent is not fully configured yet");
-        }
-
-        if (!window.__genesisVapi || window.__genesisVapiKey !== data.vapi_public_key) {
-          window.__genesisVapi = new window.Vapi(data.vapi_public_key);
-          window.__genesisVapiKey = data.vapi_public_key;
-
-          window.__genesisVapi.on("call-start", () => {
-            status.innerHTML = '<div class="demo-logged">✅ Riley is connected. Speak when ready.</div>';
-          });
-
-          window.__genesisVapi.on("call-end", () => {
-            status.innerHTML = '<div class="demo-source">Call ended. You can start another demo call any time.</div>';
-          });
-
-          window.__genesisVapi.on("error", () => {
-            showError(status, "Voice demo temporarily unavailable");
-          });
-        }
-
-        status.innerHTML = '<div class="demo-source">Connecting Riley to your browser…</div>';
-        await window.__genesisVapi.start(data.assistant_id);
-      } catch (error) {
-        status.innerHTML = `
-          <div class="demo-error">Voice demo temporarily unavailable</div>
-          <div class="demo-source" style="margin-top:8px;">
-            Book a live walkthrough:
-            <a href="${GENESIS_CONFIG.calendly}" target="_blank" rel="noopener" style="color:#93c5fd;">Calendly</a>
+    function renderSolutions() {
+      const host = document.getElementById("solutionCards");
+      host.innerHTML = solutionCards.map(([icon, name, body, example, price, action, buy, stripe]) => `
+        <article class="card">
+          <div class="icon">${icon}</div>
+          <h3>${name}</h3>
+          <p>${body}</p>
+          <em>"${example}"</em>
+          <div class="price-badge">${price}</div>
+          <div class="card-actions">
+            <a class="button button-outline" href="/demos.html">${action}</a>
+            <a class="button button-primary" href="${stripe}">${buy}</a>
           </div>
-        `;
-      }
+        </article>
+      `).join("");
     }
 
-    async function runDemo3() {
-      const input = document.getElementById("demo3-input").value.trim();
-      const result = document.getElementById("demo3-result");
-      if (!input) {
-        showError(result, "Enter a question for the RAG chatbot.");
-        return;
-      }
-      showSpinner(result);
-      try {
-        const data = await fetchJson(demoUrl("/demo/rag-chatbot"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: input })
-        });
-        result.innerHTML = `
-          <div class="demo-response">${escapeHtml(data.answer || "No answer returned.")}</div>
-          <div class="demo-source">Source: Genesis AI FAQ</div>
-        `;
-      } catch (error) {
-        showError(result, "Demo temporarily unavailable");
-      }
-    }
-
-    async function runDemo4() {
-      const input = document.getElementById("demo4-input").value.trim();
-      const result = document.getElementById("demo4-result");
-      const steps = ["step1", "step2", "step3"];
-      if (!input) {
-        showError(result, "Enter a workflow trigger message.");
-        return;
-      }
-
-      steps.forEach((id) => document.getElementById(id).classList.remove("active"));
-      result.innerHTML = "";
-
-      setTimeout(() => document.getElementById("step1").classList.add("active"), 500);
-      setTimeout(() => document.getElementById("step2").classList.add("active"), 1500);
-      setTimeout(() => document.getElementById("step3").classList.add("active"), 2500);
-
-      try {
-        const data = await fetchJson(demoUrl("/demo/workflow"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: input })
-        });
-        await delay(2600);
-        const score = normalizeScore(data.score);
-        result.innerHTML = `
-          <div class="demo-score score-${score.toLowerCase()}">Score: ${escapeHtml(score)}</div>
-          <div class="demo-response">${escapeHtml(data.response || "Workflow completed successfully.")}</div>
-          <div class="demo-logged">✅ Full pipeline complete</div>
-        `;
-      } catch (error) {
-        showError(result, "Demo temporarily unavailable");
-      }
-    }
-
-    async function runDemo6() {
-      const input = document.getElementById("demo6-input").value.trim();
-      const base = document.getElementById("demo6-base");
-      const trained = document.getElementById("demo6-trained");
-      if (!input) {
-        showError(base, "Enter a question to compare.");
-        showError(trained, "Enter a question to compare.");
-        return;
-      }
-      showSpinner(base);
-      showSpinner(trained);
-      try {
-        const data = await fetchJson(demoUrl("/demo/fine-tuning"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: input })
-        });
-        base.innerHTML = escapeHtml(data.base_response || data.base_gpt || "Unavailable");
-        trained.innerHTML = escapeHtml(data.trained_response || data.genesis_ai_trained || "Unavailable");
-      } catch (error) {
-        showError(base, "Unavailable");
-        showError(trained, "Unavailable");
-      }
-    }
-
-    async function runDemo7() {
-      const input = document.getElementById("demo7-input").value.trim();
-      const result = document.getElementById("demo7-result");
-      if (!input) {
-        showError(result, "Enter a topic to generate content.");
-        return;
-      }
-      showSpinner(result);
-      try {
-        const data = await fetchJson(demoUrl("/demo/video-automation"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ topic: input })
-        });
-        result.innerHTML = `
-          <div class="content-section">
-            <h4>📹 Script</h4>
-            <p>${escapeHtml(data.script || "No script returned.")}</p>
+    function renderDemos() {
+      const host = document.getElementById("demoCards");
+      host.innerHTML = demos.map(([title, body, ctaText, price, link]) => `
+        <article class="demo-card">
+          <h3>${title}</h3>
+          <p>${body}</p>
+          <div class="demo-cta">
+            <p>${ctaText}</p>
+            <div class="cta-row">
+              <a class="button button-outline" href="${CALENDLY}" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a class="button button-primary" href="[STRIPE_STARTER_LINK]">Buy Now — ${price}</a>
+            </div>
           </div>
-          <div class="content-section">
-            <h4>📝 Captions</h4>
-            <p>${escapeHtml(data.captions || "No captions returned.")}</p>
+          <div style="margin-top:16px;">
+            <a class="button button-soft" href="${link}">See it live</a>
           </div>
-          <div class="content-section">
-            <h4>#️⃣ Hashtags</h4>
-            <p>${escapeHtml(data.hashtags || "No hashtags returned.")}</p>
-          </div>
-          <div class="content-section">
-            <h4>🖼️ Thumbnail</h4>
-            <p>${escapeHtml(data.thumbnail || "No thumbnail returned.")}</p>
-          </div>
-        `;
-      } catch (error) {
-        showError(result, "Demo temporarily unavailable");
-      }
+        </article>
+      `).join("");
     }
 
-    async function loadAgentStatus() {
-      const meta = document.getElementById("demo8-meta");
-      try {
-        const data = await fetchJson(demoUrl("/demo/agent-status"), { method: "GET" });
-        const lastScan = data.last_scan
-          ? new Date(data.last_scan).toLocaleString()
-          : "Unavailable";
-        const uptime = typeof data.uptime_percent === "number"
-          ? `${Math.round(data.uptime_percent)}%`
-          : "Unavailable";
-        meta.innerHTML = `
-          <div class="meta-stack">
-            <div><strong>Last scan:</strong> ${escapeHtml(lastScan)}</div>
-            <div><strong>Uptime:</strong> ${escapeHtml(uptime)}</div>
-            <div><strong>Repo:</strong> <a href="${GENESIS_CONFIG.github}" target="_blank" rel="noopener" style="color:#93c5fd;">View source</a></div>
-          </div>
-        `;
-      } catch (error) {
-        showError(meta, "Live agent telemetry unavailable");
-      }
-    }
-
-    function toggleChat() {
-      const win = document.getElementById("chatWindow");
-      win.classList.toggle("open");
-      if (win.classList.contains("open")) {
-        document.getElementById("chatInput").focus();
-      }
-    }
-
-    async function sendChat() {
-      const input = document.getElementById("chatInput");
-      const msgs = document.getElementById("chatMessages");
-      const text = input.value.trim();
-      if (!text) return;
-
-      msgs.innerHTML += `
-        <div class="message-bubble message-user">
-          ${escapeHtml(text)}
-        </div>`;
-      input.value = "";
-      msgs.scrollTop = msgs.scrollHeight;
-
-      const loadId = "load" + Date.now();
-      msgs.innerHTML += `
-        <div class="message-bubble message-ai" id="${loadId}">
-          <div class="spinner"
-               style="width:14px;height:14px;margin:2px auto;
-                      border:2px solid #2563eb;
-                      border-top-color:transparent;
-                      border-radius:50%;
-                      animation:spin 0.8s linear infinite;">
-          </div>
-        </div>`;
-      msgs.scrollTop = msgs.scrollHeight;
-
-      try {
-        const res = await fetch("https://genesis-ai-systems-demo.onrender.com/demo/rag-chatbot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text })
-        });
-        const data = await res.json();
-        const el = document.getElementById(loadId);
-        if (el) {
-          el.textContent = data.answer || data.response || "How can I help you?";
-        }
-      } catch (error) {
-        const el = document.getElementById(loadId);
-        if (el) {
-          el.innerHTML =
-            "I&apos;m having trouble connecting. " +
-            "Please email <a href=\"mailto:info@genesisai.systems\" " +
-            "style=\"color:#2563eb;\">info@genesisai.systems</a>";
-        }
-      }
-      msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    async function submitContactForm() {
-      const name = document.getElementById("contactName").value;
-      const business = document.getElementById("contactBusiness").value;
-      const email = document.getElementById("contactEmail").value;
-      const phone = document.getElementById("contactPhone").value;
-      const need = document.getElementById("contactNeed").value;
-      const message = document.getElementById("contactMessage").value;
-      const btn = document.getElementById("contactSubmitBtn");
-      const result = document.getElementById("contactResult");
-
-      if (!name || !business || !email || !phone || !need) {
-        result.style.display = "block";
-        result.style.background = "#1e293b";
-        result.style.color = "#f97316";
-        result.innerHTML = "Please fill in all required fields.";
-        return;
-      }
-
-      btn.disabled = true;
-      btn.innerHTML = "Sending...";
-      result.style.display = "none";
-
-      const leadMessage =
-        `New lead from ${name} at ${business}. ` +
-        `Need: ${need}. Email: ${email}. ` +
-        `Phone: ${phone}. Message: ${message}`;
-
-      try {
-        const res = await fetch("https://genesis-ai-systems-demo.onrender.com/demo/lead-capture", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: leadMessage,
-            name: name,
-            business: business,
-            email: email,
-            phone: phone,
-            need: need
-          })
-        });
-        const data = await res.json();
-        const score = data.score || "MEDIUM";
-
-        result.style.display = "block";
-
-        if (score === "HIGH") {
-          result.style.background = "#052e16";
-          result.style.border = "1px solid #22c55e";
-          result.style.color = "#22c55e";
-          result.innerHTML =
-            "🔥 <strong>High priority lead!</strong><br>" +
-            "Trendell will reach out within 2 hours.<br>" +
-            "<small>Or book instantly:</small><br>" +
-            "<a href=\"https://calendly.com/genesisai-info-ptmt/free-ai-demo-call\" " +
-            "target=\"_blank\" rel=\"noopener\" " +
-            "style=\"color:#22c55e;font-weight:bold;\">" +
-            "Schedule your demo now →</a>";
-        } else if (score === "MEDIUM") {
-          result.style.background = "#1c1917";
-          result.style.border = "1px solid #2563eb";
-          result.style.color = "#93c5fd";
-          result.innerHTML =
-            "✅ <strong>Got it, " + escapeHtml(name) + "!</strong><br>" +
-            "Trendell will reach out within 24 hours.<br>" +
-            "<a href=\"https://calendly.com/genesisai-info-ptmt/free-ai-demo-call\" " +
-            "target=\"_blank\" rel=\"noopener\" " +
-            "style=\"color:#2563eb;\">" +
-            "Or book a time directly →</a>";
-        } else {
-          result.style.background = "#1e293b";
-          result.style.border = "1px solid #475569";
-          result.style.color = "#94a3b8";
-          result.innerHTML =
-            "📅 <strong>Thanks " + escapeHtml(name) + "!</strong><br>" +
-            "Trendell will be in touch soon.<br>" +
-            "<a href=\"/demos.html\" style=\"color:#2563eb;\">" +
-            "Explore our live demos while you wait →</a>";
-        }
-
-        btn.innerHTML = "✅ Submitted!";
-        setTimeout(() => {
-          window.location.href = "/thank-you.html";
-        }, 3000);
-      } catch (error) {
-        result.style.display = "block";
-        result.style.background = "#1e293b";
-        result.style.color = "#94a3b8";
-        result.innerHTML =
-          "Thanks! Please email us directly at " +
-          "<a href=\"mailto:info@genesisai.systems\" " +
-          "style=\"color:#2563eb;\">info@genesisai.systems</a> " +
-          "or call <a href=\"tel:3134002575\" " +
-          "style=\"color:#2563eb;\">(313) 400-2575</a>";
-        btn.disabled = false;
-        btn.innerHTML = "Book My Free Demo →";
-      }
-    }
-
-    document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener("click", (event) => {
-        const targetId = anchor.getAttribute("href");
-        if (!targetId || targetId === "#") return;
-        const target = document.querySelector(targetId);
-        if (!target) return;
-        event.preventDefault();
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
+    function renderIndustryTabs() {
+      const tabHost = document.getElementById("industryTabs");
+      tabHost.innerHTML = Object.entries(industries).map(([key, value], index) => `
+        <button class="tab-button ${index === 0 ? "active" : ""}" data-tab="${key}">${value.label}</button>
+      `).join("");
+      tabHost.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-tab]");
+        if (!button) return;
+        document.querySelectorAll(".tab-button").forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        renderIndustryPanel(button.dataset.tab);
       });
+      renderIndustryPanel("restaurant");
+    }
+
+    function renderIndustryPanel(key) {
+      const panel = document.getElementById("industryPanel");
+      const data = industries[key];
+      panel.innerHTML = `
+        <div class="story-text">
+          <h3>${data.title}</h3>
+          <p>${data.story}</p>
+          <div class="check-list">
+            ${data.checks.map((item) => `<div>✅ ${item}</div>`).join("")}
+          </div>
+        </div>
+        <aside class="result-card">
+          <div class="big-number">${data.number}</div>
+          <div><strong>${data.result}</strong></div>
+          <div>${data.sub}</div>
+          <div class="result-actions">
+            <a class="button button-outline" href="${CALENDLY}" target="_blank" rel="noreferrer">${data.cta}</a>
+            <a class="button button-primary" href="[STRIPE_STARTER_LINK]">Buy Starter — $500</a>
+          </div>
+        </aside>
+      `;
+    }
+
+    async function loadStats() {
+      try {
+        const [leadsResp, demosResp, recentResp] = await Promise.all([
+          fetch(`${DEMO_SERVER}/stats/leads-today`),
+          fetch(`${DEMO_SERVER}/stats/demos`),
+          fetch(`${DEMO_SERVER}/stats/recent-activity`)
+        ]);
+        const leads = await leadsResp.json();
+        const demosData = await demosResp.json();
+        const recent = await recentResp.json();
+        document.getElementById("statLeadsToday").textContent = leads.count ?? "--";
+        document.getElementById("statDemos").textContent = demosData.count ?? "--";
+        document.getElementById("statUptime").textContent = (demosData.uptime || "99.9%").toString();
+        if (Array.isArray(recent.items) && recent.items.length) {
+          document.getElementById("activityFeed").innerHTML = recent.items.slice(0, 5).map((item) => `<li>${item}</li>`).join("");
+        }
+      } catch (error) {
+        console.error("Stats load failed", error);
+      }
+    }
+
+    const contactForm = document.getElementById("contactForm");
+    contactForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const status = document.getElementById("contactStatus");
+      status.textContent = "Sending your details now...";
+      const payload = Object.fromEntries(new FormData(contactForm).entries());
+      try {
+        const response = await fetch(`${DEMO_SERVER}/submit/contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        status.textContent = data.message || "Thanks. Trendell will reach out soon.";
+        if (data.success) {
+          setTimeout(() => {
+            window.location.href = "/thank-you.html";
+          }, 3000);
+        }
+      } catch (error) {
+        status.textContent = "Please email info@genesisai.systems and we will get right back to you.";
+      }
     });
 
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch(() => {});
-      });
+    const chatLauncher = document.getElementById("chatLauncher");
+    const chatWindow = document.getElementById("chatWindow");
+    const chatClose = document.getElementById("chatClose");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatLog = document.getElementById("chatLog");
+
+    function addChatBubble(text, type) {
+      const item = document.createElement("div");
+      item.className = `chat-bubble ${type}`;
+      item.textContent = text;
+      chatLog.appendChild(item);
+      chatLog.scrollTop = chatLog.scrollHeight;
     }
 
-    (function () {
-      let deferredPrompt = null;
-      const banner = document.getElementById("pwa-install-banner");
-      const installBtn = document.getElementById("pwa-install-btn");
-      const dismissBtn = document.getElementById("pwa-install-dismiss");
+    chatLauncher.addEventListener("click", () => chatWindow.classList.toggle("open"));
+    chatClose.addEventListener("click", () => chatWindow.classList.remove("open"));
 
-      function isMobile() {
-        return window.matchMedia && window.matchMedia("(max-width: 780px)").matches;
-      }
-
-      window.addEventListener("beforeinstallprompt", function (event) {
-        if (!isMobile()) return;
-        event.preventDefault();
-        deferredPrompt = event;
-        if (!localStorage.getItem("pwaInstallBannerDismissed")) {
-          banner.style.display = "flex";
-        }
-      });
-
-      if (installBtn && banner) {
-        installBtn.addEventListener("click", function () {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then(function (result) {
-              if (result.outcome === "accepted") {
-                banner.style.display = "none";
-                localStorage.setItem("pwaInstallBannerDismissed", "1");
-              }
-            });
-          }
+    chatForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      addChatBubble(message, "user");
+      chatInput.value = "";
+      try {
+        const response = await fetch(`${DEMO_SERVER}/demo/rag-chatbot`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: message })
         });
+        const data = await response.json();
+        addChatBubble(data.answer || data.message || "I can help with that.", "bot");
+      } catch (error) {
+        addChatBubble("I hit a snag. Please email info@genesisai.systems.", "bot");
       }
+    });
 
-      if (dismissBtn && banner) {
-        dismissBtn.addEventListener("click", function () {
-          banner.style.display = "none";
-          localStorage.setItem("pwaInstallBannerDismissed", "1");
-        });
-      }
+    const navToggle = document.getElementById("navToggle");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const closeMenu = document.getElementById("closeMenu");
+    navToggle.addEventListener("click", () => mobileMenu.classList.add("open"));
+    closeMenu.addEventListener("click", () => mobileMenu.classList.remove("open"));
+    mobileMenu.addEventListener("click", (event) => {
+      if (event.target === mobileMenu) mobileMenu.classList.remove("open");
+    });
 
-      if (!isMobile()) {
-        banner.style.display = "none";
-      }
+    const mobileBar = document.getElementById("mobileBar");
+    window.addEventListener("scroll", () => {
+      const show = window.scrollY > window.innerHeight * 0.7;
+      mobileBar.classList.toggle("hidden", !show);
+      mobileBar.style.display = show ? "flex" : "none";
+    });
 
-      window.addEventListener("appinstalled", function () {
-        banner.style.display = "none";
-        localStorage.setItem("pwaInstallBannerDismissed", "1");
-      });
-    })();
-
-    loadAgentStatus();
+    renderSolutions();
+    renderDemos();
+    renderIndustryTabs();
+    loadStats();
   </script>
 </body>
 </html>

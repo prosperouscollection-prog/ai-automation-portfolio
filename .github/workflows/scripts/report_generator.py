@@ -160,14 +160,10 @@ def slack_report_blocks(subject: str, summary: str, details: Union[str, List[Dic
         {
             "type": "section",
             "fields": [
-                {"type": "mrkdwn", "text": f"*Agent:*
-{agent}  "},
-                {"type": "mrkdwn", "text": f"*Status:*
-*{status.upper()}*"},
-                {"type": "mrkdwn", "text": f"*Priority:*
-{priority.title()}"},
-                {"type": "mrkdwn", "text": f"*Time:*
-{ts}"}
+                {"type": "mrkdwn", "text": f"*Agent:*\n{agent}"},
+                {"type": "mrkdwn", "text": f"*Status:*\n*{status.upper()}*"},
+                {"type": "mrkdwn", "text": f"*Priority:*\n{priority.title()}"},
+                {"type": "mrkdwn", "text": f"*Time:*\n{ts}"}
             ]
         },
         {

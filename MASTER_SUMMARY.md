@@ -1,124 +1,109 @@
 # Genesis AI Systems — Master Summary
-## Trendell Fordham | Detroit, MI
-## genesisai.systems | info@genesisai.systems
-## (313) 400-2575
+# Trendell Fordham | Detroit, MI
+# genesisai.systems | info@genesisai.systems
+# [BUSINESS_PHONE_NUMBER] — Riley answers 24/7
 
----
+## What We Are
 
-## What We Built
+A real freelance AI agency.  
+14 AI systems. 10 agents.  
+Founded March 2026. Detroit MI.  
+Customer Zero: Genesis AI Systems itself.
 
-### The Agency
-Genesis AI Systems is a done-for-you AI automation agency that builds, deploys, and maintains AI systems for local businesses starting at $500. Founded by Trendell Fordham, Detroit, MI.
+## 14 Products
 
-### The Portfolio (8 Projects)
+1. Never Miss a Customer Again — $500 + $150/mo
+2. Answer Your Phone 24/7 (Riley) — $1,500 + $300/mo
+3. Answer Customer Questions 24/7 — $1,000 + $200/mo
+4. Your Business Runs Itself — $2,000 + $400/mo
+5. AI Trained on Your Business — $5,000 + $500/mo
+6. Someone Watching Your Tech 24/7 — $10,000 + $2,000/mo
+7. Never Let a Hot Lead Go Cold — $3,000 + $500/mo
+8. Social Media on Autopilot — $2,000 + $400/mo
+9. Keep Every Client Happy Automatically — $2,500 + $500/mo
+10. Control Everything From Phone — $1,000 + $200/mo
+11. Private Chat App for Business — $1,000 + $200/mo
+12. Full Video Content in 30 Seconds — $1,500 + $300/mo
+13. Find New Customers Every Morning — $2,000 + $400/mo
+14. Get Everything — Full Stack — $39,500 + $7,600/mo
 
-PROJECT 1: **Lead Capture + AI Scoring**  
-Tech: n8n + OpenAI + Google Sheets + Gmail  
-Setup: $500 | Monthly: $150 | Year 1: $2,300
+Total setup fees: $39,500  
+Total monthly: $7,600/month  
+Year 1 all 14: $131,700
 
-PROJECT 2: **AI Voice Agent (Riley)**  
-Tech: Vapi + OpenAI + ElevenLabs  
-Setup: $1,500 | Monthly: $300 | Year 1: $5,100
+## 10 Agents Running
 
-PROJECT 3: **RAG Knowledge Chatbot**  
-Tech: Claude API + Claude Projects  
-Setup: $1,000 | Monthly: $200 | Year 1: $3,400
+1. Security Agent — hourly
+2. QA Agent — hourly
+3. Evolution Agent — daily 2am
+4. Deploy Agent — on every push
+5. Master Orchestration — hourly + 8am text
+6. Sales Agent — every 6 hours
+7. Marketing Agent — daily 7am
+8. Client Success Agent — daily 9am
+9. SMS Command Center — on demand
+10. Lead Generator — daily 6am
 
-PROJECT 4: **AI Workflow + Email**  
-Tech: n8n + OpenAI + Gmail + Google Sheets  
-Setup: $2,000 | Monthly: $400 | Year 1: $6,800
+## Third Party Tools Used
 
-PROJECT 5: **AI Chat Widget**  
-Tech: HTML/CSS/JS + OpenAI + Railway proxy  
-Setup: $2,500 | Monthly: $500 | Year 1: $8,500
+- Apollo.io — finds prospects automatically
+- HubSpot — manages all leads and clients
+- Lindy AI — handles sales follow-up
+- Instantly.ai — cold email at scale
+- Vapi — Riley voice agent
+- Twilio — texts + business phone number
+- Resend — professional emails
+- Google Sheets — backup and reporting
+- n8n — runs automatic actions
+- Render — demo server
+- Tailscale — remote Mac mini access
 
-PROJECT 6: **Fine-tuned Model**  
-Tech: Python + OpenAI Fine-tuning API  
-Setup: $5,000 | Monthly: $500 | Year 1: $11,000
+## Communication Channels
 
-PROJECT 7: **Video Automation**  
-Tech: n8n + OpenAI + Google Sheets  
-Setup: $1,500 | Monthly: $300 | Year 1: $5,100
-
-PROJECT 8: **Self-Healing Agent System**  
-Tech: Python + CrewAI + Claude + GitHub Actions  
-Setup: $10,000 | Monthly: $2,000 | Year 1: $34,000
-
-**TOTAL:**  
-Setup fees: $24,000  
-Monthly retainers: $4,350/month  
-Year 1 all 8 projects: $76,200
-
----
-
-## The Infrastructure
-
-Live website: [https://genesisai.systems](https://genesisai.systems)
-
-- Hosting: GitHub Pages + Cloudflare
-- n8n: n8n.genesisai.systems (DigitalOcean)
-- Demo server: Railway
-- Email: info@genesisai.systems (SendGrid)
-- SMS: Twilio → (313) 400-2575
-- Voice: Vapi (Riley)
-- Booking: Calendly
-
----
-
-## The Brand
-
-- Name: Genesis AI Systems
-- Founder: Trendell Fordham
-- Location: Detroit, MI
-- Navy: #0f172a
-- Blue: #2563eb
-- Tagline: "Done-for-you AI automation for local businesses"
-
----
-
-## Target Markets
-
-Year 1: Hospitality, HR/Recruiting, Retail  
-Year 2: Healthcare/Dental, Insurance  
-Year 3+: Government, Financial, Legal
-
----
+- SMS: text updates and commands
+- Dashboard: genesisai.systems/dashboard.html
+- Command Center: genesisai.systems/command.html
+- Email: daily and weekly reports
+- Morning text: 8am summary
+- Prospect text: top 3 hot prospects
 
 ## Revenue Projections
 
-Month 1: $500–$1,500  
-Month 3: $3,000–$5,000 MRR  
-Month 6: $8,000–$12,000 MRR  
-Month 12: $15,000–$20,000 MRR
-
----
+- Month 1: $500-$1,500
+- Month 3: $3,000-$5,000 MRR
+- Month 6: $8,000-$12,000 MRR
+- Month 12: $15,000-$20,000 MRR
 
 ## Investment vs Return
 
-Initial investment: $100  
-Time: 1 session  
-Projects: 8  
-Documents: 25+  
-Year 1 potential: $60,000–$120,000  
-ROI: 59,900%–119,900%
+Started with: $100  
+Built: 14 AI systems  
+Year 1 potential: $60,000-$131,700
 
----
+## What Still Needs To Be Done
 
-## What's Left
+Tonight:
+
+- Verify +13134002575 in Twilio
+- Buy 313 business number from Twilio
+- Connect business number to Riley in Vapi
+- Set up Google Cloud service account
+- Create master Google Sheet
+- Set up Apollo.io free account
+- Set up HubSpot free account
+- Finish Stripe payment links
+- Install Tailscale on Mac mini
+- Add all new GitHub secrets
+- Redeploy Render with new server.js
+- Test SMS from all agents
+- Test contact form to spreadsheet and HubSpot
 
 This week:
-1. Set up Twilio
-2. Set up SendGrid
-3. Add GitHub secrets
-4. Deploy n8n to DigitalOcean
-5. Deploy demo server to Railway
-6. Activate all agents
-7. Record 7 Loom demos
-8. Update LinkedIn
-9. Send first 5 outreach messages
 
----
-
-Last updated: March 28, 2026  
-Built by: Trendell Fordham  
-Contact: info@genesisai.systems
+- Send first 5 outreach messages
+- Update LinkedIn profile
+- Reserve @genesisaisystems everywhere
+- Set up HoneyBook proposals
+- Record first Loom demo video
+- Deploy n8n to DigitalOcean
+- Run the trained AI job

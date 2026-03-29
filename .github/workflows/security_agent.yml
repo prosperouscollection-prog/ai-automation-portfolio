@@ -11,48 +11,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install requests bandit
-
       - name: Run security scan
         run: |
-          echo "🔒 Genesis AI Systems Security Scan"
-          echo "====================================="
+          echo "Security Agent — Genesis AI Systems"
           echo "Time: $(date)"
-          echo "Commit: $GITHUB_SHA"
-          echo ""
-          echo "Scanning for exposed API keys..."
-          grep -r "sk-" --include="*.py" --include="*.js" \
-            --exclude-dir=".git" --exclude-dir="node_modules" \
-            . && echo "⚠️ WARNING: Possible key found" || \
-            echo "✅ No exposed keys found"
-          echo ""
-          echo "Running Bandit security scan..."
-          bandit -r . -ll --exit-zero \
-            --exclude ".git,node_modules,demo-server" || true
-          echo ""
-          echo "Checking HTTPS usage..."
-          grep -r "http://" --include="*.html" --include="*.js" \
-            --exclude-dir=".git" --exclude-dir="node_modules" \
-            . && echo "⚠️ Non-HTTPS links found" || \
-            echo "✅ All links use HTTPS"
-          echo ""
-          echo "✅ Security scan complete"
-
+          grep -r "sk-" --include="*.py" --include="*.js" --exclude-dir=".git" --exclude-dir="node_modules" . && echo "Warning: possible key found" || echo "No exposed keys found"
+          bandit -r . -ll --exit-zero --exclude ".git,node_modules,demo-server" || true
+          grep -r "http://" --include="*.html" --include="*.js" --exclude-dir=".git" --exclude-dir="node_modules" . && echo "Warning: non-HTTPS links found" || echo "All links use HTTPS"
       - name: Verify site SSL
+        run: curl -s --max-time 15 https://genesisai.systems > /dev/null && echo "SSL good" || echo "SSL check failed"
+      - name: SMS alert on failure
+        if: failure()
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
-          echo "Checking SSL certificate..."
-          curl -s --max-time 15 \
-            https://genesisai.systems > /dev/null && \
-            echo "✅ SSL valid" || \
-            echo "⚠️ SSL check failed"
-
-      - name: Report complete
-        run: |
-          echo "✅ Security Agent complete"
-          echo "Genesis AI Systems — genesisai.systems"
+          pip install twilio -q
+          python3 - << 'PYEOF'
+          import os
+          from twilio.rest import Client
+          try:
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      "🚨 Genesis AI Systems Alert\n"
+                      "An agent just FAILED.\n"
+                      "Check GitHub Actions:\n"
+                      "github.com/prosperouscollection-prog/"
+                      "ai-automation-portfolio/actions"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Failure SMS sent')
+          except Exception as e:
+              print(f'SMS failed: {e}')
+          PYEOF

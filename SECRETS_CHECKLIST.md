@@ -1,73 +1,62 @@
-# Genesis AI Systems — SECRETS & OPERATIONS CHECKLIST
+# GitHub Secrets Checklist — Genesis AI Systems
 
-> This checklist ensures all secrets are configured and all notification, demo, email, SMS, and agent systems are operational. Designed for **Genesis AI Systems** ([genesisai.systems](https://genesisai.systems)).
-> 
-> _Founder: Trendell Fordham_
+## Already Added ✅
 
----
+- [x] OPENAI_API_KEY
+- [x] ANTHROPIC_API_KEY
+- [x] TWILIO_ACCOUNT_SID
+- [x] TWILIO_AUTH_TOKEN
+- [x] TWILIO_FROM_NUMBER
+- [x] ALERT_PHONE_NUMBER (+13134002575)
+- [x] RESEND_API_KEY
+- [x] SITE_URL
+- [x] NOTIFICATION_EMAIL
+- [x] CALENDLY_URL
+- [x] DEMO_SERVER_URL
+- [x] OPENAI_ACCOUNT_BALANCE
 
-## 1. REQUIRED SECRETS
+## Still Needed — Add Tonight
 
-- [ ] `ANTHROPIC_API_KEY`           
-- [ ] `OPENAI_API_KEY`              
-- [ ] `TWILIO_ACCOUNT_SID`          
-- [ ] `TWILIO_AUTH_TOKEN`           
-- [ ] `TWILIO_FROM_NUMBER`          
-- [ ] `ALERT_PHONE_NUMBER`          
-- [ ] `SENDGRID_API_KEY`            
-- [ ] `SENDGRID_FROM_EMAIL`         
-- [ ] `SENDGRID_FROM_NAME`          
-- [ ] `SITE_URL`                    
-- [ ] `NOTIFICATION_EMAIL`          
-- [ ] `CALENDLY_URL`                
-- [ ] `N8N_WEBHOOK_BASE_URL`        
-- [ ] `DEMO_SERVER_URL`             
-- [ ] `VAPI_PUBLIC_KEY`             
-- [ ] `RAILWAY_TOKEN`               
+- [ ] GOOGLE_SHEET_ID
+- [ ] GOOGLE_SERVICE_ACCOUNT
+- [ ] HUBSPOT_ACCESS_TOKEN
+- [ ] APOLLO_API_KEY
+- [ ] LINDY_API_KEY
+- [ ] BUSINESS_PHONE_NUMBER
+- [ ] VAPI_PUBLIC_KEY
+- [ ] VAPI_PHONE_NUMBER
+- [ ] STRIPE_STARTER_LINK
+- [ ] STRIPE_GROWTH_LINK
+- [ ] STRIPE_FULLSTACK_LINK
+- [ ] STRIPE_DEPOSIT_LINK
+- [ ] TELEGRAM_BOT_TOKEN
+- [ ] TELEGRAM_CHAT_ID
+- [ ] N8N_WEBHOOK_BASE_URL
 
-## 2. OPTIONAL SECRETS
+## Add To Render Too
 
-- [ ] `SLACK_WEBHOOK_URL`            
+- [ ] GOOGLE_SHEET_ID
+- [ ] GOOGLE_SERVICE_ACCOUNT
+- [ ] HUBSPOT_ACCESS_TOKEN
+- [ ] APOLLO_API_KEY
+- [ ] VAPI_PHONE_NUMBER
+- [ ] STRIPE_STARTER_LINK
+- [ ] STRIPE_GROWTH_LINK
+- [ ] STRIPE_FULLSTACK_LINK
+- [ ] STRIPE_DEPOSIT_LINK
+- [ ] GITHUB_TOKEN
+- [ ] BUSINESS_PHONE_NUMBER
 
-## 3. VERIFICATION & TESTS
+## Verification Checklist
 
-- [ ] Test SMS delivery to **(313) 400-2575** using test script
-- [ ] Test email delivery to **info@genesisai.systems** using test script
-- [ ] Test Slack notification (if webhook exists)
-- [ ] Security agent passing: ![Security](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/security_agent.yml/badge.svg)
-- [ ] QA agent passing: ![QA](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/qa_agent.yml/badge.svg)
-- [ ] Evolution agent daily completion
-- [ ] Deploy agent passes on latest deployment
-- [ ] All 8 live demos working and accessible
-- [ ] `genesisai.systems` loads with status `200 OK`
-- [ ] System health badge present in README
-- [ ] All action scripts tested (see SETUP_GUIDE.md Section 9)
-
-## 4. GITHUB REPO SECRETS LOCATION
-
-> Add/update all secrets here:  
-> [github.com/prosperouscollection-prog/ai-automation-portfolio/settings/secrets/actions](https://github.com/prosperouscollection-prog/ai-automation-portfolio/settings/secrets/actions)
-
----
-
-## 5. DOCUMENTATION & RESOURCES
-
-- [SETUP_GUIDE.md](./SETUP_GUIDE.md) — Full secrets, integration, and testing walkthrough.
-- [README.md](./README.md) — Status badges, agent summary, and system health.
-- [scripts/notify.py](.github/workflows/scripts/notify.py) — Notification logic (testable with `--test-sms`, `--test-email`, `--test-slack`).
-- [scripts/test_notifications.py](.github/workflows/scripts/test_notifications.py) — Test all notification channels and confirm operational status.
-
----
-
-## 6. TROUBLESHOOTING
-
-- Double-check all values for typos in GitHub Secrets
-- Use `.env` file for local CLI tests
-- Confirm verified email and phone in Twilio/SendGrid
-- Check workflow run logs for agent errors: [Actions workflow results](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions)
-
----
-
-#### Genesis AI Systems | Detroit, MI  
-**Founder:** Trendell Fordham  
-info@genesisai.systems • (313) 400-2575
+- [ ] Contact form saves to Google Sheets
+- [ ] Contact form saves to HubSpot
+- [ ] SMS alert arrives at (313) 400-2575
+- [ ] Email arrives at info@genesisai.systems
+- [ ] Lead generator texts top prospects at 6am
+- [ ] Sales helper follows up new leads within 6 hours
+- [ ] Marketing helper creates content at 7am
+- [ ] All 10 agents show passing in GitHub Actions
+- [ ] genesisai.systems loads with Buy Now buttons
+- [ ] Riley answers calls on business number
+- [ ] SMS commands work

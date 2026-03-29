@@ -188,49 +188,52 @@ class EmailNotifier(BaseNotifier):
 class SMSNotifier(BaseNotifier):
     """Notifier for sending SMS alerts via Twilio."""
 
-    def __init__(
-        self,
-        account_sid: Optional[str] = None,
-        auth_token: Optional[str] = None,
-        from_number: Optional[str] = None,
-    ) -> None:
-        """Initialize Twilio credentials."""
-        self.account_sid = account_sid or os.getenv("TWILIO_ACCOUNT_SID")
-        self.auth_token = auth_token or os.getenv("TWILIO_AUTH_TOKEN")
-        self.from_number = from_number or os.getenv("TWILIO_FROM_NUMBER")
-        if not all([self.account_sid, self.auth_token, self.from_number]):
-            logger.warning("Twilio credentials missing. SMS notifications will be skipped.")
+    def __init__(self) -> None:
+        """Load Twilio settings and create the client when possible."""
+        self.to_number = os.getenv("ALERT_PHONE_NUMBER")
+        self.from_number = os.getenv("TWILIO_FROM_NUMBER")
+        self.client = None
         if TwilioClient is None:
             logger.warning("twilio package missing. SMS notifications will be skipped.")
+            return
+        try:
+            self.client = TwilioClient(
+                os.getenv("TWILIO_ACCOUNT_SID"),
+                os.getenv("TWILIO_AUTH_TOKEN"),
+            )
+        except Exception as exc:
+            logger.warning("Twilio credentials missing or invalid. SMS skipped: %s", exc)
 
     def send(
         self,
         subject: str,
         message: str,
         priority: NotificationPriority | str = NotificationPriority.MEDIUM,
-        to_number: Optional[str] = None,
         **_: Any,
     ) -> bool:
         """Send an SMS message via Twilio."""
-        if not all([self.account_sid, self.auth_token, self.from_number]) or TwilioClient is None:
+        if self.client is None or not self.from_number or not self.to_number:
             logger.error("Twilio is not configured. SMS was not sent.")
             return False
 
         normalized = self.normalize_priority(priority)
-        destination = to_number or os.getenv("ALERT_PHONE_NUMBER", BRAND_PHONE_INTL)
         body = (
-            f"Genesis AI Systems:\n"
-            f"{subject}\n"
-            f"Priority: {normalized.value}\n"
-            f"{message}\n"
-            f"- genesisai.systems"
+            f"Genesis AI Systems\n"
+            f"{'=' * 20}\n"
+            f"{normalized.value}: {subject}\n"
+            f"{'-' * 20}\n"
+            f"{str(message)[:140]}\n"
+            f"genesisai.systems"
         )
         try:
-            client = TwilioClient(self.account_sid, self.auth_token)
-            client.messages.create(to=destination, from_=self.from_number, body=body[:1600])
-            logger.info("Twilio SMS sent to %s [%s]: %s", destination, normalized.value, subject)
+            msg = self.client.messages.create(
+                body=body,
+                from_=self.from_number,
+                to=self.to_number,
+            )
+            logger.info("SMS sent: %s", msg.sid)
             return True
-        except Exception as exc:  # pragma: no cover - external network
+        except Exception as exc:
             logger.error("SMS failed: %s", exc)
             return False
 

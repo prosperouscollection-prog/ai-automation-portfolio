@@ -9,55 +9,48 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Install dependencies
         run: pip install requests
-
-      - name: Check copyright year
+      - name: Check for old years and old model names
         run: |
-          echo "🔄 Genesis AI Systems Evolution Check"
-          echo "======================================"
-          echo "Time: $(date)"
-          echo ""
-          echo "Checking copyright year..."
-          grep -r "2025" --include="*.html" \
-            --exclude-dir=".git" . && \
-            echo "⚠️ Outdated year found — update to 2026" || \
-            echo "✅ Copyright year current"
-
-      - name: Check for outdated models
+          grep -r "2025" --include="*.html" --exclude-dir=".git" . && echo "Old year found" || echo "Year is current"
+          grep -r "gpt-3.5\\|text-davinci" --include="*.py" --include="*.js" --exclude-dir=".git" --exclude-dir="node_modules" . && echo "Old model names found" || echo "Model names look current"
+      - name: Check demo server
         run: |
-          echo "Checking for deprecated model names..."
-          grep -r "gpt-3.5\\|text-davinci" \
-            --include="*.py" --include="*.js" \
-            --exclude-dir=".git" --exclude-dir="node_modules" \
-            . && echo "⚠️ Outdated models found" || \
-            echo "✅ No deprecated models found"
-
-      - name: Check demo server health
-        run: |
-          echo "Checking demo server..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            https://genesis-ai-systems-demo.onrender.com \
-            || echo "000")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesis-ai-systems-demo.onrender.com || echo "000")
           echo "Demo server status: $STATUS"
-          if [ "$STATUS" = "200" ] || \
-             [ "$STATUS" = "404" ] || \
-             [ "$STATUS" = "301" ]; then
-            echo "✅ Demo server responding"
-          else
-            echo "⚠️ Demo server may be down: $STATUS"
-          fi
-
-      - name: Generate evolution report
+      - name: SMS alert on failure
+        if: failure()
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
-          echo "Evolution report generated: $(date)"
-          echo "Repository: ai-automation-portfolio"
-          echo "Business: Genesis AI Systems"
-          echo "Website: genesisai.systems"
-          echo "✅ Evolution Agent complete"
+          pip install twilio -q
+          python3 - << 'PYEOF'
+          import os
+          from twilio.rest import Client
+          try:
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      "🚨 Genesis AI Systems Alert\n"
+                      "An agent just FAILED.\n"
+                      "Check GitHub Actions:\n"
+                      "github.com/prosperouscollection-prog/"
+                      "ai-automation-portfolio/actions"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Failure SMS sent')
+          except Exception as e:
+              print(f'SMS failed: {e}')
+          PYEOF

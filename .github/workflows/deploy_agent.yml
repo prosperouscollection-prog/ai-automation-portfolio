@@ -1,4 +1,4 @@
-name: "🚀 Deploy Agent — Genesis AI Systems"
+name: Deploy Agent — Genesis AI Systems
 on:
   push:
     branches: [main]
@@ -9,62 +9,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Wait for GitHub Pages propagation
-        run: |
-          echo "🚀 Deploy Agent — Genesis AI Systems"
-          echo "====================================="
-          echo "Commit: $GITHUB_SHA"
-          echo "Time: $(date)"
-          echo "Waiting 45 seconds for GitHub Pages..."
-          sleep 45
-
+      - name: Wait for site to update
+        run: sleep 45
       - name: Verify main site
         run: |
-          echo "Verifying genesisai.systems..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 https://genesisai.systems \
-            || echo "000")
-          echo "Status: $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ Deployment verified successfully"
-          else
-            echo "⚠️ Site returned $STATUS — may still propagating"
-          fi
-
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems || echo "000")
+          echo "Main site status: $STATUS"
       - name: Verify demos page
         run: |
-          echo "Verifying demos page..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            --max-time 30 \
-            https://genesisai.systems/demos.html \
-            || echo "000")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://genesisai.systems/demos.html || echo "000")
           echo "Demos page status: $STATUS"
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ Demos page live"
-          else
-            echo "⚠️ Demos page status: $STATUS"
-          fi
-
-      - name: Log deployment record
+      - name: SMS alert on failure
+        if: failure()
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
         run: |
-          echo "{"  > deployment.json
-          echo "  \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"," \
-            >> deployment.json
-          echo "  \"commit\": \"$GITHUB_SHA\"," \
-            >> deployment.json
-          echo "  \"status\": \"deployed\"," \
-            >> deployment.json
-          echo "  \"site\": \"https://genesisai.systems\"," \
-            >> deployment.json
-          echo "  \"business\": \"Genesis AI Systems\"" \
-            >> deployment.json
-          echo "}" >> deployment.json
-          cat deployment.json
-
-      - name: Report complete
-        run: |
-          echo "✅ Deploy Agent complete"
-          echo "Live at: https://genesisai.systems"
-          echo "Demos: https://genesisai.systems/demos.html"
-          echo "Genesis AI Systems — Trendell Fordham"
+          pip install twilio -q
+          python3 - << 'PYEOF'
+          import os
+          from twilio.rest import Client
+          try:
+              client = Client(
+                  os.getenv('TWILIO_ACCOUNT_SID'),
+                  os.getenv('TWILIO_AUTH_TOKEN')
+              )
+              client.messages.create(
+                  body=(
+                      "🚨 Genesis AI Systems Alert\n"
+                      "An agent just FAILED.\n"
+                      "Check GitHub Actions:\n"
+                      "github.com/prosperouscollection-prog/"
+                      "ai-automation-portfolio/actions"
+                  ),
+                  from_=os.getenv('TWILIO_FROM_NUMBER'),
+                  to=os.getenv('ALERT_PHONE_NUMBER')
+              )
+              print('✅ Failure SMS sent')
+          except Exception as e:
+              print(f'SMS failed: {e}')
+          PYEOF

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Genesis AI Systems</title>
+  <meta name="description" content="Learn why Trendell Fordham built Genesis AI Systems for local businesses in Detroit and beyond.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy:#0f172a; --navy-soft:#162032; --blue:#2563eb; --white:#fff; --text:#dbe7ff; --muted:#9fb0cc;
+      --line:rgba(148,163,184,.16); --shadow:0 30px 80px rgba(2,6,23,.45);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;font-family:"Manrope",sans-serif;color:var(--white);background:linear-gradient(180deg,#0f172a,#09101d)}
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1160px,calc(100% - 32px));margin:0 auto}
+    .nav{position:sticky;top:0;z-index:100;background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(148,163,184,.12)}
+    .nav-inner{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .logo,h1,h2,h3{font-family:"Space Grotesk",sans-serif}
+    .logo{font-weight:700}
+    .button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 20px;border-radius:16px;font-weight:700;border:1px solid transparent}
+    .button.primary{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+    .button.outline{border-color:rgba(148,163,184,.25);background:rgba(255,255,255,.02)}
+    .hero,.section{padding:88px 0}
+    .hero{text-align:center}
+    .pill{display:inline-flex;padding:10px 16px;border-radius:999px;border:1px solid rgba(37,99,235,.25);background:rgba(37,99,235,.12);color:#cfe0ff;margin-bottom:18px}
+    h1{font-size:clamp(2.7rem,6vw,4.8rem);margin:0 0 18px}
+    h2{font-size:clamp(2rem,4vw,3rem);margin:0 0 14px}
+    h3{margin:0 0 12px;font-size:1.45rem}
+    p{color:var(--text);line-height:1.65;font-size:1.02rem}
+    .story-grid,.contact-grid,.compare-grid,.stats-grid,.pillar-grid,.testimonial-grid,.tech-grid,.footer-grid{display:grid;gap:24px}
+    .story-grid{grid-template-columns:320px 1fr;align-items:start}
+    .contact-grid,.compare-grid{grid-template-columns:1fr 1fr}
+    .stats-grid,.pillar-grid,.testimonial-grid,.tech-grid{grid-template-columns:repeat(4,1fr)}
+    .card,.quote-box,.promise-box,.story-card{background:rgba(16,25,44,.88);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:24px}
+    .photo{width:220px;height:220px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#162032;border:3px solid #2563eb;font-size:4rem;margin:0 auto 18px}
+    .stat-number{font-size:3rem;color:#7db4ff;line-height:1}
+    .quote-box{background:#162032;text-align:center}
+    .promise-box{background:#2563eb;text-align:center}
+    .footer{padding:28px 0 100px;border-top:1px solid rgba(148,163,184,.12);color:var(--muted)}
+    .footer-grid{grid-template-columns:repeat(3,1fr);align-items:center}
+    .chat-launcher{position:fixed;right:18px;bottom:18px;width:62px;height:62px;border-radius:50%;border:none;background:linear-gradient(135deg,#2563eb,#3b82f6);color:white;font-size:1.4rem;cursor:pointer;z-index:1001;box-shadow:0 16px 36px rgba(37,99,235,.4)}
+    .chat-window{position:fixed;right:18px;bottom:94px;width:min(380px,calc(100vw - 24px));background:#10192c;border:1px solid rgba(37,99,235,.35);border-radius:24px;display:none;overflow:hidden;z-index:1002;box-shadow:var(--shadow)}
+    .chat-window.open{display:block}
+    .chat-header,.chat-form{padding:16px}
+    .chat-header{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0f172a;border-bottom:1px solid rgba(148,163,184,.12)}
+    .chat-log{max-height:320px;overflow:auto;display:grid;gap:12px;padding:18px}
+    .chat-bubble{padding:12px 14px;border-radius:16px;line-height:1.55}
+    .chat-bubble.bot{background:rgba(255,255,255,.04);color:var(--text)}
+    .chat-bubble.user{background:#2563eb;justify-self:end;max-width:88%}
+    .chat-form{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(148,163,184,.12)}
+    .chat-form input,input,select,textarea{border-radius:14px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.03);color:white;padding:14px;font:inherit}
+    label{display:grid;gap:8px;font-weight:700;color:#dbe7ff}
+    textarea{min-height:120px;resize:vertical}
+    .form-grid{display:grid;gap:14px}
+    @media (max-width:960px){
+      .story-grid,.contact-grid,.compare-grid,.stats-grid,.pillar-grid,.testimonial-grid,.tech-grid,.footer-grid{grid-template-columns:1fr}
+      .hero .button{width:100%}
+    }
+    @media (max-width:720px){
+      .chat-window{inset:0;width:100vw;border-radius:0;right:0;bottom:0}
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="container nav-inner">
+      <a class="logo" href="/index.html">Genesis AI Systems</a>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a class="button outline" href="/demos.html">View live demos</a>
+        <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container">
+      <div class="pill">Our Story</div>
+      <h1>We level the playing field for local businesses.</h1>
+      <p>Big companies have AI working for them 24/7. Now you do too.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container story-grid">
+      <div class="story-card" style="text-align:center;">
+        <div class="photo">TF</div>
+        <strong>Trendell Fordham</strong><br>
+        Founder and CEO<br>
+        📍 Detroit, MI<br>
+        📞 [BUSINESS_PHONE_NUMBER]<br>
+        📧 info@genesisai.systems
+      </div>
+      <div class="story-card">
+        <h2>Why I built this</h2>
+        <p>Hi. I am Trendell Fordham.</p>
+        <p>I grew up watching Detroit businesses work harder than anyone and still lose customers to bigger companies with more resources.</p>
+        <p>Not because they offered worse service. Not because they cared less.</p>
+        <p>But because a customer called at 9pm and nobody answered. Because a lead came in at midnight and sat there until morning. Because the owner was too busy doing everything else to follow up in time.</p>
+        <p>That bothered me.</p>
+        <p>So I learned everything I could about AI and automation. I spent months building systems that could do the repetitive work. Answering phones. Following up on leads. Responding to questions. Booking appointments.</p>
+        <p>Then I tested every single system on my own business first.</p>
+        <p>If it did not work for Genesis AI Systems I did not sell it to anyone else.</p>
+        <p>Today every system I sell has been running on my own agency. You are not a test case. You are getting something already proven.</p>
+        <p>I am based right here in Detroit. I answer my own phone. I personally oversee every system I build. And I am not done building.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="quote-box">
+        <h2>Our Mission</h2>
+        <p><strong>"Every local business deserves to compete with the big guys — without working more hours to do it."</strong></p>
+      </div>
+      <div class="pillar-grid" style="margin-top:24px;">
+        <div class="card">
+          <h3>🏙️ Built for Detroit. Built for everywhere.</h3>
+          <p>We started in Detroit because we believe in local businesses. Real owners. Real employees. Real stakes.</p>
+        </div>
+        <div class="card">
+          <h3>🤝 We handle everything. You run your business.</h3>
+          <p>You did not start your business to deal with technology. We handle all of that. You just see the results.</p>
+        </div>
+        <div class="card">
+          <h3>✅ We only sell what we use ourselves.</h3>
+          <p>Every system we offer runs on Genesis AI Systems first. If we would not trust it for our own business we would not offer it to yours.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 style="text-align:center;">Genesis AI Systems by the numbers</h2>
+      <div class="stats-grid" style="margin-top:24px;">
+        <div class="card"><div class="stat-number">14</div><p>AI systems built and tested</p></div>
+        <div class="card"><div class="stat-number">10</div><p>AI agents running 24/7</p></div>
+        <div class="card"><div class="stat-number">$100</div><p>Where we started</p></div>
+        <div class="card"><div class="stat-number">5-7</div><p>Days to go live</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 style="text-align:center;">Why business owners choose us</h2>
+      <div class="compare-grid" style="margin-top:24px;">
+        <div class="card">
+          <h3>Other AI Companies</h3>
+          <p>✕ Sell software you figure out yourself</p>
+          <p>✕ Generic AI that sounds like a robot</p>
+          <p>✕ Sign a 12-month contract</p>
+          <p>✕ You learn something broke from customers</p>
+          <p>✕ One-size-fits-all service</p>
+          <p>✕ Takes months to set up</p>
+          <p>✕ You need a tech team</p>
+          <p>✕ You talk to salespeople</p>
+        </div>
+        <div class="card">
+          <h3>Genesis AI Systems</h3>
+          <p>✅ We build and manage everything for you</p>
+          <p>✅ AI trained to sound like your business</p>
+          <p>✅ 30 days notice to cancel anytime</p>
+          <p>✅ We catch problems before you do</p>
+          <p>✅ Built for your business</p>
+          <p>✅ Live in 5-7 days</p>
+          <p>✅ Zero tech knowledge needed</p>
+          <p>✅ You talk directly to Trendell</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 style="text-align:center;">What powers Genesis AI Systems</h2>
+      <p style="text-align:center;">You do not need to know what any of this means. We handle all of it.</p>
+      <div class="tech-grid" style="margin-top:24px;">
+        <div class="card"><h3>The AI that reads and responds</h3><p>OpenAI</p></div>
+        <div class="card"><h3>The AI that thinks carefully</h3><p>Anthropic Claude</p></div>
+        <div class="card"><h3>How we send calls and texts</h3><p>Twilio</p></div>
+        <div class="card"><h3>What makes Riley sound human</h3><p>Vapi</p></div>
+        <div class="card"><h3>Where your data lives safely</h3><p>Google Sheets</p></div>
+        <div class="card"><h3>How we send professional emails</h3><p>Resend</p></div>
+        <div class="card"><h3>Where we find new prospects for you</h3><p>Apollo.io</p></div>
+        <div class="card"><h3>How we manage your leads</h3><p>HubSpot</p></div>
+        <div class="card"><h3>How we run follow-up sequences</h3><p>Lindy AI</p></div>
+        <div class="card"><h3>The engine that connects everything</h3><p>n8n</p></div>
+      </div>
+      <p style="text-align:center;margin-top:18px;">We manage all of these tools for you. You never have to log into any of them.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="promise-box">
+        <h2>Our Promise</h2>
+        <p><strong>We build it in 5-7 days or we tell you why.</strong></p>
+        <p><strong>If it breaks we fix it before you notice.</strong></p>
+        <p><strong>If you are not happy in 30 days we make it right.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2 style="text-align:center;">What our clients say</h2>
+      <div class="testimonial-grid" style="margin-top:24px;">
+        <div class="card">
+          <p>"Riley answered calls I was missing every night. I booked 6 new clients in the first month."</p>
+          <p>— [Client Name], Detroit Restaurant</p>
+          <p>⭐⭐⭐⭐⭐</p>
+        </div>
+        <div class="card">
+          <p>"I was skeptical about AI. Trendell set everything up and showed me the results. I was blown away."</p>
+          <p>— [Client Name], Detroit HVAC Company</p>
+          <p>⭐⭐⭐⭐⭐</p>
+        </div>
+        <div class="card">
+          <p>"My website answers questions 24/7 without me doing anything. Best investment of the year."</p>
+          <p>— [Client Name], Detroit Dental Office</p>
+          <p>⭐⭐⭐⭐⭐</p>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:18px;">Building our client list now. Your business could be featured here.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container contact-grid">
+      <div class="card">
+        <h2>Let us talk</h2>
+        <p>📞 [BUSINESS_PHONE_NUMBER] — Riley answers 24/7</p>
+        <p>📧 info@genesisai.systems</p>
+        <p>📍 Detroit, MI</p>
+        <a class="button primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free 15-Min Call</a>
+      </div>
+      <div class="card">
+        <form class="form-grid" id="aboutContactForm">
+          <label>Your Name<input type="text" name="name" required></label>
+          <label>Your Business Name<input type="text" name="business" required></label>
+          <label>Best Phone Number<input type="tel" name="phone" required></label>
+          <label>Email Address<input type="email" name="email" required></label>
+          <label>What type of business?
+            <select name="business_type" required>
+              <option value="">Select one</option>
+              <option>Restaurant</option>
+              <option>Dental Office</option>
+              <option>HVAC</option>
+              <option>Salon</option>
+              <option>Real Estate</option>
+              <option>Retail</option>
+              <option>Other</option>
+            </select>
+          </label>
+          <label>What is your biggest headache right now?
+            <textarea name="pain_point" required></textarea>
+          </label>
+          <button class="button primary" type="submit">Get My Free Recommendation →</button>
+        </form>
+        <p id="aboutFormStatus">Tell us what is eating your time. We will tell you what we would build.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div>Genesis AI Systems © 2026 | Detroit, MI</div>
+      <div style="text-align:center;">
+        <a href="/index.html">Home</a> ·
+        <a href="/about.html">About</a> ·
+        <a href="/demos.html">Demos</a> ·
+        <a href="/privacy-policy.html">Privacy Policy</a> ·
+        <a href="/terms.html">Terms</a>
+      </div>
+      <div style="text-align:right;">📞 [BUSINESS_PHONE_NUMBER]<br>📧 info@genesisai.systems</div>
+    </div>
+  </footer>
+
+  <button class="chat-launcher" id="chatLauncher" aria-label="Open chat">💬</button>
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div>
+        <strong>Genesis AI Systems</strong>
+        <div style="color:#9fb0cc;font-size:.85rem;">Ask a question right now</div>
+      </div>
+      <button class="button outline" id="chatClose" style="min-height:42px;padding:0 14px;">✕</button>
+    </div>
+    <div class="chat-log" id="chatLog">
+      <div class="chat-bubble bot">Hi. Ask what you would ask a real business. I will answer right away.</div>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <input type="text" id="chatInput" placeholder="Type your question">
+      <button class="button primary" type="submit">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const DEMO_SERVER = "https://genesis-ai-systems-demo.onrender.com";
+    const form = document.getElementById("aboutContactForm");
+    const status = document.getElementById("aboutFormStatus");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "Sending your details now...";
+      try {
+        const payload = Object.fromEntries(new FormData(form).entries());
+        const response = await fetch(`${DEMO_SERVER}/submit/contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        status.textContent = data.message || "Trendell will reach out soon.";
+      } catch (error) {
+        status.textContent = "Please email info@genesisai.systems and we will get back to you.";
+      }
+    });
+    const chatLauncher = document.getElementById("chatLauncher");
+    const chatWindow = document.getElementById("chatWindow");
+    const chatClose = document.getElementById("chatClose");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatLog = document.getElementById("chatLog");
+    function addBubble(text, type) {
+      const item = document.createElement("div");
+      item.className = `chat-bubble ${type}`;
+      item.textContent = text;
+      chatLog.appendChild(item);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+    chatLauncher.addEventListener("click", () => chatWindow.classList.toggle("open"));
+    chatClose.addEventListener("click", () => chatWindow.classList.remove("open"));
+    chatForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      addBubble(message, "user");
+      chatInput.value = "";
+      try {
+        const response = await fetch(`${DEMO_SERVER}/demo/rag-chatbot`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: message })
+        });
+        const data = await response.json();
+        addBubble(data.answer || data.message || "I can help with that.", "bot");
+      } catch (error) {
+        addBubble("I hit a snag. Please email info@genesisai.systems.", "bot");
+      }
+    });
+  </script>
+</body>
+</html>

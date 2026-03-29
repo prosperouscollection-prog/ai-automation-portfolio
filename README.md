@@ -1,84 +1,98 @@
-![Security](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/security_agent.yml/badge.svg)
-![QA](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/qa_agent.yml/badge.svg)
-![Deploy](https://github.com/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/deploy_agent.yml/badge.svg)
-
 # Genesis AI Systems
 
-**Tagline:** *Done-for-you AI automation for local businesses*
+Trendell Fordham  
+Detroit, MI  
+info@genesisai.systems  
+[BUSINESS_PHONE_NUMBER]
 
-**Website:** [https://genesisai.systems](https://genesisai.systems)
+Website: https://genesisai.systems  
+Book a call: https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
 
-**Founder:** Trendell Fordham  
-**Email:** info@genesisai.systems  
-**Phone:** (313) 400-2575  
-**GitHub:** [prosperouscollection-prog/ai-automation-portfolio](https://github.com/prosperouscollection-prog/ai-automation-portfolio)  
-**Location:** Detroit, MI  
+## What this does for your business
 
----
+We handle the tech. You run your business.
 
-## Overview
-Genesis AI Systems provides done-for-you automation solutions for local businesses, using advanced AI operational agents to maximize uptime and security. This repository contains the self-hosted AI automation portfolio for the agency, monitored and maintained by a fully autonomous 4-agent system.
+Genesis AI Systems helps local businesses:
 
-**Mission:** _Customer Zero is Genesis AI Systems itself. Our automation agents and monitoring pipeline always protect our agency and site first._
+- answer calls after hours
+- reply to leads fast
+- book more appointments
+- follow up without forgetting
+- create content without staring at a blank page
+- catch problems before customers do
 
----
+## What we sell
 
-## System Health — Genesis AI Systems
-Monitored 24/7 by autonomous 4-agent system:
-- **Security Agent:** every hour · checks for credentials, malware, and exploits
-- **QA Agent:** every hour · tests site speed, links, accessibility, and key features
-- **Evolution Agent:** daily · catches dependency drift and new AI capabilities
-- **Deploy Agent:** each deployment · ensures zero-regression production
+We now offer 14 business systems.
 
-Live: [https://genesisai.systems](https://genesisai.systems)
+1. Never Miss a Customer Again
+2. Answer Your Phone 24/7
+3. Answer Customer Questions 24/7
+4. Your Business Runs Itself
+5. AI Trained on Your Business
+6. Someone Watching Your Tech 24/7
+7. Never Let a Hot Lead Go Cold
+8. Social Media on Autopilot
+9. Keep Every Client Happy Automatically
+10. Control Everything From Your Phone
+11. A Private Chat App for Your Business
+12. Full Video Content in 30 Seconds
+13. Find New Customers Every Morning
+14. Get Everything — Full Stack
 
----
+## Pricing at a glance
 
-### Current Automation Pipeline
+- Total projects: 14
+- Combined setup fees: $39,500
+- Combined monthly retainers: $7,600/month
+- Year 1 value for all 14: $131,700
 
-| Agent         | Schedule                 | Checks                                                            | Alerts/Badges                |
-|---------------|--------------------------|-------------------------------------------------------------------|------------------------------|
-| Security      | Hourly & on push         | Keys, credentials, scripts, XSS, HTTPS, `.env`, Bandit            | Badge, Report, SMS/email     |
-| QA            | After Security, Hourly   | Uptime, speed, demos, links, meta, forms, 20+ checks              | Badge, Report, SMS/email     |
-| Evolution     | Daily (2am UTC)          | Dependencies, model updates, API changelogs, demo performance     | Report, Issues               |
-| Deploy        | After QA, on push        | Deploys to Pages, waits, verifies production                      | Badge, Log, SMS/email        |
+## What is inside this folder
 
-### Health & Uptime Reporting
-- **Overall System Score:** 0–100, updated hourly
-- **Agent Status:** real-time pass/fail and summary per agent
-- **Demo Server:** uptime and 8 live demo response times
-- **Issues:** open issue count always visible
-- **Notifications:** SMS & email for failures, silent when healthy
+- Main website pages
+- Live demos
+- Demo server
+- Sales and onboarding documents
+- Case studies
+- Agent files
+- Project folders for all 14 systems
 
----
+## Most important files
 
-## Quick Links
-- [Setup Guide](./SETUP_GUIDE.md)
-- [Secrets Checklist](./SECRETS_CHECKLIST.md)
-- [Automated Workflows](.github/workflows/)
-- [Notification Scripts](.github/workflows/scripts/notify.py)
+- `index.html` — main website
+- `about.html` — founder story page
+- `demos.html` — live demos page
+- `command.html` — mobile command page
+- `demo-server/server.js` — demo server and form handling
+- `MASTER_SUMMARY.md` — full business summary
+- `CASE_STUDIES.md` — business result stories
+- `SECRETS_CHECKLIST.md` — what still needs to be added
 
----
+## What still needs to happen
 
-## Technology Used
-- Python 3.11+, GitHub Actions, Playwright, Bandit, Semgrep, BeautifulSoup4, Anthropic & OpenAI APIs
-- Secure notifications: Twilio (SMS), SendGrid (Email), Slack, GitHub Issues
+Tonight:
 
----
+- Buy a Detroit business number
+- Connect that number to Riley
+- Add Google Sheets access
+- Add HubSpot access
+- Add Apollo access
+- Add Lindy access
+- Add Stripe links
+- Test text alerts
+- Test the contact form end to end
 
-### Branding
-- Colors: Navy (#0f172a), Electric Blue (#2563eb)
-- All notifications are branded and reference [Genesis AI Systems](https://genesisai.systems) and Trendell Fordham (Founder).
+This week:
 
----
+- Send first outreach messages
+- Record first demo videos
+- Set up HoneyBook
+- Turn on the lead finder
+- Turn on the sales follow-up helper
+- Turn on the content helper
 
 ## Contact
-- Website: [https://genesisai.systems](https://genesisai.systems)
-- Email: info@genesisai.systems
-- Phone: (313) 400-2575
-- Calendly: [Free AI Demo Call](https://calendly.com/genesisai-info-ptmt/free-ai-demo-call)
 
----
-
-> **Genesis AI Systems** — protecting your business with real autonomous AI automation.  
-> _Powered by our own technology, 24/7_
+Genesis AI Systems  
+info@genesisai.systems  
+https://genesisai.systems
