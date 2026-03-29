@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salon AI — Appointment Booking & Pricing Questions</title>
+  <meta name="description" content="Never lose a client. Genesis AI answers calls 24/7, books appointments, answers pricing questions, and sends reminders. Built for hair salons and spas.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy-soft: #162032;
+      --blue: #2563eb;
+      --blue-soft: rgba(37, 99, 235, 0.16);
+      --white: #ffffff;
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --line: rgba(148, 163, 184, 0.18);
+      --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+      --radius: 24px;
+      --max: 1240px;
+      --green: #22c55e;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 30%),
+        linear-gradient(180deg, #0f172a 0%, #0b1324 45%, #09101f 100%);
+      color: var(--white);
+      font-family: "Manrope", sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    img { max-width: 100%; display: block; }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-align: center;
+      transition: 0.2s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .button-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .button-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .button-outline {
+      border: 1px solid var(--line);
+      color: var(--white);
+      background: transparent;
+    }
+
+    .button-outline:hover {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+    }
+
+    .hero {
+      padding: 120px 0;
+    }
+
+    h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-subtitle {
+      font-size: 1.3rem;
+      color: var(--text);
+      margin-bottom: 32px;
+      max-width: 700px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+      padding-top: 48px;
+      border-top: 1px solid var(--line);
+    }
+
+    .stat-card {
+      background: rgba(22, 32, 50, 0.4);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .stat-number {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .features-section {
+      padding: 80px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-title {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 48px;
+      text-align: center;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 32px;
+    }
+
+    .feature-card {
+      background: rgba(22, 32, 50, 0.4);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+
+    .feature-card p {
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .pricing-section {
+      padding: 80px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      margin-bottom: 48px;
+    }
+
+    .price-card {
+      background: rgba(22, 32, 50, 0.6);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .price-card h4 {
+      font-size: 1.25rem;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .price-amount {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+
+    .price-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0;
+    }
+
+    .price-card li {
+      padding: 8px 0;
+      color: var(--text);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .price-card li:last-child {
+      border-bottom: none;
+    }
+
+    .cta-footer {
+      padding: 120px 0;
+      text-align: center;
+      border-top: 1px solid var(--line);
+    }
+
+    .cta-footer h2 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 2.5rem;
+      margin-bottom: 24px;
+    }
+
+    .cta-footer p {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>Never Lose a Client to Voicemail</h1>
+        <p class="hero-subtitle">AI that answers calls 24/7, books appointments, answers pricing questions, sends reminders, and keeps your schedule full automatically. So you focus on your clients.</p>
+        
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Demo</a>
+          <a class="button button-outline" href="/roi-calculator.html">See Your ROI</a>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">+30%</div>
+            <div class="stat-label">More bookings typically captured</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">24/7</div>
+            <div class="stat-label">No more missed calls after hours</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">$400+/mo</div>
+            <div class="stat-label">Typical receptionist cost saved</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features-section">
+      <div class="container">
+        <h2 class="section-title">What Genesis Does for Salons</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">📞</div>
+            <h3>Answers Every Call 24/7</h3>
+            <p>Instant call answering during and after hours. Clients calling during dinner get a friendly voice, not voicemail.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h3>Books Appointments</h3>
+            <p>Clients say what service they want and when. AI checks availability, books immediately, sends confirmation.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Answers Pricing</h3>
+            <p>Service prices, package options, add-ons. Train AI on your pricing. Reduces calls about cost.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3>Sends Reminders</h3>
+            <p>Automated appointment reminders via text/email. Reduces no-shows. Clients appreciate the reminder.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">❓</div>
+            <h3>Answers FAQs</h3>
+            <p>Hours, location, parking, what to bring, cancellation policy. All answered without your team.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Daily Booking Reports</h3>
+            <p>See calls, bookings, pricing questions, service preferences. Spot trends to maximize capacity.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing-section">
+      <div class="container">
+        <h2 class="section-title">Simple Pricing for Salons</h2>
+        <div class="pricing-cards">
+          <div class="price-card">
+            <h4>Starter</h4>
+            <p style="color: var(--muted);">For solo stylists</p>
+            <div class="price-amount">$150/mo</div>
+            <div style="color: var(--muted); margin-bottom: 16px;">+ $500 setup</div>
+            <ul>
+              <li>✅ Call answering 24/7</li>
+              <li>✅ Appointment booking</li>
+              <li>✅ FAQ answers</li>
+              <li>✅ Monthly support</li>
+            </ul>
+            <a class="button button-primary" style="width: 100%; display: block; margin-top: 20px;" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Started</a>
+          </div>
+
+          <div class="price-card" style="border: 2px solid var(--green);">
+            <h4 style="color: var(--green);">Pro ⭐</h4>
+            <p style="color: var(--muted);">For growing salons</p>
+            <div class="price-amount">$350/mo</div>
+            <div style="color: var(--muted); margin-bottom: 16px;">+ $1,500 setup</div>
+            <ul>
+              <li>✅ Everything in Starter</li>
+              <li>✅ Pricing questions</li>
+              <li>✅ SMS reminders</li>
+              <li>✅ Weekly reports</li>
+            </ul>
+            <a class="button button-primary" style="width: 100%; display: block; margin-top: 20px;" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Started</a>
+          </div>
+
+          <div class="price-card">
+            <h4>Growth</h4>
+            <p style="color: var(--muted);">For established salons</p>
+            <div class="price-amount">$650/mo</div>
+            <div style="color: var(--muted); margin-bottom: 16px;">+ $3,500 setup</div>
+            <ul>
+              <li>✅ Everything in Pro</li>
+              <li>✅ Multi-stylist routing</li>
+              <li>✅ Advanced reminders</li>
+              <li>✅ Priority support</li>
+            </ul>
+            <a class="button button-primary" style="width: 100%; display: block; margin-top: 20px;" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Get Started</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-footer">
+      <div class="container">
+        <h2>Ready to keep your schedule fully booked?</h2>
+        <p>Book a free 15-minute demo call. We'll show you exactly how it works for your salon.</p>
+        <div class="footer-actions">
+          <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book Free Demo</a>
+          <a class="button button-outline" href="/">Back to Home</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

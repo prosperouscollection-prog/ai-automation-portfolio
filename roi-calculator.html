@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI ROI Calculator — Genesis AI Systems</title>
+  <meta name="description" content="Calculate your potential savings and ROI with Genesis AI. See how much you can save vs hiring a team or using other AI solutions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #0f172a;
+      --navy-soft: #162032;
+      --blue: #2563eb;
+      --blue-soft: rgba(37, 99, 235, 0.16);
+      --white: #ffffff;
+      --text: #dbe7ff;
+      --muted: #9fb0cc;
+      --line: rgba(148, 163, 184, 0.18);
+      --shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
+      --radius: 24px;
+      --max: 1240px;
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.25), transparent 30%),
+        linear-gradient(180deg, #0f172a 0%, #0b1324 45%, #09101f 100%);
+      color: var(--white);
+      font-family: "Manrope", sans-serif;
+      padding: 60px 16px;
+    }
+
+    .container {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--text);
+      margin-bottom: 48px;
+      max-width: 600px;
+    }
+
+    .calculator-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 1024px) {
+      .calculator-wrapper {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .calculator-inputs {
+      background: rgba(22, 32, 50, 0.6);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 40px;
+    }
+
+    .input-group {
+      margin-bottom: 32px;
+    }
+
+    .input-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+
+    .input-group .description {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .input-wrapper input {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 1rem;
+    }
+
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: var(--blue);
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .input-wrapper .unit {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .slider-group {
+      margin: 24px 0;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--blue);
+    }
+
+    .slider-value {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .results-panel {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(37, 99, 235, 0.15));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .result-item {
+      margin-bottom: 32px;
+    }
+
+    .result-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .result-label {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .result-value {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .result-subtext {
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-top: 4px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .comparison-card {
+      background: rgba(22, 32, 50, 0.6);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .comparison-card h3 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: var(--white);
+    }
+
+    .comparison-card .amount {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    .comparison-card .subtext {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 48px 0;
+      border-top: 1px solid var(--line);
+      margin-top: 48px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-align: center;
+      transition: 0.2s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .button-primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .button-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .button-outline {
+      border: 1px solid var(--line);
+      color: var(--white);
+      background: transparent;
+    }
+
+    .button-outline:hover {
+      background: var(--blue-soft);
+      border-color: var(--blue);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ROI Calculator</h1>
+    <p class="subtitle">See how much your business could save with Genesis AI vs hiring a team or using other solutions.</p>
+
+    <div class="calculator-wrapper">
+      <div class="calculator-inputs">
+        <div class="input-group">
+          <label>Leads per month</label>
+          <div class="description">How many leads or customer inquiries do you get each month?</div>
+          <div class="input-wrapper">
+            <input type="number" id="leadsPerMonth" min="0" max="1000" step="10" value="50">
+            <span class="unit">leads/mo</span>
+          </div>
+          <div class="slider-group">
+            <input type="range" id="leadsSlider" min="0" max="1000" step="10" value="50">
+            <div class="slider-value">
+              <span>0</span>
+              <span>1,000+</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Current cost per lead</label>
+          <div class="description">How much do you spend to acquire each lead? (ads, labor, tools)</div>
+          <div class="input-wrapper">
+            <span class="unit">$</span>
+            <input type="number" id="costPerLead" min="0" max="500" step="5" value="50">
+          </div>
+          <div class="slider-group">
+            <input type="range" id="costPerLeadSlider" min="0" max="500" step="5" value="50">
+            <div class="slider-value">
+              <span>$0</span>
+              <span>$500</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Your conversion rate</label>
+          <div class="description">What % of leads convert to customers?</div>
+          <div class="input-wrapper">
+            <input type="number" id="conversionRate" min="0" max="100" step="1" value="15">
+            <span class="unit">%</span>
+          </div>
+          <div class="slider-group">
+            <input type="range" id="conversionSlider" min="0" max="100" step="1" value="15">
+            <div class="slider-value">
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Average deal size</label>
+          <div class="description">What's the average value of a customer?</div>
+          <div class="input-wrapper">
+            <span class="unit">$</span>
+            <input type="number" id="dealSize" min="0" max="10000" step="100" value="500">
+          </div>
+          <div class="slider-group">
+            <input type="range" id="dealSizeSlider" min="0" max="10000" step="100" value="500">
+            <div class="slider-value">
+              <span>$0</span>
+              <span>$10,000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-panel">
+        <div class="result-item">
+          <div class="result-label">Annual revenue from Genesis leads</div>
+          <div class="result-value" id="revenueResult">$45,000</div>
+          <div class="result-subtext">Based on your leads, conversion rate & deal size</div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">vs Genesis cost (annual)</div>
+          <div class="result-value" id="costResult">$3,300</div>
+          <div class="result-subtext">Using Growth plan ($650/mo) as baseline</div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">Your net profit from Genesis</div>
+          <div class="result-value" id="profitResult">$41,700</div>
+          <div class="result-subtext">Revenue minus Genesis costs</div>
+        </div>
+
+        <div class="result-item">
+          <div class="result-label">ROI</div>
+          <div class="result-value" id="roiResult">1,264%</div>
+          <div class="result-subtext" id="roiSubtext">For every $1 spent, you get back $13.64</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="comparison-card">
+        <h3>💼 Hire a team approach</h3>
+        <div class="amount">$8,000-15,000/mo</div>
+        <div class="subtext">
+          <p>✅ 2-3 people to handle leads + follow-up</p>
+          <p>✅ Phone system & training</p>
+          <p>❌ 4-6 week hiring process</p>
+          <p>❌ Doesn't work 24/7</p>
+          <p>❌ High turnover (15-30% annually)</p>
+        </div>
+      </div>
+
+      <div class="comparison-card">
+        <h3>🔧 Build it yourself approach</h3>
+        <div class="amount">$5,000-12,000 + 3-6 months</div>
+        <div class="subtext">
+          <p>✅ Fully custom solution</p>
+          <p>❌ Steep learning curve</p>
+          <p>❌ Takes 3-6 months</p>
+          <p>❌ Ongoing maintenance required</p>
+          <p>❌ Breaks when APIs change</p>
+        </div>
+      </div>
+
+      <div class="comparison-card">
+        <h3>⚡ Genesis AI approach</h3>
+        <div class="amount">$650-7,600/mo</div>
+        <div class="subtext">
+          <p>✅ Ready in 5-7 business days</p>
+          <p>✅ 24/7 operation</p>
+          <p>✅ We handle all maintenance</p>
+          <p>✅ We train it on your business</p>
+          <p>✅ We fix anything that breaks</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2 style="margin-top: 0; margin-bottom: 24px;">Ready to see this in action?</h2>
+      <a class="button button-primary" href="https://calendly.com/genesisai-info-ptmt/free-ai-demo-call" target="_blank" rel="noreferrer">Book a Free Demo Call</a>
+    </div>
+  </div>
+
+  <script>
+    // Sync inputs with sliders
+    const leadsInput = document.getElementById('leadsPerMonth');
+    const leadsSlider = document.getElementById('leadsSlider');
+    const costInput = document.getElementById('costPerLead');
+    const costSlider = document.getElementById('costPerLeadSlider');
+    const conversionInput = document.getElementById('conversionRate');
+    const conversionSlider = document.getElementById('conversionSlider');
+    const dealInput = document.getElementById('dealSize');
+    const dealSlider = document.getElementById('dealSizeSlider');
+
+    function updateResults() {
+      const leads = parseInt(leadsInput.value) || 0;
+      const cost = parseInt(costInput.value) || 0;
+      const conversion = parseInt(conversionInput.value) || 0;
+      const deal = parseInt(dealInput.value) || 0;
+
+      // Calculate customers from leads
+      const customers = (leads * conversion) / 100;
+
+      // Calculate revenue
+      const revenue = customers * deal * 12;
+
+      // Genesis cost (use Growth plan as default)
+      const genesisMonthlyCost = 650;
+      const genesisAnnualCost = genesisMonthlyCost * 12;
+
+      // Calculate profit and ROI
+      const profit = revenue - genesisAnnualCost;
+      const roi = genesisAnnualCost > 0 ? ((profit / genesisAnnualCost) * 100).toFixed(0) : 0;
+      const payback = genesisAnnualCost > 0 ? (profit / genesisAnnualCost + 1).toFixed(2) : 0;
+
+      // Update display
+      document.getElementById('revenueResult').textContent = '$' + revenue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      document.getElementById('costResult').textContent = '$' + genesisAnnualCost.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      document.getElementById('profitResult').textContent = '$' + profit.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      document.getElementById('roiResult').textContent = roi + '%';
+      document.getElementById('roiSubtext').textContent = 'For every $1 spent, you get back $' + payback;
+    }
+
+    // Event listeners
+    [leadsInput, costInput, conversionInput, dealInput].forEach(el => {
+      el.addEventListener('input', (e) => {
+        const slider = e.target.id === 'leadsPerMonth' ? leadsSlider : 
+                      e.target.id === 'costPerLead' ? costSlider :
+                      e.target.id === 'conversionRate' ? conversionSlider :
+                      dealSlider;
+        slider.value = e.target.value;
+        updateResults();
+      });
+    });
+
+    [leadsSlider, costSlider, conversionSlider, dealSlider].forEach(el => {
+      el.addEventListener('input', (e) => {
+        const input = e.target.id === 'leadsSlider' ? leadsInput :
+                      e.target.id === 'costPerLeadSlider' ? costInput :
+                      e.target.id === 'conversionSlider' ? conversionInput :
+                      dealInput;
+        input.value = e.target.value;
+        updateResults();
+      });
+    });
+
+    // Initial calculation
+    updateResults();
+  </script>
+</body>
+</html>
