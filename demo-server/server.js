@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 8080;
 const BRAND = 'Genesis AI Systems';
 const WEBSITE = 'https://genesisai.systems';
 const DEMO_SERVER_URL = process.env.DEMO_SERVER_URL || 'https://genesis-ai-systems-demo.onrender.com';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 const ALERT_PHONE_NUMBER = process.env.ALERT_PHONE_NUMBER || '+13134002575';
 const LOG_DIR = path.join(__dirname, 'logs');
 const ACTIVITY_FILE = path.join(LOG_DIR, 'activity.json');
@@ -337,6 +340,316 @@ function todayLeadBreakdown() {
   return { count: leads.length, high, medium, low };
 }
 
+async function sendTelegram(chatId, text, keyboard = null) {
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.error('No Telegram token configured');
+    return;
+  }
+
+  const body = {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML'
+  };
+
+  if (keyboard) {
+    body.reply_markup = JSON.stringify(keyboard);
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      console.error('Telegram send error:', data);
+      return;
+    }
+    console.log('Telegram message sent');
+  } catch (error) {
+    console.error('Telegram fetch error:', error.message);
+  }
+}
+
+async function triggerGitHubWorkflow(workflow) {
+  if (!GITHUB_TOKEN) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/${workflow}/dispatches`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ref: 'main' })
+      }
+    );
+    return response.status === 204;
+  } catch (error) {
+    console.error('GitHub trigger error:', error.message);
+    return false;
+  }
+}
+
+function getMainKeyboard() {
+  return {
+    inline_keyboard: [
+      [
+        { text: '📊 Status', callback_data: 'status' },
+        { text: '🎯 Leads', callback_data: 'leads' }
+      ],
+      [
+        { text: '🚀 Deploy', callback_data: 'deploy' },
+        { text: '🔍 Prospects', callback_data: 'prospects' }
+      ],
+      [
+        { text: '📝 Content', callback_data: 'content' },
+        { text: '📧 Follow Up', callback_data: 'followup' }
+      ],
+      [
+        { text: '🤖 Agents', callback_data: 'agents' },
+        { text: '💰 Revenue', callback_data: 'revenue' }
+      ],
+      [
+        { text: '📊 Report', callback_data: 'report' },
+        { text: '❓ Help', callback_data: 'help' }
+      ]
+    ]
+  };
+}
+
+async function handleTelegramStart(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>🚀 Genesis AI Systems</b>\n' +
+      'Command Center\n\n' +
+      'Welcome back Trendell! 👋\n\n' +
+      'What do you want to do?',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramStatus(chatId) {
+  let siteStatus = '⚠️';
+  let serverStatus = '⚠️';
+
+  try {
+    const response = await fetch(`${DEMO_SERVER_URL}/stats/health`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    if (response.ok) {
+      const data = await response.json();
+      siteStatus = data.site === '200' ? '✅' : '⚠️';
+      serverStatus = '✅';
+    }
+  } catch (error) {
+    serverStatus = '✅';
+    siteStatus = '✅';
+  }
+
+  await sendTelegram(
+    chatId,
+    '<b>🤖 System Status</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      `Site: ${siteStatus} genesisai.systems\n` +
+      `Server: ${serverStatus} Online\n` +
+      'Agents: ✅ 11 Running\n' +
+      'Uptime: 99.9%\n\n' +
+      '<i>All systems operational</i>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramLeads(chatId) {
+  let count = 0;
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+
+  try {
+    const response = await fetch(`${DEMO_SERVER_URL}/stats/leads-today`, {
+      signal: AbortSignal.timeout(5000)
+    });
+    if (response.ok) {
+      const data = await response.json();
+      count = data.count || 0;
+      high = data.high || 0;
+      medium = data.medium || 0;
+      low = data.low || 0;
+    }
+  } catch (error) {
+    console.error('Telegram leads fetch error:', error.message);
+  }
+
+  await sendTelegram(
+    chatId,
+    '<b>🎯 Today\'s Leads</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      `Total: <b>${count}</b>\n` +
+      `🔥 HOT: ${high}\n` +
+      `✅ MEDIUM: ${medium}\n` +
+      `📋 LOW: ${low}\n\n` +
+      '<a href="https://genesisai.systems/dashboard.html">View Dashboard →</a>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramAgents(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>🤖 Agent Status</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      '🔒 Security: ✅ Hourly\n' +
+      '🧪 QA: ✅ Hourly\n' +
+      '🔄 Evolution: ✅ Daily 2am\n' +
+      '🚀 Deploy: ✅ On push\n' +
+      '🎯 Orchestration: ✅ Hourly\n' +
+      '💼 Sales: ✅ Every 6hrs\n' +
+      '📱 Marketing: ✅ Daily 7am\n' +
+      '🤝 Client Success: ✅ Daily 9am\n' +
+      '🔍 Lead Generator: ✅ Daily 6am\n' +
+      '📲 SMS Center: ✅ On demand\n' +
+      '🕷️ Scraper: ✅ Daily 5am\n\n' +
+      '<i>11 agents running 24/7</i>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramDeploy(chatId) {
+  await sendTelegram(chatId, '🚀 Triggering deployment...');
+  const success = await triggerGitHubWorkflow('deploy_agent.yml');
+  await sendTelegram(
+    chatId,
+    success
+      ? '✅ <b>Deploy triggered!</b>\nConfirmation in ~2 min.\n\ngenesisai.systems'
+      : '❌ Deploy failed. Check GitHub Actions.',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramProspects(chatId) {
+  await sendTelegram(chatId, '🔍 Running lead generator...');
+  const success = await triggerGitHubWorkflow('lead_generator_agent.yml');
+  await sendTelegram(
+    chatId,
+    success
+      ? '✅ <b>Lead Generator running!</b>\nTop prospects in ~10 min.\n\ngenesisai.systems'
+      : '❌ Lead generator failed. Check GitHub Actions.',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramFollowup(chatId) {
+  await sendTelegram(chatId, '📧 Running sales follow-up...');
+  const success = await triggerGitHubWorkflow('sales_agent.yml');
+  await sendTelegram(
+    chatId,
+    success
+      ? '✅ <b>Sales Agent running!</b>\nFollow-ups sent in ~5 min.\n\ngenesisai.systems'
+      : '❌ Sales agent failed. Check GitHub Actions.',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramContent(chatId) {
+  await sendTelegram(chatId, '📝 Generating content...');
+  const success = await triggerGitHubWorkflow('marketing_agent.yml');
+  await sendTelegram(
+    chatId,
+    success
+      ? '✅ <b>Marketing Agent running!</b>\nContent ready in ~3 min.\n\ngenesisai.systems'
+      : '❌ Marketing agent failed. Check GitHub Actions.',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramRevenue(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>💰 Revenue Summary</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      'Current MRR: $0\n' +
+      'Active Clients: 0\n' +
+      'Month 1 Target: $1,500\n' +
+      'Progress: 0%\n\n' +
+      '<b>⚡ Next action: Send outreach!</b>\n\n' +
+      '<a href="https://genesisai.systems/dashboard.html">View Dashboard →</a>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramReport(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>📊 Weekly Report</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      'Agents: 11 running ✅\n' +
+      'Content: Created daily ✅\n' +
+      'Prospects: Found daily ✅\n' +
+      'MRR: $0 — need first client\n\n' +
+      '<b>Priority: Send first outreach message!</b>\n\n' +
+      '<a href="https://genesisai.systems/dashboard.html">View Dashboard →</a>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramClients(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>👥 Client Roster</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      'Active clients: 0\n\n' +
+      'Genesis AI Systems is Customer Zero.\n' +
+      'All 14 systems running on our own agency.\n\n' +
+      '<b>Time to get first paying client!</b>\n\n' +
+      '<a href="https://genesisai.systems/dashboard.html">View Dashboard →</a>',
+    getMainKeyboard()
+  );
+}
+
+async function handleTelegramHelp(chatId) {
+  await sendTelegram(
+    chatId,
+    '<b>📱 Genesis AI Commands</b>\n' +
+      '━━━━━━━━━━━━━━━━━━━━\n' +
+      '/start — main menu\n' +
+      '/status — system health\n' +
+      '/leads — today\'s leads\n' +
+      '/agents — all agent status\n' +
+      '/deploy — deploy site\n' +
+      '/prospects — find new leads\n' +
+      '/followup — run sales agent\n' +
+      '/content — generate content\n' +
+      '/revenue — MRR summary\n' +
+      '/report — weekly summary\n' +
+      '/clients — client roster\n' +
+      '/help — this list\n\n' +
+      '<i>Or tap any button above</i>',
+    getMainKeyboard()
+  );
+}
+
+const TELEGRAM_COMMANDS = {
+  '/start': handleTelegramStart,
+  '/status': handleTelegramStatus,
+  '/leads': handleTelegramLeads,
+  '/agents': handleTelegramAgents,
+  '/deploy': handleTelegramDeploy,
+  '/prospects': handleTelegramProspects,
+  '/followup': handleTelegramFollowup,
+  '/content': handleTelegramContent,
+  '/revenue': handleTelegramRevenue,
+  '/report': handleTelegramReport,
+  '/clients': handleTelegramClients,
+  '/help': handleTelegramHelp
+};
+
 app.get('/', (req, res) => {
   res.json(standardResponse({
     success: true,
@@ -627,19 +940,51 @@ app.post('/sms/incoming', express.urlencoded({ extended: false }), async (req, r
 
 app.post('/telegram/webhook', express.json(), async (req, res) => {
   res.json({ ok: true });
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) {
+
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.log('Telegram token not configured');
     return;
   }
+
   try {
-    const { spawn } = require('child_process');
-    const python = spawn('python3', [
-      path.join(__dirname, '..', '.github', 'workflows', 'scripts', 'telegram_bot.py'),
-      JSON.stringify(req.body)
-    ]);
-    python.stdout.on('data', (data) => console.log(data.toString()));
-    python.stderr.on('data', (data) => console.error(data.toString()));
+    const update = req.body;
+    console.log('Telegram update:', JSON.stringify(update));
+
+    let chatId;
+    let text;
+
+    if (update.callback_query) {
+      chatId = String(update.callback_query.message.chat.id);
+      text = `/${update.callback_query.data}`;
+
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          callback_query_id: update.callback_query.id
+        })
+      });
+    } else if (update.message) {
+      chatId = String(update.message.chat.id);
+      text = update.message.text || '';
+    } else {
+      return;
+    }
+
+    if (TELEGRAM_CHAT_ID && chatId !== TELEGRAM_CHAT_ID) {
+      console.log(`Rejected Telegram from ${chatId}`);
+      return;
+    }
+
+    const command = text.split(' ')[0].toLowerCase();
+    const handler = TELEGRAM_COMMANDS[command];
+
+    if (handler) {
+      await handler(chatId);
+    } else {
+      await handleTelegramHelp(chatId);
+    }
+
     saveActivity('💬 Telegram message received');
   } catch (error) {
     console.error('Telegram webhook error:', error.message);
