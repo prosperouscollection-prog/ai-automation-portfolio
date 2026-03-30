@@ -35,13 +35,6 @@
         url: "",
         directCheckoutReady: false
       },
-      fullstack: {
-        id: "fullstack",
-        name: "Full Stack",
-        amount: "$39,500",
-        url: "https://buy.stripe.com/fZu14mcE9dgb9Q12Ab2Fa03",
-        directCheckoutReady: true
-      },
       deposit: {
         id: "deposit",
         name: "Build Deposit",

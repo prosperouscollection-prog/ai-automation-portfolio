@@ -140,14 +140,7 @@
         price: "$2,000 setup + $400/month",
         demoHref: "/demos.html#demo-1"
       },
-      {
-        id: "full-business-stack",
-        icon: "🚀",
-        title: "Run the whole system together",
-        description: "Calls, leads, website help, follow-up, content support, and oversight in one setup.",
-        price: "$39,500 setup + $7,600/month",
-        demoHref: "/demos.html"
-      }
+
     ],
     demoHighlights: [
       {
@@ -211,22 +204,6 @@
           "Same-day support when something needs attention"
         ],
         primaryLabel: "Book a Growth Planning Call",
-        secondaryType: "consult",
-        secondaryLabel: "Talk to Trendell first"
-      },
-      {
-        id: "fullstack",
-        name: "Full Stack",
-        setup: "$39,500 one-time setup",
-        monthly: "$7,600 per month after that",
-        bestFor: "Businesses that want one operator-led system covering calls, leads, follow-up, and oversight.",
-        features: [
-          "Your core systems working together",
-          "Trained on how your business actually works",
-          "Daily visibility into what matters",
-          "Direct founder oversight"
-        ],
-        primaryLabel: "Book a Full Stack Strategy Call",
         secondaryType: "consult",
         secondaryLabel: "Talk to Trendell first"
       }
