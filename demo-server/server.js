@@ -946,6 +946,40 @@ app.post('/sms/incoming', express.urlencoded({ extended: false }), async (req, r
   res.type('text/xml').send(response.toString());
 });
 
+app.post('/vapi/end-of-call', express.json(), async (req, res) => {
+  res.json({ ok: true });
+
+  try {
+    const msg = req.body?.message || req.body || {};
+    const call = msg.call || {};
+    const summary = msg.summary || 'No summary available';
+    const transcript = msg.transcript || '';
+    const duration = call.startedAt && call.endedAt
+      ? Math.round((new Date(call.endedAt) - new Date(call.startedAt)) / 1000)
+      : null;
+
+    const durationText = duration != null ? `${duration}s` : 'unknown';
+    const caller = call.customer?.number || 'Unknown caller';
+
+    console.log('Vapi end-of-call:', { caller, duration: durationText, summary });
+    saveActivity(`📞 Riley finished a call — ${durationText} — ${caller}`);
+
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      await sendTelegram(
+        TELEGRAM_CHAT_ID,
+        '<b>📞 Riley Call Ended</b>\n' +
+          '━━━━━━━━━━━━━━━━━━━━\n' +
+          `Caller: ${caller}\n` +
+          `Duration: ${durationText}\n\n` +
+          `<b>Summary:</b>\n${summary}` +
+          (transcript ? `\n\n<i>Transcript logged.</i>` : '')
+      );
+    }
+  } catch (error) {
+    console.error('Vapi webhook error:', error.message);
+  }
+});
+
 app.post('/telegram/webhook', express.json(), async (req, res) => {
   res.json({ ok: true });
 

@@ -27,7 +27,7 @@
       calendly: validUrl(runtime.calendlyUrl) || "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
     },
     analytics: {
-      googleMeasurementId: validUrl(runtime.googleMeasurementId || "")
+      googleMeasurementId: validUrl(runtime.googleMeasurementId) || "G-Q072M40T9Y"
     },
     checkout: {
       starter: {
@@ -41,8 +41,8 @@
         id: "growth",
         name: "Growth",
         amount: "$3,500",
-        url: validUrl(runtime.stripeGrowthLink || ""),
-        directCheckoutReady: false
+        url: validUrl(runtime.stripeGrowthLink) || "https://buy.stripe.com/28EdR8bA5gsne6hdeP2Fa01",
+        directCheckoutReady: true
       },
       deposit: {
         id: "deposit",
