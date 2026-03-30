@@ -32,11 +32,6 @@ try:
 except ImportError:  # pragma: no cover - handled at runtime
     resend = None
 
-try:
-    from twilio.rest import Client as TwilioClient
-except ImportError:  # pragma: no cover - handled at runtime
-    TwilioClient = None
-
 
 @dataclass(frozen=True)
 class StructuredFile:
@@ -607,26 +602,15 @@ class NotificationSender:
     def __init__(
         self,
         console: Console,
-        twilio_sid: str | None = None,
-        twilio_token: str | None = None,
-        twilio_from: str | None = None,
         alert_phone: str | None = None,
         resend_key: str | None = None,
         notification_email: str | None = None,
     ) -> None:
-        """Initialize SMS and email notification clients."""
+        """Initialize email notification client."""
         self.console = console
-        self.twilio_from = twilio_from
         self.alert_phone = alert_phone
         self.notification_email = notification_email or "info@genesisai.systems"
         self.resend_api_key = resend_key or os.getenv("RESEND_API_KEY")
-        self.twilio_client = None
-
-        if twilio_sid and twilio_token and TwilioClient is not None:
-            try:
-                self.twilio_client = TwilioClient(twilio_sid, twilio_token)
-            except Exception as exc:  # pragma: no cover - network auth
-                self.console.print(f"[yellow]Twilio init warning:[/yellow] {exc}")
 
         if self.resend_api_key and resend is not None:
             try:
@@ -636,29 +620,7 @@ class NotificationSender:
 
     def send(self, subject: str, message: str, priority: str = "INFO") -> None:
         """Send a message over all configured notification channels."""
-        self.send_sms(subject=subject, message=message, priority=priority)
         self.send_email(subject=subject, message=message, priority=priority)
-
-    def send_sms(self, subject: str, message: str, priority: str = "INFO") -> None:
-        """Send an SMS alert via Twilio if configured."""
-        if not all([self.twilio_client, self.twilio_from, self.alert_phone]):
-            return
-
-        body = (
-            "Genesis AI Systems:\n"
-            f"{subject}\n"
-            f"Priority: {priority}\n"
-            f"{message}\n"
-            "- genesisai.systems"
-        )
-        try:
-            self.twilio_client.messages.create(
-                body=body[:1600],
-                from_=self.twilio_from,
-                to=self.alert_phone,
-            )
-        except Exception as exc:  # pragma: no cover - external network
-            self.console.print(f"[yellow]SMS notification warning:[/yellow] {exc}")
 
     def send_email(self, subject: str, message: str, priority: str = "INFO") -> None:
         """Send an email notification via Resend if configured."""
@@ -1471,9 +1433,6 @@ class PromptOrchestrator:
         model: str,
         max_output_tokens: int = 32_000,
         min_balance: float = 2.00,
-        twilio_sid: str | None = None,
-        twilio_token: str | None = None,
-        twilio_from: str | None = None,
         alert_phone: str | None = None,
         resend_key: str | None = None,
         notification_email: str | None = None,
@@ -1488,9 +1447,6 @@ class PromptOrchestrator:
         self.log_dir = portfolio_dir / ".github" / "workflows" / "logs"
         self.notifier = NotificationSender(
             console=self.console,
-            twilio_sid=twilio_sid,
-            twilio_token=twilio_token,
-            twilio_from=twilio_from,
             alert_phone=alert_phone,
             resend_key=resend_key,
             notification_email=notification_email,

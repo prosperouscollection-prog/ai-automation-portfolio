@@ -362,7 +362,7 @@ class LeadGeneratorAgent:
         lines.append("genesisai.systems")
         message = "\n".join(lines)
 
-        # Try Telegram first (working) — fall back to Twilio SMS
+        # Send via Telegram
         telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
         telegram_chat = os.getenv("TELEGRAM_CHAT_ID", "").strip()
         if telegram_token and telegram_chat:
@@ -374,28 +374,12 @@ class LeadGeneratorAgent:
                 )
                 if resp.ok:
                     print("✅ Morning alert sent via Telegram")
-                    return
                 else:
-                    print(f"⚠️  Telegram failed {resp.status_code} — trying Twilio")
+                    print(f"⚠️  Telegram failed {resp.status_code}")
             except Exception as e:
-                print(f"⚠️  Telegram exception: {e} — trying Twilio")
-
-        # Twilio SMS fallback
-        twilio_sid = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
-        twilio_token = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
-        twilio_from = os.getenv("TWILIO_FROM_NUMBER", "").strip()
-        alert_to = os.getenv("ALERT_PHONE_NUMBER", "").strip()
-        if twilio_sid and twilio_token and twilio_from and alert_to:
-            try:
-                from twilio.rest import Client
-                Client(twilio_sid, twilio_token).messages.create(
-                    body=message, from_=twilio_from, to=alert_to
-                )
-                print("✅ Morning alert sent via Twilio SMS")
-            except Exception as e:
-                print(f"⚠️  Twilio exception: {e}")
+                print(f"⚠️  Telegram exception: {e}")
         else:
-            print("⚠️  No notification method available (Telegram or Twilio)")
+            print("⚠️  Telegram not configured — TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing")
             print(f"   HOT leads today:\n{message}")
 
     def generate_outreach(self, prospects: list[dict], industry: str) -> list[dict]:

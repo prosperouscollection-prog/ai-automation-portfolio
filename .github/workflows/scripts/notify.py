@@ -25,11 +25,6 @@ try:
 except ImportError:  # pragma: no cover - runtime dependency
     requests = None
 
-try:
-    from twilio.rest import Client as TwilioClient
-except ImportError:  # pragma: no cover - runtime dependency
-    TwilioClient = None
-
 
 BRAND_NAME = "Genesis AI Systems"
 BRAND_WEBSITE = "https://genesisai.systems"
@@ -185,59 +180,6 @@ class EmailNotifier(BaseNotifier):
         """
 
 
-class SMSNotifier(BaseNotifier):
-    """Notifier for sending SMS alerts via Twilio."""
-
-    def __init__(self) -> None:
-        """Load Twilio settings and create the client when possible."""
-        self.to_number = os.getenv("ALERT_PHONE_NUMBER")
-        self.from_number = os.getenv("TWILIO_FROM_NUMBER")
-        self.client = None
-        if TwilioClient is None:
-            logger.warning("twilio package missing. SMS notifications will be skipped.")
-            return
-        try:
-            self.client = TwilioClient(
-                os.getenv("TWILIO_ACCOUNT_SID"),
-                os.getenv("TWILIO_AUTH_TOKEN"),
-            )
-        except Exception as exc:
-            logger.warning("Twilio credentials missing or invalid. SMS skipped: %s", exc)
-
-    def send(
-        self,
-        subject: str,
-        message: str,
-        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
-        **_: Any,
-    ) -> bool:
-        """Send an SMS message via Twilio."""
-        if self.client is None or not self.from_number or not self.to_number:
-            logger.error("Twilio is not configured. SMS was not sent.")
-            return False
-
-        normalized = self.normalize_priority(priority)
-        body = (
-            f"Genesis AI Systems\n"
-            f"{'=' * 20}\n"
-            f"{normalized.value}: {subject}\n"
-            f"{'-' * 20}\n"
-            f"{str(message)[:140]}\n"
-            f"genesisai.systems"
-        )
-        try:
-            msg = self.client.messages.create(
-                body=body,
-                from_=self.from_number,
-                to=self.to_number,
-            )
-            logger.info("SMS sent: %s", msg.sid)
-            return True
-        except Exception as exc:
-            logger.error("SMS failed: %s", exc)
-            return False
-
-
 class SlackNotifier(BaseNotifier):
     """Notifier for sending Slack webhook alerts."""
 
@@ -331,14 +273,12 @@ class NotificationOrchestrator:
     def __init__(
         self,
         email_notifier: Optional[EmailNotifier] = None,
-        sms_notifier: Optional[SMSNotifier] = None,
         slack_notifier: Optional[SlackNotifier] = None,
         github_notifier: Optional[GitHubNotifier] = None,
         telegram_notifier: Optional[TelegramNotifier] = None,
     ) -> None:
         """Initialize all supported notification channels."""
         self.email_notifier = email_notifier or EmailNotifier()
-        self.sms_notifier = sms_notifier or SMSNotifier()
         self.slack_notifier = slack_notifier or SlackNotifier()
         self.github_notifier = github_notifier or GitHubNotifier()
         self.telegram_notifier = telegram_notifier or TelegramNotifier()
@@ -356,13 +296,11 @@ class NotificationOrchestrator:
         if normalized == NotificationPriority.CRITICAL:
             sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
-            sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
             sent["slack"] = self.slack_notifier.send(subject, message, normalized, **kwargs)
             sent["github"] = self.github_notifier.send(subject, message, normalized, **kwargs)
         elif normalized == NotificationPriority.HIGH:
             sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
-            sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
         elif normalized == NotificationPriority.MEDIUM:
             sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
@@ -381,16 +319,6 @@ class NotificationOrchestrator:
     ) -> bool:
         """Send an email without touching other channels."""
         return self.email_notifier.send(subject, message, priority, **kwargs)
-
-    def send_sms_only(
-        self,
-        subject: str,
-        message: str,
-        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
-        **kwargs: Any,
-    ) -> bool:
-        """Send an SMS without touching other channels."""
-        return self.sms_notifier.send(subject, message, priority, **kwargs)
 
     def send_slack_only(
         self,
@@ -511,12 +439,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--on-critical-fail", default="false", help="Send CRITICAL alerts when report is critical")
     parser.add_argument("--on-high-email", default="false", help="Send HIGH email alerts when report is high")
     parser.add_argument("--on-warning-log", default="false", help="Log LOW/MEDIUM report warnings without failing")
-    parser.add_argument("--test-sms", action="store_true", help="Test SMS notification")
     parser.add_argument("--test-email", action="store_true", help="Test email notification")
     parser.add_argument("--test-slack", action="store_true", help="Test Slack notification")
     parser.add_argument("--test-all", action="store_true", help="Test all notification channels")
     parser.add_argument("--to-email", default=None, help="Override destination email")
-    parser.add_argument("--to-number", default=None, help="Override destination phone")
     return parser.parse_args()
 
 
@@ -529,24 +455,6 @@ def handle_tests(args: argparse.Namespace, orchestrator: NotificationOrchestrato
     """Run requested test notifications."""
     ran_any = False
     results: list[bool] = []
-
-    if args.test_sms or args.test_all:
-        ran_any = True
-        message = (
-            "✅ Genesis AI Systems\n"
-            "Test notification successful!\n"
-            "Your agent monitoring is active.\n"
-            "- Trendell Fordham\n"
-            "  genesisai.systems"
-        )
-        ok = orchestrator.send_sms_only(
-            subject="Genesis AI Systems Test SMS",
-            message=message,
-            priority=NotificationPriority.INFO,
-            to_number=args.to_number,
-        )
-        print("Test SMS:", "PASS" if ok else "FAIL")
-        results.append(ok)
 
     if args.test_email or args.test_all:
         ran_any = True

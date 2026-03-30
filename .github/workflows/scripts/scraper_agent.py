@@ -373,33 +373,16 @@ class ScraperAgent:
             )
         lines.append("Outreach ready in Google Sheets")
         lines.append("genesisai.systems")
-        self.send_sms("\n".join(lines))
+        self.send_alert("\n".join(lines))
 
-    def send_sms(self, message: str) -> None:
-        """Send alert via Telegram (primary) then Twilio SMS (fallback)."""
-        # Telegram first — always working
+    def send_alert(self, message: str) -> None:
+        """Send alert via Telegram."""
         subject = "Scraper Agent Results"
         if telegram_notify(subject, message, "MEDIUM"):
             print("✅ Scraper alert sent via Telegram")
-            return
-        # Twilio fallback
-        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
-            print("⚠️  No notification method available — printing results:")
+        else:
+            print("⚠️  Telegram notification failed — printing results:")
             print(message)
-            return
-        try:
-            from twilio.rest import Client
-            Client(
-                os.getenv("TWILIO_ACCOUNT_SID"),
-                os.getenv("TWILIO_AUTH_TOKEN"),
-            ).messages.create(
-                body=message[:1600],
-                from_=os.getenv("TWILIO_FROM_NUMBER"),
-                to=os.getenv("ALERT_PHONE_NUMBER"),
-            )
-            print("✅ Scraper alert sent via Twilio SMS")
-        except Exception as error:
-            print(f"⚠️  All notification methods failed: {error}")
 
 
 if __name__ == "__main__":
