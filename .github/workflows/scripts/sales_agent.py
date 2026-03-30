@@ -64,6 +64,7 @@ class SalesAgent:
         for lead in hot[:10]:
             self.send_outreach_email(lead)
             self.save_to_hubspot(lead)
+            self.save_to_pipeline(lead)
 
         for lead in warm[:5]:
             self.send_outreach_email(lead)
@@ -180,8 +181,46 @@ class SalesAgent:
             print(f"⚠️  Email failed for {lead.business}")
 
 
-    def save_to_hubspot(self, lead: Lead) -> None:
-        """Create a Company record in HubSpot for this lead."""
+    def save_to_pipeline(self, lead: Lead) -> None:
+        """Append HOT lead to Pipeline tab so Trendell can track outreach."""
+        if not self.sheet_id or not self.service_account_json:
+            return
+        try:
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+            creds = service_account.Credentials.from_service_account_info(
+                json.loads(self.service_account_json),
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
+            )
+            service = build("sheets", "v4", credentials=creds)
+            today = datetime.now().strftime("%Y-%m-%d")
+            service.spreadsheets().values().append(
+                spreadsheetId=self.sheet_id,
+                range="Pipeline!A1",
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body={"values": [[
+                    today,
+                    lead.business,
+                    lead.phone,
+                    lead.address,
+                    lead.business_type,
+                    lead.yelp_rating,
+                    lead.score,
+                    "No",       # Outreach Sent
+                    "",         # Channel
+                    "",         # Response
+                    "New",      # Status
+                    "Call or text",  # Next Step
+                    "",         # Next Follow-up Date
+                    lead.pain_point,
+                ]]},
+            ).execute()
+            print(f"✅ {lead.business} added to Pipeline")
+        except Exception as e:
+            print(f"⚠️  Pipeline save failed for {lead.business}: {e}")
+
+    def save_to_hubspot(self, lead: Lead) -> None:        """Create a Company record in HubSpot for this lead."""
         if not self.hubspot_token:
             print("⚠️  HUBSPOT_ACCESS_TOKEN missing — skipping HubSpot save")
             return

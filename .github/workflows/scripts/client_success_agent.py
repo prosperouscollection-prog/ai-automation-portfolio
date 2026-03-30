@@ -146,7 +146,62 @@ class ClientSuccessAgent:
             "Trendell"
         )
 
+    def save_to_clients_sheet(self, clients: list[dict]) -> None:
+        """Sync active client list to Clients tab — full overwrite each run."""
+        sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+        sa_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
+        if not sheet_id or not sa_json:
+            return
+        try:
+            import json
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+            creds = service_account.Credentials.from_service_account_info(
+                json.loads(sa_json),
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
+            )
+            service = build("sheets", "v4", credentials=creds)
+            today = date.today().strftime("%Y-%m-%d")
+            rows = []
+            for c in clients:
+                days = self.days_since_start(c)
+                next_milestone = min(
+                    (m for m in self.MILESTONES if m > days),
+                    default=None
+                )
+                rows.append([
+                    c.get("name", ""),
+                    c.get("business", ""),
+                    c.get("email", ""),
+                    c.get("phone", ""),
+                    c.get("industry", ""),
+                    c.get("start_date", ""),
+                    "",   # Setup Fee — fill manually
+                    "",   # Monthly Fee — fill manually
+                    today,
+                    self.MILESTONES.get(next_milestone, "") if next_milestone else "Complete",
+                    "",   # Milestone Date
+                    "Active",
+                    "",   # Notes
+                ])
+            # Clear existing data rows (keep header), then write fresh
+            service.spreadsheets().values().clear(
+                spreadsheetId=sheet_id,
+                range="Clients!A2:M",
+            ).execute()
+            if rows:
+                service.spreadsheets().values().update(
+                    spreadsheetId=sheet_id,
+                    range="Clients!A2",
+                    valueInputOption="RAW",
+                    body={"values": rows},
+                ).execute()
+            print(f"✅ Clients tab updated — {len(rows)} clients")
+        except Exception as e:
+            print(f"⚠️  Clients tab sync failed: {e}")
+
     def send_weekly_report(self, clients: list[dict]) -> None:
+        self.save_to_clients_sheet(clients)
         today = date.today().strftime("%B %d, %Y")
         body = (
             f"Client Health — {today}\n\n"
