@@ -1,5 +1,5 @@
 # Genesis AI Systems — Claude Code Master Build Document
-## Version 3 — Updated March 30, 2026
+## Version 4 — Updated March 30, 2026
 ## Paste contents of this file as your first message in Claude Code
 
 ---
@@ -11,7 +11,7 @@ You are the lead engineer for Genesis AI Systems.
 **Live site:** genesisai.systems
 **GitHub:** prosperouscollection-prog/ai-automation-portfolio
 **Demo server:** genesis-ai-systems-demo.onrender.com
-**n8n:** n8n.genesisai.systems (DigitalOcean droplet — provisioned, needs setup.sh run)
+**n8n:** n8n.genesisai.systems — live on DigitalOcean (167.99.62.62), Docker + Caddy
 **Owner:** Trendell Fordham, Detroit MI
 
 ---
@@ -21,21 +21,24 @@ You are the lead engineer for Genesis AI Systems.
 | Item | Status |
 |---|---|
 | All 11 agents running green | ✅ confirmed |
-| Twilio removed from all agents | ✅ Telegram is primary, Resend for email |
-| Google Sheets — 6 tabs with headers | ✅ Leads, Marketing, Pipeline, Clients, Outreach Log, Revenue |
-| All 8 demo endpoints wired to Claude API | ✅ real responses |
-| Google Analytics on all 9 pages | ✅ G-Q072M40T9Y |
-| Starter + Growth Stripe Buy Now buttons | ✅ live |
+| Twilio removed — all agents + all 6 Python scripts | ✅ Telegram is sole alert channel |
+| Google Sheets — 7 tabs with headers | ✅ Leads, Marketing, Pipeline, Clients, Outreach Log, Revenue, Website Leads |
+| All 8 demo endpoints return real Claude responses | ✅ verified March 30 2026 |
+| Google Analytics on all pages | ✅ G-Q072M40T9Y |
+| Starter + Growth Stripe Buy Now buttons | ✅ live on all 8 demos |
 | Full Stack / $39,500 removed | ✅ everywhere |
-| robots.txt | ✅ live — blocks admin pages + AI scrapers |
-| sitemap.xml | ✅ expanded to 13 URLs |
-| Activity feed on homepage | ✅ live — pulls from demo server |
+| robots.txt | ✅ blocks admin pages + artifact dirs |
+| sitemap.xml | ✅ 13 URLs — all industry pages, contact, faq, roi-calculator |
+| Activity feed on homepage | ✅ pulls from /stats/recent-activity on demo server |
+| Exit intent popup | ✅ Calendly CTA, 7-day cookie (genesis_exit_shown), no email capture, on index.html + demos.html |
 | Vapi /end-of-call webhook endpoint | ✅ on demo server |
 | Vapi webhook URL set in Vapi dashboard | ✅ done by Trendell |
-| n8n docker-compose + Caddyfile + setup.sh | ✅ files committed to /n8n/ |
-| DigitalOcean droplet | ✅ provisioned by Trendell |
-| Contact form | ✅ saves to Sheets (Website Leads tab) + HubSpot + Telegram + Resend |
+| n8n deployed | ✅ live at n8n.genesisai.systems |
+| n8n first workflow | ✅ "HubSpot New Contact → Telegram + Resend" active, runs every 15 min |
+| n8n API key | ✅ label: genesis-automation, stored in /tmp/n8n_patch2.json on droplet |
+| Contact form | ✅ saves to Website Leads tab + HubSpot + Telegram + Resend |
 | Lead scoring all-HOT bug | ✅ fixed |
+| /stats/recent-activity | ✅ returns 10 real live items from memory.activity |
 
 ---
 
@@ -49,131 +52,105 @@ You are the lead engineer for Genesis AI Systems.
 
 ---
 
+## n8n Config
+
+**URL:** https://n8n.genesisai.systems
+**Login:** trendell@genesisai.systems / AKktNLmC75l7qK3WzzvLrQ==
+**API key label:** genesis-automation (ends ...tMZo)
+**Workflow ID:** dYwzj3Kd94NCr9pu — "HubSpot New Contact → Telegram + Resend"
+**Droplet IP:** 167.99.62.62
+**Encryption key:** stored in /opt/n8n/.env on droplet
+
+Tokens wired into workflow:
+- HubSpot: secrets.HUBSPOT_ACCESS_TOKEN
+- Telegram bot: secrets.TELEGRAM_BOT_TOKEN (Genesis AI Systems bot)
+- Telegram chat ID: 8023833224
+- Resend: secrets.RESEND_API_KEY
+
+Note: Resend email node currently bounces — trendell@genesisai.systems needs 3 Resend DNS records added to Cloudflare to verify the sending domain. Telegram node works fine.
+
+---
+
 ## Task List — Next Session Priority Order
 
-### TASK 1 — Deploy n8n on the DigitalOcean droplet
+### TASK 1 — Run agents after Twilio cleanup
 
-The droplet is provisioned. The config files are at `/Users/genesisai/portfolio/n8n/`.
+All 6 Python scripts had Twilio stripped (commit c7cc212). Verify each agent runs clean:
 
-Steps:
-1. SSH into droplet: `ssh root@[DROPLET_IP]`
-2. Run: `bash <(curl -s https://raw.githubusercontent.com/prosperouscollection-prog/ai-automation-portfolio/main/n8n/setup.sh)`
-3. Verify n8n is live at `n8n.genesisai.systems`
-4. Inside n8n, create credentials for: HubSpot, Google Sheets, Resend, Telegram
-5. Build first workflow: New HubSpot contact (lead status = NEW) → Telegram alert → Resend welcome email
-
-Ask Trendell for the droplet IP before starting.
-
----
-
-### TASK 2 — Add "Website Leads" tab to Google Sheets
-
-The contact form on contact.html writes to a tab called `Website Leads` which does not exist yet.
-
-Run this Python snippet locally to create it with the correct headers:
-```python
-import json
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-
-with open('/Users/genesisai/Downloads/n8n-integration-491503-9e7222cb0016.json') as f:
-    creds_dict = json.load(f)
-
-creds = service_account.Credentials.from_service_account_info(
-    creds_dict, scopes=["https://www.googleapis.com/auth/spreadsheets"])
-service = build("sheets", "v4", credentials=creds)
-SHEET_ID = "1ORElwpEZN23jzPR9v_-Wu_qVG2g8xKGIkw_g41JoAPw"
-
-service.spreadsheets().values().update(
-    spreadsheetId=SHEET_ID,
-    range="Website Leads!A1",
-    valueInputOption="RAW",
-    body={"values": [["Timestamp","Name","Business","Phone","Email","Business Type","Pain Point","Score","Reason","Status","Follow-up Date","Source"]]}
-).execute()
-print("✅ Website Leads tab ready")
-```
-
----
-
-### TASK 3 — Audit all 14 portfolio projects end-to-end
-
-For each project, verify the demo endpoint returns a real Claude-generated response (not hardcoded mock).
-
-Test each endpoint:
 ```bash
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/lead-capture \
-  -H "Content-Type: application/json" -d '{"message":"I need help with my restaurant"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/faq-bot \
-  -H "Content-Type: application/json" -d '{"question":"What are your hours?"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/workflow \
-  -H "Content-Type: application/json" -d '{"business_type":"restaurant","pain_point":"missing calls"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/rag-chatbot \
-  -H "Content-Type: application/json" -d '{"question":"How much does the starter plan cost?"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/follow-up \
-  -H "Content-Type: application/json" -d '{"lead_name":"John","business":"Auto shop","pain_point":"missed calls"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/chat \
-  -H "Content-Type: application/json" -d '{"message":"Tell me about your services"}'
-
-curl -s -X POST https://genesis-ai-systems-demo.onrender.com/demo/video-content \
-  -H "Content-Type: application/json" -d '{"business_type":"dental","topic":"after hours coverage"}'
-
-curl -s https://genesis-ai-systems-demo.onrender.com/stats/recent-activity
+gh workflow run security_agent.yml
+gh workflow run qa_agent.yml
+gh workflow run lead_generator_agent.yml
+gh workflow run scraper_agent.yml
+gh workflow run master_orchestration.yml
+gh workflow run sms_command_center.yml
 ```
 
-Fix any that return hardcoded strings or empty responses.
-
-Also verify Riley (Vapi 586-636-9550) is answering calls.
+For each: `gh run list --workflow=[name].yml --limit 1` then `gh run view [id] --log | tail -30`
 
 ---
 
-### TASK 4 — Exit Intent Popup
+### TASK 2 — Block AI scrapers in robots.txt
 
-Add to `index.html` and `demos.html`.
+Add these User-agent blocks above the `User-agent: *` section in robots.txt:
 
-Requirements:
-- Trigger: mouse moves toward top of viewport (exit intent)
-- Offer: "Before you go — book a free 15-minute call"
-- Primary CTA: Calendly link (use `window.GenesisSiteConfig.urls.calendly`)
-- Secondary: "No thanks" dismiss button
-- Cookie: do not show again for 7 days (key: `genesis_exit_shown`)
-- No email capture
-- Mobile: disable on mobile (exit intent doesn't work on touch devices)
-- Plain English copy only
-- Matches brand colors: navy #0f172a, electric blue #2563eb
+```
+User-agent: GPTBot
+Disallow: /
 
----
+User-agent: ChatGPT-User
+Disallow: /
 
-### TASK 5 — Clean remaining Twilio fallback code
+User-agent: CCBot
+Disallow: /
 
-These files still have Twilio as a fallback in the code (not the workflows — those are clean).
-The fallback never fires because Telegram runs first, but clean it out:
+User-agent: anthropic-ai
+Disallow: /
 
-- `.github/workflows/scripts/lead_generator_agent.py` — remove Twilio fallback in `notify_trendell()`
-- `.github/workflows/scripts/scraper_agent.py` — remove Twilio fallback in `send_sms()`
-- `.github/workflows/scripts/notify.py` — remove `SMSNotifier` class and all Twilio imports
-- `.github/workflows/scripts/balance_checker.py` — audit and remove Twilio
-- `.github/workflows/scripts/prompt_deployer.py` — audit and remove Twilio
-- `.github/workflows/scripts/run_all_prompts.py` — audit and remove Twilio
+User-agent: Claude-Web
+Disallow: /
 
-After cleaning each file run `python3 -m py_compile [file]` to confirm no syntax errors.
-Then run `gh workflow run` on the affected agent and confirm ✅.
+User-agent: Google-Extended
+Disallow: /
+```
 
 ---
 
-### TASK 6 — Demo server /stats/recent-activity endpoint
+### TASK 3 — Resend domain verification
 
-The activity feed on homepage pulls from `/stats/recent-activity`.
-Verify this endpoint:
-1. Returns real recent actions (not hardcoded)
-2. Pulls from `memory.activity` array in server.js
-3. Falls back gracefully when array is empty
+Add 3 DNS records to Cloudflare to authorize Resend to send from genesisai.systems:
+1. Resend dashboard → Domains → Add Domain → genesisai.systems
+2. Copy the DKIM + SPF records Resend provides
+3. Add them in Cloudflare → genesisai.systems → DNS
+4. Click Verify in Resend — should go green within minutes
 
-If it returns hardcoded data, wire it to pull from the last 5 entries in Google Sheets `Leads` tab instead.
+Once verified, the Resend email node in the n8n workflow will deliver correctly.
+
+---
+
+### TASK 4 — Build second n8n workflow
+
+**Name:** "New HOT Lead → Telegram Alert"
+
+Logic:
+- Trigger: Schedule (every 30 min) OR webhook from lead_generator_agent
+- GET Google Sheets Leads tab — filter rows where Score = HOT and Status = NEW
+- For each match: POST Telegram message with lead name, business, phone
+- Mark row Status = NOTIFIED
+
+Use the n8n API key (genesis-automation) and the workflow PUT endpoint pattern already established.
+
+---
+
+### TASK 5 — Verify Riley answers calls
+
+Call (586) 636-9550 and confirm:
+- Riley answers within 2 rings
+- Handles a restaurant inquiry correctly
+- Logs the call to Google Sheets (Inbound Calls tab or Voice Agent tab)
+- Sends Telegram alert to 8023833224
+
+If Riley doesn't answer, check Vapi dashboard → Assistants → Riley → check phone number assignment.
 
 ---
 
@@ -194,7 +171,11 @@ If it returns hardcoded data, wire it to pull from the last 5 entries in Google 
 ## Key Config
 
 **Google Sheet ID:** 1ORElwpEZN23jzPR9v_-Wu_qVG2g8xKGIkw_g41JoAPw
-**Service account:** genesis-ai-systems-operations@n8n-integration-491503.iam.gserviceaccount.com
+**Service account JSON:** /Users/genesisai/Downloads/n8n-integration-491503-9e7222cb0016.json
+**Service account email:** genesis-ai-systems-operations@n8n-integration-491503.iam.gserviceaccount.com
 **Calendly:** https://calendly.com/genesisai-info-ptmt/free-ai-demo-call
 **Business phone:** (586) 636-9550
 **Brand:** Navy #0f172a + Electric Blue #2563eb
+**Genesis AI Telegram bot:** secrets.TELEGRAM_BOT_TOKEN
+**Telegram chat ID:** 8023833224
+**Prosperous agent bot:** [prosperous-agent-bot-token] (different bot — do not use for GAS)
