@@ -54,10 +54,10 @@ class LeadGeneratorAgent:
         scored = self.score_prospects(prospects)
         hot = [p for p in scored if p["score"] == "HOT"]
 
+        self.generate_outreach(hot[:5], industry)  # must run before save_to_sheets
         self.save_to_sheets(scored, industry)
         self.save_to_hubspot(hot)
         self.notify_trendell(hot[:3], industry)
-        self.generate_outreach(hot[:5], industry)
 
         print(f"✅ Found {len(prospects)} prospects")
         print(f"🔥 HOT leads: {len(hot)}")
@@ -94,7 +94,7 @@ class LeadGeneratorAgent:
                     "email": "",
                     "contact_name": "",
                     "title": "",
-                    "estimated_num_employees": 10,  # Yelp doesn't provide this
+                    "estimated_num_employees": 0,  # Yelp doesn't provide this — 0 so scoring uses reviews only
                     "city": location.get("city", "Detroit"),
                     "address": ", ".join(filter(None, [
                         location.get("address1", ""),
