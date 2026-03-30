@@ -18,9 +18,6 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
           HUBSPOT_ACCESS_TOKEN: ${{ secrets.HUBSPOT_ACCESS_TOKEN }}
           LINDY_API_KEY: ${{ secrets.LINDY_API_KEY }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
           ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
@@ -28,31 +25,26 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
         run: |
-          pip install requests twilio python-dotenv resend google-auth google-api-python-client -q
+          pip install requests python-dotenv resend google-auth google-api-python-client -q
           cd .github/workflows/scripts
           python3 sales_agent.py
-      - name: SMS alert on failure
+      - name: Telegram alert on failure
         if: failure()
         env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
-          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          pip install twilio -q
+          pip install requests -q
           python3 - << 'PYEOF'
-          import os
-          if os.getenv('TWILIO_ACCOUNT_SID') and os.getenv('TWILIO_AUTH_TOKEN'):
-              from twilio.rest import Client
+          import os, requests
+          token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+          chat = os.getenv('TELEGRAM_CHAT_ID', '')
+          msg = "🚨 Sales Agent FAILED\nCheck GitHub Actions:\ngithub.com/prosperouscollection-prog/ai-automation-portfolio/actions"
+          if token and chat:
               try:
-                  Client(
-                      os.getenv('TWILIO_ACCOUNT_SID'),
-                      os.getenv('TWILIO_AUTH_TOKEN')
-                  ).messages.create(
-                      body="🚨 Sales Agent FAILED\nCheck GitHub Actions",
-                      from_=os.getenv('TWILIO_FROM_NUMBER'),
-                      to=os.getenv('ALERT_PHONE_NUMBER')
-                  )
-              except Exception:
-                  pass
+                  r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': chat, 'text': msg}, timeout=10)
+                  print('✅ Telegram alert sent' if r.ok else f'⚠️ Telegram {r.status_code}')
+              except Exception as e:
+                  print(f'⚠️ Telegram failed: {e}')
           PYEOF
