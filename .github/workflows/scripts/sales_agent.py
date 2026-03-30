@@ -220,7 +220,8 @@ class SalesAgent:
         except Exception as e:
             print(f"⚠️  Pipeline save failed for {lead.business}: {e}")
 
-    def save_to_hubspot(self, lead: Lead) -> None:        """Create a Company record in HubSpot for this lead."""
+    def save_to_hubspot(self, lead: Lead) -> None:
+        """Create a Company record in HubSpot for this lead."""
         if not self.hubspot_token:
             print("⚠️  HUBSPOT_ACCESS_TOKEN missing — skipping HubSpot save")
             return
