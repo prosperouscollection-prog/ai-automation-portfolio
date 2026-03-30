@@ -33,6 +33,8 @@ jobs:
           ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
           HUBSPOT_ACCESS_TOKEN: ${{ secrets.HUBSPOT_ACCESS_TOKEN }}
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TARGET_CITY: ${{ github.event.inputs.target_city || 'Detroit MI' }}
           INDUSTRY: ${{ github.event.inputs.industry || 'restaurant' }}
           MAX_RESULTS: ${{ github.event.inputs.max_results || '50' }}

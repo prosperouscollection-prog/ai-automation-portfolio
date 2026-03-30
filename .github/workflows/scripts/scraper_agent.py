@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from notify import telegram_notify
+
 INDUSTRY_SEARCHES = {
     "restaurant": [
         "restaurants in {city}",
@@ -374,14 +376,19 @@ class ScraperAgent:
         self.send_sms("\n".join(lines))
 
     def send_sms(self, message: str) -> None:
-        # Skip if Twilio not configured
-        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
-            print("⏭️  Twilio not configured — skipping SMS")
+        """Send alert via Telegram (primary) then Twilio SMS (fallback)."""
+        # Telegram first — always working
+        subject = "Scraper Agent Results"
+        if telegram_notify(subject, message, "MEDIUM"):
+            print("✅ Scraper alert sent via Telegram")
             return
-        
+        # Twilio fallback
+        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
+            print("⚠️  No notification method available — printing results:")
+            print(message)
+            return
         try:
             from twilio.rest import Client
-
             Client(
                 os.getenv("TWILIO_ACCOUNT_SID"),
                 os.getenv("TWILIO_AUTH_TOKEN"),
@@ -390,9 +397,9 @@ class ScraperAgent:
                 from_=os.getenv("TWILIO_FROM_NUMBER"),
                 to=os.getenv("ALERT_PHONE_NUMBER"),
             )
-            print("✅ SMS sent to Trendell")
+            print("✅ Scraper alert sent via Twilio SMS")
         except Exception as error:
-            print(f"⚠️  SMS failed: {error}")
+            print(f"⚠️  All notification methods failed: {error}")
 
 
 if __name__ == "__main__":

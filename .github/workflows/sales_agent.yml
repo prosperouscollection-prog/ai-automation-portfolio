@@ -24,8 +24,11 @@ jobs:
           ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
         run: |
-          pip install requests twilio python-dotenv -q
+          pip install requests twilio python-dotenv resend google-auth google-api-python-client -q
           cd .github/workflows/scripts
           python3 sales_agent.py
       - name: SMS alert on failure

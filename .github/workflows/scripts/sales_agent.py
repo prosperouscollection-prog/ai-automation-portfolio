@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
-"""Sales helper that follows up on new leads and alerts Trendell on hot ones."""
+"""Sales helper — reads leads from Sheets, sends outreach via Resend, alerts Trendell on HOT ones."""
 
 from __future__ import annotations
 
 import json
 import os
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Shared notification helpers from notify.py
+from notify import telegram_notify, resend_email
+
+HUBSPOT_INDUSTRY_MAP = {
+    "restaurant": "FOOD_BEVERAGES",
+    "dental": "HEALTH_WELLNESS_AND_FITNESS",
+    "hvac": "CONSTRUCTION",
+    "salon": "COSMETICS",
+    "real_estate": "REAL_ESTATE",
+    "retail": "RETAIL",
+}
+
 
 @dataclass
 class Lead:
-    """Simple lead record used by the sales helper."""
-
     name: str
     business: str
     email: str
@@ -25,187 +35,213 @@ class Lead:
     business_type: str
     pain_point: str
     score: str
+    address: str = ""
+    yelp_rating: str = ""
+    yelp_url: str = ""
 
 
 class SalesAgent:
-    """Reads new leads, follows up, and pushes hot ones to Trendell fast."""
-
-    STAGES = {
-        "New": 1,
-        "Contacted": 2,
-        "Demo Booked": 3,
-        "Proposal Sent": 4,
-        "Won": 5,
-        "Lost": 6,
-    }
+    """Reads HOT leads from Google Sheets, sends outreach via Resend, alerts Trendell via Telegram."""
 
     def __init__(self) -> None:
-        self.demo_server = os.getenv("DEMO_SERVER_URL", "https://genesis-ai-systems-demo.onrender.com")
+        self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
+        self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+        self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
+        self.resend_key = os.getenv("RESEND_API_KEY", "").strip()
 
     def run(self) -> None:
-        leads = self.get_new_leads()
-        for lead in leads:
-            self.process_lead(lead)
-        self.send_pipeline_report()
-
-    def get_new_leads(self) -> list[Lead]:
-        """Read recent leads from the demo server or fall back to sample data."""
-        try:
-            response = requests.get(f"{self.demo_server}/stats/leads", timeout=15)
-            items = response.json().get("items", []) if response.ok else []
-            leads: list[Lead] = []
-            for item in items:
-                leads.append(
-                    Lead(
-                        name=item.get("name", "Unknown"),
-                        business=item.get("business", "Unknown Business"),
-                        email=item.get("email", ""),
-                        phone=item.get("phone", ""),
-                        business_type=item.get("business_type", "Other"),
-                        pain_point=item.get("pain_point", item.get("message", "")),
-                        score=item.get("score", "MEDIUM"),
-                    )
-                )
-            return leads[:5]
-        except Exception as error:
-            print(f"Lead read failed: {error}")
-            return [
-                Lead(
-                    name="Alicia Monroe",
-                    business="Motor City Diner",
-                    email="alicia@motorcitydiner.com",
-                    phone="(313) 555-0110",
-                    business_type="Restaurant",
-                    pain_point="We miss dinner calls at night",
-                    score="HIGH",
-                )
-            ]
-
-    def process_lead(self, lead: Lead) -> None:
-        """Handle one lead based on how ready they sound."""
-        if lead.score == "HIGH":
-            self.alert_trendell(lead)
-            self.trigger_lindy_sequence(lead, "hot")
-        elif lead.score == "MEDIUM":
-            self.trigger_lindy_sequence(lead, "warm")
-        else:
-            self.trigger_lindy_sequence(lead, "cold")
-        self.update_hubspot(lead)
-        self.mark_contacted(lead)
-
-    def trigger_lindy_sequence(self, lead: Lead, sequence_type: str) -> None:
-        """Ask Lindy to handle the follow-up. Fall back to a direct email."""
-        key = os.getenv("LINDY_API_KEY")
-        if not key:
-            print("Lindy not configured — using direct email")
-            self.send_direct_email(lead)
+        leads = self.get_leads_from_sheets()
+        if not leads:
+            print("ℹ️  No leads to process today")
+            telegram_notify("Sales Agent", "No new leads to process today.", "INFO")
             return
+
+        hot = [l for l in leads if l.score == "HOT"]
+        warm = [l for l in leads if l.score == "WARM"]
+
+        print(f"📋 Processing {len(leads)} leads — {len(hot)} HOT, {len(warm)} WARM")
+
+        for lead in hot[:10]:
+            self.send_outreach_email(lead)
+            self.save_to_hubspot(lead)
+
+        for lead in warm[:5]:
+            self.send_outreach_email(lead)
+
+        self.alert_trendell_hot(hot[:3])
+        self.send_pipeline_report(hot, warm)
+        print(f"✅ Sales Agent complete — {len(hot)} HOT leads processed")
+
+
+    def get_leads_from_sheets(self) -> list[Lead]:
+        """Read HOT/WARM prospects from the Leads Google Sheet."""
+        if not self.sheet_id or not self.service_account_json:
+            print("⚠️  Sheets not configured — no leads to process")
+            return []
         try:
-            requests.post(
-                "https://api.lindy.ai/v1/sequences/trigger",
-                headers={"Authorization": f"Bearer {key}"},
-                json={
-                    "sequence_id": f"genesis_ai_{sequence_type}",
-                    "contact": {
-                        "email": lead.email,
-                        "name": lead.name,
-                        "company": lead.business,
-                        "custom": {
-                            "business_type": lead.business_type,
-                            "pain_point": lead.pain_point,
-                        },
-                    },
-                },
-                timeout=20,
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+
+            creds = service_account.Credentials.from_service_account_info(
+                json.loads(self.service_account_json),
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
-            print(f"✅ Lindy sequence triggered for {lead.name}")
-        except Exception as error:
-            print(f"Lindy error: {error} — falling back to direct email")
-            self.send_direct_email(lead)
+            service = build("sheets", "v4", credentials=creds)
+            result = service.spreadsheets().values().get(
+                spreadsheetId=self.sheet_id,
+                range="Leads!A2:N",
+            ).execute()
+            rows = result.get("values", [])
+            leads = []
+            for row in rows:
+                if len(row) < 10:
+                    continue
+                score = row[9] if len(row) > 9 else "WARM"
+                if score not in ("HOT", "WARM"):
+                    continue
+                leads.append(Lead(
+                    name=row[2] if len(row) > 2 else "Business Owner",
+                    business=row[2] if len(row) > 2 else "Local Business",
+                    email="",  # Yelp leads don't have email — outreach via phone/visit
+                    phone=row[4] if len(row) > 4 else "",
+                    business_type=row[1] if len(row) > 1 else "retail",
+                    pain_point="Missed calls and slow follow-up",
+                    score=score,
+                    address=row[5] if len(row) > 5 else "",
+                    yelp_rating=row[7] if len(row) > 7 else "",
+                    yelp_url=row[12] if len(row) > 12 else "",
+                ))
+            print(f"✅ Read {len(leads)} leads from Sheets")
+            return leads
+        except Exception as e:
+            print(f"❌ Sheets read error: {e}")
+            return []
 
-    def send_direct_email(self, lead: Lead) -> None:
-        """Fallback email if Lindy is not ready yet."""
-        body = self.get_email_body(lead)
-        print(f"Direct email ready for {lead.email}:\n{body}\n")
 
-    def get_email_body(self, lead: Lead) -> str:
-        """Choose a short email that feels right for that business."""
+    def get_email_body(self, lead: Lead) -> tuple[str, str]:
+        """Return (subject, body) for this lead's business type."""
+        btype = lead.business_type.lower()
         templates = {
-            "Restaurant": (
-                f"Hi {lead.name},\n\n"
-                f"I saw your inquiry about {lead.business}.\n\n"
-                "I build AI systems that answer calls and book\n"
-                "reservations 24/7 for restaurants.\n\n"
-                "Worth a 15-minute call?\n\n"
-                "Trendell Fordham\n"
-                "Genesis AI Systems\n"
-                "genesisai.systems"
+            "restaurant": (
+                f"Quick question about {lead.business}",
+                f"Hi there,\n\n"
+                f"I noticed {lead.business} in Detroit.\n\n"
+                "Quick question — what happens when someone calls for a reservation and you're slammed?\n\n"
+                "I build AI phone assistants for restaurants that answer calls and book tables 24/7.\n\n"
+                "Takes 5-7 days to set up. Starts at $500.\n\n"
+                "Worth a 10-minute call this week?\n\n"
+                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems\n(586) 636-9550"
             ),
-            "HVAC": (
-                f"Hi {lead.name},\n\n"
-                "When someone needs emergency HVAC at 10pm\n"
-                "and calls you — who answers?\n\n"
-                "I build AI systems that capture every\n"
-                "emergency inquiry and text you immediately.\n\n"
+            "dental": (
+                f"Patients calling {lead.business} after hours",
+                f"Hi there,\n\n"
+                f"A patient tried to book at {lead.business} after hours last week.\n\n"
+                "Nobody answered. They called another dentist.\n\n"
+                "I build AI systems for dental offices that answer after-hours calls and book appointments automatically.\n\n"
+                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
+            ),
+            "hvac": (
+                f"Emergency calls {lead.business} might be missing",
+                f"Hi there,\n\n"
+                f"When {lead.business} gets an emergency call at 10pm — who answers?\n\n"
+                "I build AI systems that catch every after-hours inquiry and text you immediately.\n\n"
                 "15-minute call this week?\n\n"
-                "Trendell Fordham\n"
-                "Genesis AI Systems"
+                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
+            ),
+            "salon": (
+                f"Booking appointments for {lead.business} automatically",
+                f"Hi there,\n\n"
+                f"Are you still taking appointment calls manually at {lead.business}?\n\n"
+                "I set up AI assistants for salons that book appointments and send reminders 24/7 — automatically.\n\n"
+                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
             ),
         }
-        return templates.get(
-            lead.business_type,
-            (
-                f"Hi {lead.name},\n\n"
-                f"I saw your inquiry about {lead.business}.\n\n"
-                "I build done-for-you AI systems for local\n"
-                "businesses starting at $500.\n\n"
-                "Worth a quick 15-minute call?\n\n"
-                "Trendell Fordham\n"
-                "Genesis AI Systems\n"
-                "genesisai.systems"
-            ),
+        default = (
+            f"Quick question about {lead.business}",
+            f"Hi there,\n\n"
+            f"I noticed {lead.business} in Detroit and wanted to reach out.\n\n"
+            "I build done-for-you AI systems for local businesses — answering calls, capturing leads, following up fast.\n\n"
+            "Starts at $500. Live in 5-7 days.\n\n"
+            "Worth a quick 10-minute call?\n\n"
+            "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems\n(586) 636-9550"
         )
+        return templates.get(btype, default)
 
-    def alert_trendell(self, lead: Lead) -> None:
-        """Text Trendell when a lead sounds ready now."""
-        # Skip if Twilio not configured
-        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
-            print("⏭️  Twilio not configured — skipping alert")
+    def send_outreach_email(self, lead: Lead) -> None:
+        """Send a Resend outreach email to this lead. Skip if no email on record."""
+        if not lead.email:
+            print(f"ℹ️  No email for {lead.business} — outreach via phone: {lead.phone}")
             return
-        
+        subject, body = self.get_email_body(lead)
+        ok = resend_email(lead.email, subject, body, priority="MEDIUM")
+        if ok:
+            print(f"✅ Outreach email sent to {lead.business} ({lead.email})")
+        else:
+            print(f"⚠️  Email failed for {lead.business}")
+
+
+    def save_to_hubspot(self, lead: Lead) -> None:
+        """Create a Company record in HubSpot for this lead."""
+        if not self.hubspot_token:
+            print("⚠️  HUBSPOT_ACCESS_TOKEN missing — skipping HubSpot save")
+            return
         try:
-            from twilio.rest import Client
-
-            Client(
-                os.getenv("TWILIO_ACCOUNT_SID"),
-                os.getenv("TWILIO_AUTH_TOKEN"),
-            ).messages.create(
-                body=(
-                    "🔥 HOT Lead Alert\n"
-                    "Genesis AI Systems\n"
-                    f"Name: {lead.name}\n"
-                    f"Business: {lead.business}\n"
-                    f"Phone: {lead.phone}\n"
-                    f"Need: {lead.pain_point}\n"
-                    "Call them NOW!"
-                ),
-                from_=os.getenv("TWILIO_FROM_NUMBER"),
-                to=os.getenv("ALERT_PHONE_NUMBER"),
+            resp = requests.post(
+                "https://api.hubapi.com/crm/v3/objects/companies",
+                headers={"Authorization": f"Bearer {self.hubspot_token}", "Content-Type": "application/json"},
+                json={"properties": {
+                    "name": lead.business,
+                    "phone": lead.phone,
+                    "city": "Detroit",
+                    "state": "Michigan",
+                    "industry": HUBSPOT_INDUSTRY_MAP.get(lead.business_type.lower(), "OTHER"),
+                    "description": (
+                        f"Score: {lead.score}\n"
+                        f"Pain point: {lead.pain_point}\n"
+                        f"Address: {lead.address}\n"
+                        f"Yelp: {lead.yelp_rating} stars\n"
+                        f"Yelp URL: {lead.yelp_url}"
+                    ),
+                    "hs_lead_status": "IN_PROGRESS",
+                }},
+                timeout=15,
             )
-        except Exception as error:
-            print(f"⚠️  HOT lead alert failed: {error}")
+            if resp.status_code in (200, 201):
+                print(f"✅ {lead.business} saved to HubSpot")
+            else:
+                print(f"⚠️  HubSpot {resp.status_code} for {lead.business}: {resp.text[:200]}")
+        except Exception as e:
+            print(f"❌ HubSpot error for {lead.business}: {e}")
 
-    def update_hubspot(self, lead: Lead) -> None:
-        """Print what would be sent to HubSpot."""
-        print(f"HubSpot update ready for {lead.name} ({lead.score})")
+    def alert_trendell_hot(self, hot_leads: list[Lead]) -> None:
+        """Telegram alert for HOT leads — call them now."""
+        if not hot_leads:
+            return
+        lines = ["🔥 HOT Lead Alert — Genesis AI Systems", "=" * 28]
+        for i, lead in enumerate(hot_leads, 1):
+            lines.append(
+                f"{i}. {lead.business}\n"
+                f"   📞 {lead.phone or 'No phone'}\n"
+                f"   ⭐ Yelp {lead.yelp_rating} | {lead.address[:40]}\n"
+                f"   → Reach out NOW"
+            )
+        lines.append("\ngenesisai.systems")
+        telegram_notify("HOT Leads Ready", "\n".join(lines), "HIGH")
 
-    def mark_contacted(self, lead: Lead) -> None:
-        """Print a marker so the lead is not contacted twice."""
-        print(f"Lead marked contacted: {lead.email}")
-
-    def send_pipeline_report(self) -> None:
-        """Print a simple pipeline report."""
-        print("✅ Weekly pipeline report ready")
+    def send_pipeline_report(self, hot: list[Lead], warm: list[Lead]) -> None:
+        """Send a Resend email + Telegram summary of today's pipeline."""
+        today = datetime.now().strftime("%B %d, %Y")
+        body = (
+            f"Sales Pipeline — {today}\n\n"
+            f"HOT leads: {len(hot)}\n"
+            f"WARM leads: {len(warm)}\n\n"
+            + (("Top HOT leads:\n" + "\n".join(f"- {l.business} | {l.phone}" for l in hot[:5])) if hot else "No HOT leads today.")
+            + "\n\nAll leads saved to HubSpot and Google Sheets.\ngenesisai.systems"
+        )
+        trendell_email = os.getenv("NOTIFICATION_EMAIL", "info@genesisai.systems")
+        resend_email(trendell_email, f"Sales Pipeline — {today}", body, "MEDIUM")
+        telegram_notify(f"Sales Pipeline — {today}", f"HOT: {len(hot)} | WARM: {len(warm)}", "INFO")
+        print(f"✅ Pipeline report sent — {len(hot)} HOT, {len(warm)} WARM")
 
 
 if __name__ == "__main__":

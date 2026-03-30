@@ -12,6 +12,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from notify import telegram_notify, resend_email
+
 TOPICS = [
     "missed_calls",
     "before_after",
@@ -39,6 +41,8 @@ class MarketingAgent:
         self.output_dir = Path.cwd() / "marketing_output"
         self.output_dir.mkdir(exist_ok=True)
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
+        self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
 
     def run(self) -> None:
         topic = self.get_todays_topic()
@@ -47,6 +51,7 @@ class MarketingAgent:
         instagram = self.generate_instagram_captions(topic)
         outreach = self.generate_outreach_email(industry)
         self.save_to_files(linkedin, instagram, outreach)
+        self.save_to_sheets(linkedin, instagram, outreach, topic, industry)
         self.notify_trendell(linkedin[:200])
         print("✅ Marketing content generated")
 
@@ -167,29 +172,47 @@ Include call to action: Link in bio → genesisai.systems
         (self.output_dir / f"{stamp}_outreach.txt").write_text(outreach)
 
     def notify_trendell(self, preview: str) -> None:
-        # Skip if Twilio not configured
-        if not os.getenv("TWILIO_ACCOUNT_SID") or not os.getenv("TWILIO_AUTH_TOKEN"):
-            print("⏭️  Twilio not configured — skipping SMS notification")
-            return
-        
-        try:
-            from twilio.rest import Client
+        today = datetime.utcnow().strftime("%B %d")
+        telegram_notify(
+            f"Marketing Content Ready — {today}",
+            f"Today's post preview:\n\n{preview}...\n\nFull content saved to Sheets.",
+            "INFO"
+        )
+        trendell_email = os.getenv("NOTIFICATION_EMAIL", "info@genesisai.systems")
+        resend_email(
+            trendell_email,
+            f"Marketing Content Ready — {today}",
+            f"Today's LinkedIn post preview:\n\n{preview}...\n\nFull content saved to Google Sheets.\n\ngenesisai.systems",
+            "LOW"
+        )
 
-            Client(
-                os.getenv("TWILIO_ACCOUNT_SID"),
-                os.getenv("TWILIO_AUTH_TOKEN"),
-            ).messages.create(
-                body=(
-                    "📝 Marketing content ready\n"
-                    "Genesis AI Systems\n"
-                    f"Today's post preview:\n{preview}...\n"
-                    "Full content saved to files"
-                ),
-                from_=os.getenv("TWILIO_FROM_NUMBER"),
-                to=os.getenv("ALERT_PHONE_NUMBER"),
+
+    def save_to_sheets(self, linkedin: str, instagram: str, outreach: str, topic: str, industry: str) -> None:
+        """Append today's content to the Marketing tab in Google Sheets."""
+        if not self.sheet_id or not self.service_account_json:
+            print("⚠️  Sheets not configured — content saved to files only")
+            return
+        try:
+            import json as _json
+            from google.oauth2 import service_account
+            from googleapiclient.discovery import build
+
+            creds = service_account.Credentials.from_service_account_info(
+                _json.loads(self.service_account_json),
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
-        except Exception as error:
-            print(f"⚠️  Notification failed: {error}")
+            service = build("sheets", "v4", credentials=creds)
+            today = datetime.utcnow().strftime("%Y-%m-%d")
+            service.spreadsheets().values().append(
+                spreadsheetId=self.sheet_id,
+                range="Marketing!A1",
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body={"values": [[today, topic, industry, linkedin[:500], instagram[:300], outreach[:500]]]},
+            ).execute()
+            print("✅ Marketing content saved to Sheets")
+        except Exception as e:
+            print(f"⚠️  Sheets save failed: {e}")
 
 
 if __name__ == "__main__":

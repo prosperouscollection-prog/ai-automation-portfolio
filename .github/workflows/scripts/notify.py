@@ -334,12 +334,14 @@ class NotificationOrchestrator:
         sms_notifier: Optional[SMSNotifier] = None,
         slack_notifier: Optional[SlackNotifier] = None,
         github_notifier: Optional[GitHubNotifier] = None,
+        telegram_notifier: Optional[TelegramNotifier] = None,
     ) -> None:
         """Initialize all supported notification channels."""
         self.email_notifier = email_notifier or EmailNotifier()
         self.sms_notifier = sms_notifier or SMSNotifier()
         self.slack_notifier = slack_notifier or SlackNotifier()
         self.github_notifier = github_notifier or GitHubNotifier()
+        self.telegram_notifier = telegram_notifier or TelegramNotifier()
 
     def notify(
         self,
@@ -352,14 +354,17 @@ class NotificationOrchestrator:
         normalized = BaseNotifier.normalize_priority(priority)
         sent: dict[str, bool] = {}
         if normalized == NotificationPriority.CRITICAL:
+            sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
             sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
             sent["slack"] = self.slack_notifier.send(subject, message, normalized, **kwargs)
             sent["github"] = self.github_notifier.send(subject, message, normalized, **kwargs)
         elif normalized == NotificationPriority.HIGH:
+            sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
             sent["sms"] = self.sms_notifier.send(subject, message, normalized, **kwargs)
         elif normalized == NotificationPriority.MEDIUM:
+            sent["telegram"] = self.telegram_notifier.send(subject, message, normalized)
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
         elif normalized == NotificationPriority.LOW:
             sent["email"] = self.email_notifier.send(subject, message, normalized, **kwargs)
@@ -664,6 +669,53 @@ def handle_direct_mode(args: argparse.Namespace, orchestrator: NotificationOrche
         return 0 if any(results.values()) else 1
 
     return -1
+
+
+class TelegramNotifier(BaseNotifier):
+    """Notifier for sending Telegram messages — primary alert channel."""
+
+    def __init__(self) -> None:
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        self.chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        if not self.token or not self.chat_id:
+            logger.warning("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing. Telegram alerts skipped.")
+
+    def send(
+        self,
+        subject: str,
+        message: str,
+        priority: NotificationPriority | str = NotificationPriority.MEDIUM,
+        **_: Any,
+    ) -> bool:
+        if not self.token or not self.chat_id or requests is None:
+            return False
+        normalized = self.normalize_priority(priority)
+        emoji = {"CRITICAL": "🚨", "HIGH": "🔥", "MEDIUM": "📋", "LOW": "✅", "INFO": "ℹ️"}.get(normalized.value, "📋")
+        text = f"{emoji} *{subject}*\n\n{message}"
+        try:
+            resp = requests.post(
+                f"https://api.telegram.org/bot{self.token}/sendMessage",
+                json={"chat_id": self.chat_id, "text": text, "parse_mode": "Markdown"},
+                timeout=15,
+            )
+            if resp.ok:
+                logger.info("Telegram sent [%s]: %s", normalized.value, subject)
+                return True
+            logger.error("Telegram %s: %s", resp.status_code, resp.text[:200])
+            return False
+        except Exception as exc:
+            logger.error("Telegram failed: %s", exc)
+            return False
+
+
+def telegram_notify(subject: str, message: str, priority: str = "MEDIUM") -> bool:
+    """Convenience function — send a Telegram alert. Import this in any agent."""
+    return TelegramNotifier().send(subject, message, priority)
+
+
+def resend_email(to_email: str, subject: str, body: str, priority: str = "MEDIUM") -> bool:
+    """Convenience function — send a Resend email. Import this in any agent."""
+    return EmailNotifier().send(subject, body, priority, to_email=to_email)
 
 
 def main() -> int:
