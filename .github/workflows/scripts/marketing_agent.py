@@ -205,7 +205,7 @@ Include call to action: Link in bio → genesisai.systems
             today = datetime.utcnow().strftime("%Y-%m-%d")
             service.spreadsheets().values().append(
                 spreadsheetId=self.sheet_id,
-                range="Marketing!A1",
+                range="Leads!A1",
                 valueInputOption="RAW",
                 insertDataOption="INSERT_ROWS",
                 body={"values": [[today, topic, industry, linkedin[:500], instagram[:300], outreach[:500]]]},

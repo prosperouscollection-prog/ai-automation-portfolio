@@ -307,7 +307,7 @@ class ScraperAgent:
             ] for prospect in prospects]
             service.spreadsheets().values().append(
                 spreadsheetId=sheet_id,
-                range="Lead Prospects!A:O",
+                range="Leads!A1",
                 valueInputOption="RAW",
                 body={"values": rows},
             ).execute()
