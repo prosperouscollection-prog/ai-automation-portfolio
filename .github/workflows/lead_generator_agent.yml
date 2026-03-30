@@ -23,8 +23,10 @@ jobs:
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
           ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          pip install requests twilio python-dotenv -q
+          pip install requests twilio python-dotenv google-auth google-api-python-client -q
           cd .github/workflows/scripts
           python3 lead_generator_agent.py
       - name: SMS on failure
