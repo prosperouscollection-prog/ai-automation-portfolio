@@ -13,13 +13,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 INDUSTRIES_SCHEDULE = {
-    0: {"industry": "restaurant", "keywords": ["restaurant", "cafe", "diner", "bistro"]},
-    1: {"industry": "dental", "keywords": ["dental", "dentist", "orthodontist"]},
-    2: {"industry": "hvac", "keywords": ["hvac", "heating", "cooling", "air conditioning"]},
-    3: {"industry": "salon", "keywords": ["salon", "barbershop", "hair", "beauty"]},
-    4: {"industry": "real_estate", "keywords": ["realtor", "real estate", "properties"]},
-    5: {"industry": "retail", "keywords": ["boutique", "shop", "store", "retail"]},
-    6: {"industry": "mixed", "keywords": ["local business", "small business"]},
+    0: {"industry": "restaurant", "keywords": ["restaurant", "cafe", "diner", "bistro"], "yelp_categories": "restaurants"},
+    1: {"industry": "dental", "keywords": ["dental", "dentist", "orthodontist"], "yelp_categories": "dentists,orthodontists"},
+    2: {"industry": "hvac", "keywords": ["hvac", "heating", "cooling", "air conditioning"], "yelp_categories": "hvac"},
+    3: {"industry": "salon", "keywords": ["salon", "barbershop", "hair", "beauty"], "yelp_categories": "hair,barbers,beautysvc"},
+    4: {"industry": "real_estate", "keywords": ["realtor", "real estate", "properties"], "yelp_categories": "realestate"},
+    5: {"industry": "retail", "keywords": ["boutique", "shop", "store", "retail"], "yelp_categories": "shopping"},
+    6: {"industry": "mixed", "keywords": ["local business", "small business"], "yelp_categories": "localservices"},
 }
 
 
@@ -28,6 +28,7 @@ class LeadGeneratorAgent:
 
     def __init__(self) -> None:
         self.apollo_key = os.getenv("APOLLO_API_KEY", "").strip()
+        self.yelp_key = os.getenv("YELP_API_KEY", "").strip()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
         self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
@@ -39,12 +40,12 @@ class LeadGeneratorAgent:
         industry = schedule["industry"]
         print(f"🔍 Searching for {industry} businesses in Detroit...")
 
-        # --- Apollo search ---
+        # --- Yelp search (free, 500/day) ---
         prospects = []
-        if not self.apollo_key:
-            print("⚠️  APOLLO_API_KEY is missing or empty — skipping real search")
+        if not self.yelp_key:
+            print("⚠️  YELP_API_KEY missing — falling back to mock data")
         else:
-            prospects = self.search_apollo(industry, schedule["keywords"])
+            prospects = self.search_yelp(industry, schedule["yelp_categories"])
 
         if not prospects:
             print("⚠️  No Apollo results — falling back to mock data for testing")
@@ -60,6 +61,56 @@ class LeadGeneratorAgent:
 
         print(f"✅ Found {len(prospects)} prospects")
         print(f"🔥 HOT leads: {len(hot)}")
+
+    def search_yelp(self, industry: str, categories: str) -> list[dict]:
+        """Search Yelp Fusion for Detroit businesses — free, 500 calls/day."""
+        try:
+            response = requests.get(
+                "https://api.yelp.com/v3/businesses/search",
+                headers={"Authorization": f"Bearer {self.yelp_key}"},
+                params={
+                    "location": "Detroit, MI",
+                    "categories": categories,
+                    "limit": 25,
+                    "sort_by": "review_count",  # busiest businesses first
+                },
+                timeout=30,
+            )
+            if response.status_code == 401:
+                print("❌ Yelp auth failed (401) — check YELP_API_KEY secret")
+                return []
+            if not response.ok:
+                print(f"❌ Yelp {response.status_code}: {response.text[:300]}")
+                return []
+            businesses = response.json().get("businesses", [])
+            print(f"✅ Yelp returned {len(businesses)} businesses")
+            results = []
+            for biz in businesses:
+                location = biz.get("location", {})
+                results.append({
+                    "name": biz.get("name", "Unknown"),
+                    "primary_domain": "",
+                    "phone": biz.get("display_phone", biz.get("phone", "")),
+                    "email": "",
+                    "contact_name": "",
+                    "title": "",
+                    "estimated_num_employees": 10,  # Yelp doesn't provide this
+                    "city": location.get("city", "Detroit"),
+                    "address": ", ".join(filter(None, [
+                        location.get("address1", ""),
+                        location.get("city", ""),
+                        location.get("state", ""),
+                    ])),
+                    "industry": industry,
+                    "yelp_rating": biz.get("rating", ""),
+                    "yelp_reviews": biz.get("review_count", 0),
+                    "yelp_url": biz.get("url", ""),
+                    "linkedin_url": "",
+                })
+            return results
+        except Exception as error:
+            print(f"❌ Yelp exception: {error}")
+            return []
 
     def search_apollo(self, industry: str, keywords: list[str]) -> list[dict]:
         """Search Apollo.io for Detroit business contacts in this industry.
@@ -146,15 +197,22 @@ class LeadGeneratorAgent:
     def score_prospects(self, prospects: list[dict]) -> list[dict]:
         scored = []
         for prospect in prospects:
+            reviews = prospect.get("yelp_reviews", 0) or 0
+            rating = prospect.get("yelp_rating", 0) or 0
             employees = prospect.get("estimated_num_employees", 0) or 0
-            if 2 <= employees <= 50:
+            # HOT: active business (reviews > 20) or right employee count
+            if reviews >= 20 or (2 <= employees <= 50):
                 prospect["score"] = "HOT"
-                prospect["reason"] = "Right-sized local business — likely missing calls"
+                prospect["reason"] = "Active local business — likely missing calls and leads"
                 prospect["recommended_product"] = "Starter Package — $500 setup, $150/mo"
-            else:
+            elif reviews > 5 or employees > 0:
                 prospect["score"] = "WARM"
-                prospect["reason"] = "Could be a fit with follow-up"
+                prospect["reason"] = "Established business — worth a follow-up"
                 prospect["recommended_product"] = "Lead Capture System"
+            else:
+                prospect["score"] = "COLD"
+                prospect["reason"] = "New or low-activity listing"
+                prospect["recommended_product"] = "Check back in 30 days"
             scored.append(prospect)
         return scored
 
@@ -203,6 +261,8 @@ class LeadGeneratorAgent:
                             f"Score: {prospect.get('score','')}\n"
                             f"Reason: {prospect.get('reason','')}\n"
                             f"Product: {prospect.get('recommended_product','')}\n"
+                            f"Address: {prospect.get('address','')}\n"
+                            f"Yelp: {prospect.get('yelp_rating','')} stars, {prospect.get('yelp_reviews','')} reviews\n"
                             f"Contact: {prospect.get('contact_name','')}, {prospect.get('title','')}\n"
                             f"Email: {prospect.get('email','')}\n"
                             f"LinkedIn: {prospect.get('linkedin_url','')}"
@@ -256,11 +316,14 @@ class LeadGeneratorAgent:
                     p.get("name", ""),
                     p.get("primary_domain", ""),
                     p.get("phone", ""),
-                    p.get("city", "Detroit"),
+                    p.get("address", p.get("city", "Detroit")),
                     str(p.get("estimated_num_employees", "")),
+                    str(p.get("yelp_rating", "")),
+                    str(p.get("yelp_reviews", "")),
                     p.get("score", ""),
                     p.get("reason", ""),
                     p.get("recommended_product", ""),
+                    p.get("yelp_url", ""),
                     p.get("outreach_email", ""),
                 ])
             service.spreadsheets().values().append(
