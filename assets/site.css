@@ -866,6 +866,13 @@ svg {
   margin-top: 26px;
 }
 
+.activity-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px 0;
+  font-size: 0.95rem;
+}
+
 .activity-item {
   display: grid;
   grid-template-columns: auto 1fr auto;

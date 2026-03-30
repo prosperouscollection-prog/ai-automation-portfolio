@@ -1,5 +1,19 @@
 User-agent: *
 Allow: /
+
+# Internal / admin pages — no crawl value
 Disallow: /dashboard.html
 Disallow: /command.html
+Disallow: /client-dashboard.html
+Disallow: /activity.html
+Disallow: /thank-you.html
+Disallow: /404.html
+Disallow: /offline.html
+
+# Build artifacts and internal directories
+Disallow: /enhancements/
+Disallow: /demo-server/
+Disallow: /claude-api-phone-access/
+Disallow: /project5-chat-widget/
+
 Sitemap: https://genesisai.systems/sitemap.xml

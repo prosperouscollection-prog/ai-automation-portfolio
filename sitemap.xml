@@ -8,21 +8,61 @@
   <url>
     <loc>https://genesisai.systems/about.html</loc>
     <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://genesisai.systems/demos.html</loc>
     <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://genesisai.systems/dashboard.html</loc>
-    <priority>0.5</priority>
+    <loc>https://genesisai.systems/contact.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/faq.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/roi-calculator.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/restaurant.html</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/dental.html</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/hvac.html</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/salon.html</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://genesisai.systems/real-estate.html</loc>
+    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://genesisai.systems/privacy-policy.html</loc>
     <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
   </url>
   <url>
     <loc>https://genesisai.systems/terms.html</loc>
     <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
   </url>
 </urlset>
