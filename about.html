@@ -233,35 +233,27 @@
       </div>
     </section>
 
-    <section class="section section-deep" id="testimonials">
+    <section class="section section-deep" id="proof">
       <div class="shell">
         <div class="section-head">
-          <h2>What our clients say</h2>
+          <h2>How we handle proof on a public site</h2>
+          <p>Genesis AI Systems is not going to publish fake reviews, fake names, or borrowed trust just to fill space.</p>
         </div>
-        <div class="testimonial-grid">
-          <article class="testimonial-card">
-            <div class="quote-mark">“</div>
-            <div class="star-row">★★★★★</div>
-            <h3>Placeholder testimonial</h3>
-            <p>“Riley answered every call I was missing at night. I booked 6 new clients in my first month. Worth every penny.”</p>
-            <div class="testimonial-meta">— [Client Name], Restaurant Owner, Detroit</div>
+        <div class="promise-grid">
+          <article class="promise-card">
+            <h3>No fake names</h3>
+            <p>If a client has not approved public use of their name or results, they do not appear on this site.</p>
           </article>
-          <article class="testimonial-card">
-            <div class="quote-mark">“</div>
-            <div class="star-row">★★★★★</div>
-            <h3>Placeholder testimonial</h3>
-            <p>“I was skeptical about AI for my business. Trendell set everything up and showed me the results. I was completely blown away by how well it worked.”</p>
-            <div class="testimonial-meta">— [Client Name], HVAC Company Owner, Detroit</div>
+          <article class="promise-card">
+            <h3>No pretend live numbers</h3>
+            <p>Trendell would rather walk you through a real demo than dress up sample numbers like they are client proof.</p>
           </article>
-          <article class="testimonial-card">
-            <div class="quote-mark">“</div>
-            <div class="star-row">★★★★★</div>
-            <h3>Placeholder testimonial</h3>
-            <p>“My website now answers customer questions 24/7 without me doing a single thing. Best business decision I made this year.”</p>
-            <div class="testimonial-meta">— [Client Name], Dental Office, Detroit MI</div>
+          <article class="promise-card">
+            <h3>Real proof should be earned</h3>
+            <p>As more client permission comes in, Genesis AI Systems can publish real case studies the right way.</p>
           </article>
         </div>
-        <p class="placeholder-note">We are actively building our client base. Your business could be featured here. Book a free call to get started today.</p>
+        <p class="placeholder-note">Until then, the strongest proof is a direct call with Trendell and a live look at how these systems work on his own business.</p>
       </div>
     </section>
 
@@ -312,7 +304,7 @@
               </label>
               <button class="button button-primary full" type="submit">Get My Free Recommendation →</button>
             </form>
-            <div class="form-response" id="contactResponse"></div>
+            <div class="form-response" id="contactResponse" role="status" aria-live="polite"></div>
           </article>
           <div class="info-stack">
             <article class="info-card">
@@ -339,6 +331,7 @@
 
   <div id="siteFooterMount"></div>
 
+  <script src="/assets/site-config.js"></script>
   <script src="/assets/site.js"></script>
   <script>
     window.GenesisSite.mountShell({

@@ -34,29 +34,35 @@ jobs:
             test "$STATUS" = "200"
           done
 
-      - name: Check contact form is present
+      - name: Check homepage CRO sections and form
         run: |
-          curl -sL --max-time 30 https://genesisai.systems | grep -q 'id="contactForm"'
+          PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
+          echo "$PAGE" | grep -q 'id="contactForm"'
+          echo "$PAGE" | grep -q 'Most businesses start with one clear fix'
+          echo "$PAGE" | grep -q 'Why owners feel safe starting here'
+          echo "$PAGE" | grep -q 'What you see after launch'
+          echo "$PAGE" | grep -q 'Tell Trendell what is slowing the business down'
 
-      - name: Check buy links use Stripe
+      - name: Check homepage avoids broken trust and fake-live copy
         run: |
-          curl -sL --max-time 30 https://genesisai.systems | grep -q 'buy.stripe.com'
+          PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
+          ! echo "$PAGE" | grep -q 'Placeholder testimonial'
+          ! echo "$PAGE" | grep -q '\[Client Name\]'
+          ! echo "$PAGE" | grep -q 'Your AI is already working'
+          ! echo "$PAGE" | grep -q 'GA_MEASUREMENT_ID'
 
-      - name: Check industry tabs are present
+      - name: Check industry tabs, skip link, and logo assets
         run: |
-          curl -sL --max-time 30 https://genesisai.systems | grep -q 'data-tab-group="industry"'
-
-      - name: Check business phone is present
-        run: |
-          curl -sL --max-time 30 https://genesisai.systems | grep -q '586'
-
-      - name: Check logo and favicon
-        run: |
-          curl -sL --max-time 30 https://genesisai.systems | grep -q '/assets/site.js'
-          curl -sL --max-time 30 https://genesisai.systems/assets/site.js | grep -q 'genesis-logo'
+          PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
+          SHELL=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.js)
+          STYLES=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.css)
+          echo "$PAGE" | grep -q 'data-tab-group="industry"'
+          echo "$SHELL" | grep -q 'Skip to main content'
+          echo "$SHELL" | grep -q 'genesis-logo'
+          echo "$STYLES" | grep -q '\.skip-link'
           curl -sL --max-time 30 https://genesisai.systems/favicon.svg | grep -q '<svg'
 
-      - name: Check nav links
+      - name: Check public nav and footer links
         run: |
           SHELL=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.js)
           echo "$SHELL" | grep -q 'How It Works'
@@ -64,21 +70,28 @@ jobs:
           echo "$SHELL" | grep -q 'About'
           echo "$SHELL" | grep -q 'Demos'
           echo "$SHELL" | grep -q 'Pricing'
-          echo "$SHELL" | grep -q 'Dashboard'
           echo "$SHELL" | grep -q 'Contact'
-
-      - name: Check footer links
-        run: |
-          SHELL=$(curl -sL --max-time 30 https://genesisai.systems/assets/site.js)
           echo "$SHELL" | grep -q 'Privacy Policy'
           echo "$SHELL" | grep -q 'Terms of Service'
           echo "$SHELL" | grep -q 'Command Center'
 
-      - name: Check testimonials and activity sections
+      - name: Check shared config and homepage data files
         run: |
-          PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
-          echo "$PAGE" | grep -q 'What our clients say'
-          echo "$PAGE" | grep -q 'Your AI is already working'
+          CONFIG=$(curl -sL --max-time 30 https://genesisai.systems/assets/site-config.js)
+          HOME=$(curl -sL --max-time 30 https://genesisai.systems/assets/homepage-data.js)
+          echo "$CONFIG" | grep -q 'calendly.com'
+          echo "$CONFIG" | grep -q 'buy.stripe.com'
+          echo "$HOME" | grep -q 'featuredOffers'
+          echo "$HOME" | grep -q 'pricingCards'
+
+      - name: Check demos and about pages avoid placeholder trust
+        run: |
+          ABOUT=$(curl -sL --max-time 30 https://genesisai.systems/about.html)
+          DEMOS=$(curl -sL --max-time 30 https://genesisai.systems/demos.html)
+          ! echo "$ABOUT" | grep -q 'Placeholder testimonial'
+          ! echo "$ABOUT" | grep -q '\[Client Name\]'
+          ! echo "$DEMOS" | grep -q 'buy.stripe.com'
+          echo "$DEMOS" | grep -q 'See pricing'
 
       - name: Check demo server is live
         run: |
@@ -91,7 +104,11 @@ jobs:
           test -f index.html
           test -f about.html
           test -f demos.html
-          test -f dashboard.html
+          test -f assets/site.css
+          test -f assets/site.js
+          test -f assets/site-config.js
+          test -f assets/homepage-data.js
+          test -f assets/homepage.js
           test -f favicon.svg
           test -f manifest.json
           test -f sitemap.xml

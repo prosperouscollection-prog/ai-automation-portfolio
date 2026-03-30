@@ -1,16 +1,59 @@
 (function () {
-  const links = {
-    calendly: "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call",
-    starter: "https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02",
-    growth: "https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02",
-    fullstack: "https://buy.stripe.com/fZu14mcE9dgb9Q12Ab2Fa03",
-    deposit: "https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02",
-    phoneHref: "tel:+15866369550",
-    phoneText: "(586) 636-9550",
-    phonePlain: "586-636-9550",
-    email: "info@genesisai.systems",
-    demoServer: "https://genesis-ai-systems-demo.onrender.com"
+  const fallbackConfig = {
+    brand: {
+      name: "Genesis AI Systems",
+      founder: "Trendell Fordham",
+      tagline: "Done-for-you AI automation for local businesses",
+      location: "Detroit, MI"
+    },
+    contact: {
+      phoneHref: "tel:+15866369550",
+      phoneText: "(586) 636-9550",
+      phonePlain: "586-636-9550",
+      email: "info@genesisai.systems"
+    },
+    urls: {
+      website: "https://genesisai.systems",
+      demoServer: "https://genesis-ai-systems-demo.onrender.com",
+      calendly: "https://calendly.com/genesisai-info-ptmt/free-ai-demo-call"
+    },
+    analytics: {
+      googleMeasurementId: ""
+    },
+    checkout: {
+      starter: {
+        id: "starter",
+        name: "Starter",
+        amount: "$500",
+        url: "https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02",
+        directCheckoutReady: true
+      },
+      growth: {
+        id: "growth",
+        name: "Growth",
+        amount: "$3,500",
+        url: "",
+        directCheckoutReady: false
+      },
+      fullstack: {
+        id: "fullstack",
+        name: "Full Stack",
+        amount: "$39,500",
+        url: "https://buy.stripe.com/fZu14mcE9dgb9Q12Ab2Fa03",
+        directCheckoutReady: true
+      },
+      deposit: {
+        id: "deposit",
+        name: "Build Deposit",
+        amount: "$100",
+        url: "https://buy.stripe.com/4gM5kC0Vrfoj8LXfmX2Fa02",
+        directCheckoutReady: true
+      }
+    }
   };
+
+  const config = window.GenesisSiteConfig || fallbackConfig;
+  let analyticsLoaded = false;
 
   const sectionRouteMap = {
     how: { label: "How It Works", homeHref: "#how-it-works", otherHref: "/#how-it-works" },
@@ -21,19 +64,6 @@
     dashboard: { label: "Dashboard", href: "/dashboard.html" },
     contact: { label: "Contact", homeHref: "#contact", otherHref: "/#contact" }
   };
-
-  function logoMarkup() {
-    return `
-      <svg id="genesis-logo" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" width="160" height="32" aria-hidden="true">
-        <circle cx="16" cy="20" r="14" fill="none" stroke="#2563eb" stroke-width="1.5"></circle>
-        <path d="M16 6 A14 14 0 1 0 28 13" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"></path>
-        <circle cx="16" cy="6" r="2.5" fill="#2563eb"></circle>
-        <path d="M22 16 L10 16 A8 8 0 1 1 22 24 L22 20 L14 20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-        <text x="38" y="15" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="white">GENESIS AI</text>
-        <text x="38" y="29" font-family="system-ui,sans-serif" font-size="10" font-weight="400" fill="#2563eb" letter-spacing="2">SYSTEMS</text>
-      </svg>
-    `;
-  }
 
   function isHomePage() {
     const path = window.location.pathname;
@@ -54,9 +84,22 @@
     return "";
   }
 
-  function shellMarkup(options) {
+  function logoMarkup() {
+    return `
+      <svg id="genesis-logo" viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" width="160" height="32" aria-hidden="true">
+        <circle cx="16" cy="20" r="14" fill="none" stroke="#2563eb" stroke-width="1.5"></circle>
+        <path d="M16 6 A14 14 0 1 0 28 13" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round"></path>
+        <circle cx="16" cy="6" r="2.5" fill="#2563eb"></circle>
+        <path d="M22 16 L10 16 A8 8 0 1 1 22 24 L22 20 L14 20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        <text x="38" y="15" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="white">GENESIS AI</text>
+        <text x="38" y="29" font-family="system-ui,sans-serif" font-size="10" font-weight="400" fill="#2563eb" letter-spacing="2">SYSTEMS</text>
+      </svg>
+    `;
+  }
+
+  function buildShellMarkup(options) {
     const activeKey = activePathKey(options.page || "");
-    const navLinks = ["how", "examples", "about", "demos", "pricing", "dashboard", "contact"]
+    const navLinks = ["how", "examples", "about", "demos", "pricing", "contact"]
       .map((key) => {
         const item = sectionRouteMap[key];
         const active = activeKey === key ? "active" : "";
@@ -77,17 +120,25 @@
 
     return {
       nav: `
+        <a class="skip-link" href="#main-content">Skip to main content</a>
         <nav class="site-nav" aria-label="Main navigation">
           <div class="shell nav-inner">
-            <a class="brand-link" href="/" aria-label="Genesis AI Systems home">
+            <a class="brand-link" href="/" aria-label="${config.brand.name} home">
               ${logoMarkup()}
             </a>
             <div class="nav-links">
               ${navLinks}
             </div>
             <div class="nav-actions">
-              <a class="button button-primary nav-cta" href="${links.calendly}" target="_blank" rel="noreferrer">Book a Free Call</a>
-              <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+              <a
+                class="button button-primary nav-cta"
+                href="${config.urls.calendly}"
+                target="_blank"
+                rel="noreferrer"
+                data-track-event="nav_primary_cta_click"
+                data-track-location="nav"
+              >Book a Free Call</a>
+              <button class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
                 <span></span><span></span><span></span>
               </button>
             </div>
@@ -96,7 +147,7 @@
         <div class="mobile-overlay" id="mobileMenu" aria-hidden="true">
           <div class="mobile-menu">
             <div class="mobile-menu-top">
-              <a class="brand-link" href="/" aria-label="Genesis AI Systems home">
+              <a class="brand-link" href="/" aria-label="${config.brand.name} home">
                 ${logoMarkup()}
               </a>
               <button class="mobile-close" id="mobileClose" aria-label="Close menu">✕</button>
@@ -107,9 +158,15 @@
               <a href="/about.html">About</a>
               <a href="/demos.html">Demos</a>
               <a href="${navHref("pricing")}">Pricing</a>
-              <a href="/dashboard.html">Dashboard</a>
               <a href="${navHref("contact")}">Contact</a>
-              <a class="button button-primary" href="${links.calendly}" target="_blank" rel="noreferrer">Book a Free Call</a>
+              <a
+                class="button button-primary"
+                href="${config.urls.calendly}"
+                target="_blank"
+                rel="noreferrer"
+                data-track-event="mobile_nav_primary_cta_click"
+                data-track-location="mobile-nav"
+              >Book a Free Call</a>
             </div>
           </div>
         </div>
@@ -119,11 +176,11 @@
           <div class="shell">
             <div class="footer-grid">
               <div class="footer-brand">
-                <a class="brand-link" href="/" aria-label="Genesis AI Systems home">
+                <a class="brand-link" href="/" aria-label="${config.brand.name} home">
                   ${logoMarkup()}
                 </a>
-                <p>Done-for-you AI automation for local businesses</p>
-                <p>Built in Detroit, MI</p>
+                <p>${config.brand.tagline}</p>
+                <p>Built in ${config.brand.location}</p>
               </div>
               <div>
                 <h3 class="footer-links-title">Quick Links</h3>
@@ -133,14 +190,14 @@
               </div>
               <div class="footer-contact">
                 <h3 class="footer-contact-title">Contact Us</h3>
-                <p>📞 <a href="${links.phoneHref}">${links.phoneText}</a></p>
+                <p>📞 <a href="${config.contact.phoneHref}">${config.contact.phoneText}</a></p>
                 <p>Riley answers 24/7</p>
-                <p>📧 <a href="mailto:${links.email}">${links.email}</a></p>
-                <p>📅 <a href="${links.calendly}" target="_blank" rel="noreferrer">Book a free call</a></p>
+                <p>📧 <a href="mailto:${config.contact.email}">${config.contact.email}</a></p>
+                <p>📅 <a href="${config.urls.calendly}" target="_blank" rel="noreferrer">Book a free call</a></p>
               </div>
             </div>
             <div class="footer-bottom">
-              <div>© 2026 Genesis AI Systems | Detroit, MI | All Rights Reserved</div>
+              <div>© 2026 ${config.brand.name} | ${config.brand.location} | All Rights Reserved</div>
               <div>14 AI Systems | 11 Agents Running 24/7</div>
             </div>
           </div>
@@ -148,22 +205,34 @@
       `,
       sticky: `
         <div class="mobile-sticky" id="mobileSticky">
-          <a class="button button-outline" href="${links.calendly}" target="_blank" rel="noreferrer">Book a Free Call</a>
-          <a class="button button-primary" href="${links.starter}" target="_blank" rel="noreferrer">Buy Now</a>
+          <a
+            class="button button-primary"
+            href="${config.urls.calendly}"
+            target="_blank"
+            rel="noreferrer"
+            data-track-event="sticky_primary_cta_click"
+            data-track-location="mobile-sticky"
+          >Book a Free Call</a>
+          <a
+            class="button button-outline"
+            href="${navHref("pricing")}"
+            data-track-event="sticky_secondary_cta_click"
+            data-track-location="mobile-sticky"
+          >See Pricing</a>
         </div>
       `,
       chat: `
         <div class="chat-hint" id="chatHint">👋 Hi! Have questions about your business? I am here to help.</div>
         <button class="chat-launcher" id="chatLauncher" aria-label="Open chat">💬</button>
-        <div class="chat-window" id="chatWindow" aria-live="polite">
+        <div class="chat-window" id="chatWindow">
           <div class="chat-head">
             <div>
-              <strong>Genesis AI Systems</strong>
+              <strong>${config.brand.name}</strong>
               <span>Ask about your business any time</span>
             </div>
             <button class="mobile-close" id="chatClose" aria-label="Close chat">✕</button>
           </div>
-          <div class="chat-log" id="chatLog">
+          <div class="chat-log" id="chatLog" aria-live="polite">
             <div class="chat-bubble bot">Hi! Tell me what kind of business you run and what is eating your time right now.</div>
           </div>
           <form class="chat-form" id="chatForm">
@@ -176,8 +245,8 @@
         <div class="exit-overlay" id="exitOverlay" aria-hidden="true">
           <div class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exitTitle">
             <button class="exit-close" id="exitClose" aria-label="Close popup">✕</button>
-            <h3 id="exitTitle">Wait — before you go!</h3>
-            <p>Get a free recommendation for your business. It takes about 2 minutes.</p>
+            <h3 id="exitTitle">Before you go</h3>
+            <p>Leave your email and Trendell will send the next best step for your business.</p>
             <form id="exitForm" class="contact-form">
               <label>
                 Email address
@@ -192,7 +261,7 @@
   }
 
   function mountShell(options) {
-    const markup = shellMarkup(options || {});
+    const markup = buildShellMarkup(options || {});
     const navMount = document.getElementById("siteNavMount");
     const footerMount = document.getElementById("siteFooterMount");
     const stickyMount = document.getElementById("siteStickyMount");
@@ -206,6 +275,37 @@
     if (exitMount && options.exitModal) exitMount.innerHTML = markup.exit;
   }
 
+  function loadAnalytics() {
+    const measurementId = config.analytics.googleMeasurementId;
+    if (!measurementId || analyticsLoaded || typeof document === "undefined") return;
+    analyticsLoaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function gtag() {
+      window.dataLayer.push(arguments);
+    };
+    window.gtag("js", new Date());
+    window.gtag("config", measurementId);
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
+    document.head.appendChild(script);
+  }
+
+  function trackEvent(name, payload) {
+    if (!config.analytics.googleMeasurementId) return;
+    loadAnalytics();
+    if (typeof window.gtag === "function") {
+      window.gtag("event", name, payload || {});
+    }
+  }
+
+  function setActiveNav(sectionKey) {
+    document.querySelectorAll(".nav-link").forEach((link) => {
+      link.classList.toggle("active", link.dataset.navKey === sectionKey);
+    });
+  }
+
   function initMenu() {
     const toggle = document.getElementById("navToggle");
     const overlay = document.getElementById("mobileMenu");
@@ -215,12 +315,14 @@
     const open = () => {
       overlay.classList.add("open");
       overlay.setAttribute("aria-hidden", "false");
+      toggle.setAttribute("aria-expanded", "true");
       document.body.classList.add("no-scroll");
     };
 
     const shut = () => {
       overlay.classList.remove("open");
       overlay.setAttribute("aria-hidden", "true");
+      toggle.setAttribute("aria-expanded", "false");
       document.body.classList.remove("no-scroll");
     };
 
@@ -230,12 +332,6 @@
       if (event.target === overlay) shut();
     });
     overlay.querySelectorAll("a").forEach((link) => link.addEventListener("click", shut));
-  }
-
-  function setActiveNav(sectionKey) {
-    document.querySelectorAll(".nav-link").forEach((link) => {
-      link.classList.toggle("active", link.dataset.navKey === sectionKey);
-    });
   }
 
   function initHomeNavObserver() {
@@ -252,10 +348,10 @@
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-        if (visible) {
-          const match = targets.find((item) => item.id === visible.target.id);
-          if (match) setActiveNav(match.key);
-        }
+
+        if (!visible) return;
+        const match = targets.find((item) => item.id === visible.target.id);
+        if (match) setActiveNav(match.key);
       },
       { threshold: [0.2, 0.45, 0.7], rootMargin: "-30% 0px -45% 0px" }
     );
@@ -275,7 +371,7 @@
   }
 
   async function askChat(message) {
-    const response = await fetch(`${links.demoServer}/demo/rag-chatbot`, {
+    const response = await fetch(`${config.urls.demoServer}/demo/rag-chatbot`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: message })
@@ -301,6 +397,7 @@
       launcher.classList.remove("pulse");
       if (hint) hint.classList.remove("show");
       windowEl.classList.add("open");
+      trackEvent("chat_widget_open", { location: window.location.pathname });
     };
 
     const shut = () => {
@@ -346,10 +443,13 @@
   function initStickyBar() {
     const sticky = document.getElementById("mobileSticky");
     if (!sticky) return;
+
     const update = () => {
       const show = window.innerWidth < 768 && window.scrollY > 400;
       sticky.classList.toggle("show", show);
+      document.body.classList.toggle("sticky-visible", show);
     };
+
     update();
     window.addEventListener("scroll", update);
     window.addEventListener("resize", update);
@@ -370,6 +470,7 @@
       overlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("no-scroll");
       email.focus();
+      trackEvent("exit_intent_popup_open", { location: window.location.pathname });
     };
 
     const shut = () => {
@@ -384,9 +485,7 @@
     });
 
     document.addEventListener("mouseout", (event) => {
-      if (shown) return;
-      if (window.innerWidth < 768) return;
-      if (window.scrollY < 220) return;
+      if (shown || window.innerWidth < 768 || window.scrollY < 220) return;
       if (event.clientY <= 24) open();
     });
 
@@ -395,6 +494,9 @@
       const value = email.value.trim();
       if (!value) return;
       localStorage.setItem("genesis_exit_email", value);
+      trackEvent("exit_intent_popup_submit", {
+        location: window.location.pathname
+      });
       shut();
       const contact = document.getElementById("contact");
       if (contact) {
@@ -402,22 +504,58 @@
         const contactEmail = document.querySelector('input[name="email"]');
         if (contactEmail && !contactEmail.value) contactEmail.value = value;
       } else {
-        window.location.href = `/#contact`;
+        window.location.href = "/#contact";
       }
+    });
+  }
+
+  function activateTab(group, nextButton) {
+    const buttons = group.querySelectorAll("[data-tab-target]");
+    const panels = document.querySelectorAll(`[data-tab-panel="${group.dataset.tabGroup}"]`);
+
+    buttons.forEach((button) => {
+      const active = button === nextButton;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+      button.tabIndex = active ? 0 : -1;
+    });
+
+    panels.forEach((panel) => {
+      const active = panel.id === nextButton.dataset.tabTarget;
+      panel.classList.toggle("active", active);
+      panel.hidden = !active;
     });
   }
 
   function initTabs() {
     document.querySelectorAll("[data-tab-group]").forEach((group) => {
-      const buttons = group.querySelectorAll("[data-tab-target]");
-      const panels = document.querySelectorAll(`[data-tab-panel="${group.dataset.tabGroup}"]`);
-      buttons.forEach((button) => {
-        button.addEventListener("click", () => {
-          buttons.forEach((item) => item.classList.remove("active"));
-          panels.forEach((panel) => panel.classList.remove("active"));
-          button.classList.add("active");
-          const panel = document.getElementById(button.dataset.tabTarget);
-          if (panel) panel.classList.add("active");
+      const buttons = Array.from(group.querySelectorAll("[data-tab-target]"));
+      if (!buttons.length) return;
+
+      buttons.forEach((button, index) => {
+        button.setAttribute("role", "tab");
+        button.setAttribute("aria-selected", button.classList.contains("active") ? "true" : "false");
+        button.tabIndex = button.classList.contains("active") ? 0 : -1;
+        const panel = document.getElementById(button.dataset.tabTarget);
+        if (panel) {
+          panel.setAttribute("role", "tabpanel");
+          panel.hidden = !button.classList.contains("active");
+        }
+
+        button.addEventListener("click", () => activateTab(group, button));
+        button.addEventListener("keydown", (event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+          event.preventDefault();
+
+          let nextIndex = index;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % buttons.length;
+          if (event.key === "ArrowLeft") nextIndex = (index - 1 + buttons.length) % buttons.length;
+          if (event.key === "Home") nextIndex = 0;
+          if (event.key === "End") nextIndex = buttons.length - 1;
+
+          const nextButton = buttons[nextIndex];
+          activateTab(group, nextButton);
+          nextButton.focus();
         });
       });
     });
@@ -447,22 +585,30 @@
 
   async function postContact(payload) {
     try {
-      const firstTry = await fetch("/submit/contact", {
+      const localResponse = await fetch("/submit/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      if (firstTry.ok) return await firstTry.json();
+      if (localResponse.ok) return await localResponse.json();
     } catch (error) {
-      // continue
+      // Try the fallback demo server next.
     }
 
-    const fallback = await fetch(`${links.demoServer}/submit/contact`, {
+    const fallback = await fetch(`${config.urls.demoServer}/submit/contact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+
     return await fallback.json();
+  }
+
+  function setFormResponse(node, type, message) {
+    if (!node) return;
+    node.classList.add("show");
+    node.dataset.status = type;
+    node.textContent = message;
   }
 
   function initContactForm() {
@@ -488,35 +634,49 @@
         pain_point: String(data.get("pain_point") || "").trim()
       };
 
-      if (!payload.name || !payload.business || !payload.phone || !payload.email) {
-        response.classList.add("show");
-        response.textContent = "Please fill in your name, business, phone number, and email address so Trendell can reach you.";
+      const requiredFields = ["name", "business", "phone", "email"];
+      let hasError = false;
+      requiredFields.forEach((fieldName) => {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        const missing = !payload[fieldName];
+        if (field) {
+          field.toggleAttribute("aria-invalid", missing);
+        }
+        hasError = hasError || missing;
+      });
+
+      if (hasError) {
+        setFormResponse(response, "error", "Please fill in your name, business, phone number, and email address so Trendell can reach you.");
         return;
       }
 
       const submitButton = form.querySelector('button[type="submit"]');
-      if (submitButton) submitButton.disabled = true;
+      const originalText = submitButton ? submitButton.textContent : "";
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending your note...";
+      }
 
       try {
         const result = await postContact(payload);
         const personalized = result.message || responseByBusiness(payload.business_type);
-        response.classList.add("show");
-        response.textContent = `${personalized} Trendell will reach out within 24 hours. Sending you to the next step now.`;
+        setFormResponse(response, "success", `${personalized} Trendell will reach out within 24 hours. Sending you to the next step now.`);
+        trackEvent("contact_form_submit", {
+          business_type: payload.business_type || "unknown",
+          location: window.location.pathname
+        });
         setTimeout(() => {
           window.location.href = "/thank-you.html";
         }, 3000);
       } catch (error) {
-        response.classList.add("show");
-        response.textContent = "Your note is ready. If the form stalls, call us or book your free call and Trendell will take it from there.";
+        setFormResponse(response, "error", "Your note is ready. If the form stalls, call us or book your free call and Trendell will take it from there.");
       } finally {
-        if (submitButton) submitButton.disabled = false;
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = originalText || "Get My Free Recommendation";
+        }
       }
     });
-  }
-
-  function timeAgo(index) {
-    const list = ["2m ago", "9m ago", "18m ago", "43m ago", "1h ago"];
-    return list[index] || "Today";
   }
 
   async function initActivity() {
@@ -527,9 +687,9 @@
 
     try {
       const [leadRes, demoRes, activityRes] = await Promise.all([
-        fetch(`${links.demoServer}/stats/leads-today`),
-        fetch(`${links.demoServer}/stats/demos`),
-        fetch(`${links.demoServer}/stats/recent-activity`)
+        fetch(`${config.urls.demoServer}/stats/leads-today`),
+        fetch(`${config.urls.demoServer}/stats/demos`),
+        fetch(`${config.urls.demoServer}/stats/recent-activity`)
       ]);
 
       if (leadRes.ok && leadsCount) {
@@ -545,14 +705,18 @@
       if (activityRes.ok && feed) {
         const data = await activityRes.json();
         const items = (data.items || []).slice(0, 5);
+        if (!items.length) {
+          feed.innerHTML = '<p class="small-note">Live example data is not available right now. Trendell can walk you through it on the call.</p>';
+          return;
+        }
+
         feed.innerHTML = items
-          .map((item, index) => {
+          .map((item) => {
             const text = typeof item === "string" ? item : item.text;
             return `
               <div class="activity-item">
                 <span class="activity-dot"></span>
                 <span>${text}</span>
-                <span class="small-note">${timeAgo(index)}</span>
               </div>
             `;
           })
@@ -560,26 +724,44 @@
       }
     } catch (error) {
       if (feed) {
-        feed.innerHTML = [
-          "🎯 New inquiry from a Detroit restaurant — answered instantly",
-          "💬 Chat helper answered 4 questions about pricing",
-          "📞 Riley handled an incoming call",
-          "✅ All 11 systems checked and running perfectly",
-          "🔍 Lead finder found 20 new prospects"
-        ]
-          .map((item, index) => `
-            <div class="activity-item">
-              <span class="activity-dot"></span>
-              <span>${item}</span>
-              <span class="small-note">${timeAgo(index)}</span>
-            </div>
-          `)
-          .join("");
+        feed.innerHTML = '<p class="small-note">Live example data is not available right now. Trendell can show you how it works on the call.</p>';
       }
     }
   }
 
+  function initClickTracking() {
+    document.addEventListener("click", (event) => {
+      const target = event.target.closest("a, button");
+      if (!target) return;
+
+      const explicitEvent = target.dataset.trackEvent;
+      if (explicitEvent) {
+        trackEvent(explicitEvent, {
+          location: target.dataset.trackLocation || window.location.pathname,
+          label: target.dataset.trackLabel || target.textContent.trim()
+        });
+      }
+
+      if (target.tagName === "A") {
+        const href = target.getAttribute("href") || "";
+        if (href.includes("calendly.com")) {
+          trackEvent("calendly_click", {
+            location: target.dataset.trackLocation || window.location.pathname,
+            label: target.dataset.trackLabel || target.textContent.trim()
+          });
+        }
+        if (href.includes("buy.stripe.com")) {
+          trackEvent("stripe_checkout_click", {
+            location: target.dataset.trackLocation || window.location.pathname,
+            label: target.dataset.trackLabel || target.textContent.trim()
+          });
+        }
+      }
+    });
+  }
+
   function initCommon() {
+    loadAnalytics();
     initMenu();
     initHomeNavObserver();
     initTabs();
@@ -589,16 +771,18 @@
     initExitModal();
     initContactForm();
     initActivity();
+    initClickTracking();
   }
 
   window.GenesisSite = {
-    links,
+    config,
     mountShell,
     initCommon,
     initTabs,
     initFaq,
     initActivity,
     initContactForm,
-    askChat
+    askChat,
+    trackEvent
   };
 })();
