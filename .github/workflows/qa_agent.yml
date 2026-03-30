@@ -90,8 +90,8 @@ jobs:
           DEMOS=$(curl -sL --max-time 30 https://genesisai.systems/demos.html)
           ! echo "$ABOUT" | grep -q 'Placeholder testimonial'
           ! echo "$ABOUT" | grep -q '\[Client Name\]'
-          ! echo "$DEMOS" | grep -q 'buy.stripe.com'
-          echo "$DEMOS" | grep -q 'See pricing'
+          echo "$DEMOS" | grep -q 'buy.stripe.com'
+          echo "$DEMOS" | grep -q 'Reserve'
 
       - name: Check demo server is live
         run: |
@@ -114,35 +114,23 @@ jobs:
           test -f sitemap.xml
           test -f robots.txt
 
-      - name: SMS alert on failure
+      - name: Telegram alert on failure
         if: failure()
         env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
-          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          pip install twilio -q
+          pip install requests -q
           python3 - << 'PYEOF'
-          import os
-          if os.getenv('TWILIO_ACCOUNT_SID') and os.getenv('TWILIO_AUTH_TOKEN'):
-              from twilio.rest import Client
+          import os, requests
+          token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+          chat = os.getenv('TELEGRAM_CHAT_ID', '')
+          msg = "🚨 QA Agent FAILED\nA site check failed.\nCheck GitHub Actions:\ngithub.com/prosperouscollection-prog/ai-automation-portfolio/actions"
+          if token and chat:
               try:
-                  client = Client(
-                      os.getenv('TWILIO_ACCOUNT_SID'),
-                      os.getenv('TWILIO_AUTH_TOKEN')
-                  )
-                  client.messages.create(
-                      body=(
-                          "Genesis AI Systems alert\n"
-                          "A site check failed.\n"
-                          "Review GitHub Actions:\n"
-                          "github.com/prosperouscollection-prog/ai-automation-portfolio/actions"
-                      ),
-                      from_=os.getenv('TWILIO_FROM_NUMBER'),
-                      to=os.getenv('ALERT_PHONE_NUMBER')
-                  )
-                  print('Failure text sent')
-              except Exception as error:
-                  print(f'SMS failed: {error}')
+                  r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': chat, 'text': msg}, timeout=10)
+                  print('✅ Telegram alert sent' if r.ok else f'⚠️ Telegram {r.status_code}')
+              except Exception as e:
+                  print(f'⚠️ Telegram failed: {e}')
           PYEOF

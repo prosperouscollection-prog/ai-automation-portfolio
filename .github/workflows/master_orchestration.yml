@@ -22,80 +22,65 @@ jobs:
           echo "Demos: $DEMOS"
           echo "Server: $SERVER"
           echo "Scraper: $SCRAPER"
-      - name: Morning summary SMS
+      - name: Morning summary Telegram
         if: |
           github.event.schedule == '0 8 * * *' ||
           github.event_name == 'workflow_dispatch'
         env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
-          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
         run: |
-          pip install twilio requests -q
+          pip install requests -q
           python3 - << 'PYEOF'
           import os, requests
-          from twilio.rest import Client
+          token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+          chat = os.getenv('TELEGRAM_CHAT_ID', '')
           try:
               r = requests.get(
-                  os.getenv('DEMO_SERVER_URL','') + '/stats/leads-today',
+                  os.getenv('DEMO_SERVER_URL', '') + '/stats/leads-today',
                   timeout=10
               )
               data = r.json() if r.ok else {}
-              leads = data.get('count','?')
-              high = data.get('high','?')
-              client = Client(
-                  os.getenv('TWILIO_ACCOUNT_SID'),
-                  os.getenv('TWILIO_AUTH_TOKEN')
-              )
-              client.messages.create(
-                  body=(
-                      f"Good morning Trendell 👋\n"
-                      f"Genesis AI Systems Daily\n"
-                      f"{'='*22}\n"
-                      f"Leads today: {leads}\n"
-                      f"HOT leads: {high}\n"
-                      f"Agents: All passing ✅\n"
-                      f"Site: Online ✅\n"
-                      f"genesisai.systems"
-                  ),
-                  from_=os.getenv('TWILIO_FROM_NUMBER'),
-                  to=os.getenv('ALERT_PHONE_NUMBER')
-              )
-              print('✅ Morning SMS sent')
-          except Exception as e:
-              print(f'Morning SMS failed: {e}')
+              leads = data.get('count', '?')
+              high = data.get('high', '?')
+          except Exception:
+              leads = high = '?'
+          msg = (
+              f"Good morning Trendell 👋\n"
+              f"Genesis AI Systems Daily\n"
+              f"{'='*22}\n"
+              f"Leads today: {leads}\n"
+              f"HOT leads: {high}\n"
+              f"Agents: All passing ✅\n"
+              f"Site: Online ✅\n"
+              f"genesisai.systems"
+          )
+          if token and chat:
+              try:
+                  r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': chat, 'text': msg}, timeout=10)
+                  print('✅ Morning Telegram sent' if r.ok else f'⚠️ Telegram {r.status_code}')
+              except Exception as e:
+                  print(f'⚠️ Telegram failed: {e}')
           PYEOF
-      - name: SMS alert on failure
+      - name: Telegram alert on failure
         if: failure()
         env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
-          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          pip install twilio -q
+          pip install requests -q
           python3 - << 'PYEOF'
-          import os
-          from twilio.rest import Client
-          try:
-              client = Client(
-                  os.getenv('TWILIO_ACCOUNT_SID'),
-                  os.getenv('TWILIO_AUTH_TOKEN')
-              )
-              client.messages.create(
-                  body=(
-                      "🚨 Genesis AI Systems Alert\n"
-                      "An agent just FAILED.\n"
-                      "Check GitHub Actions:\n"
-                      "github.com/prosperouscollection-prog/"
-                      "ai-automation-portfolio/actions"
-                  ),
-                  from_=os.getenv('TWILIO_FROM_NUMBER'),
-                  to=os.getenv('ALERT_PHONE_NUMBER')
-              )
-              print('✅ Failure SMS sent')
-          except Exception as e:
-              print(f'SMS failed: {e}')
+          import os, requests
+          token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+          chat = os.getenv('TELEGRAM_CHAT_ID', '')
+          msg = "🚨 Master Orchestration FAILED\nCheck GitHub Actions:\ngithub.com/prosperouscollection-prog/ai-automation-portfolio/actions"
+          if token and chat:
+              try:
+                  r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': chat, 'text': msg}, timeout=10)
+                  print('✅ Telegram alert sent' if r.ok else f'⚠️ Telegram {r.status_code}')
+              except Exception as e:
+                  print(f'⚠️ Telegram failed: {e}')
           PYEOF

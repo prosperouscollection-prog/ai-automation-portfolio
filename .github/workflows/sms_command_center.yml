@@ -1,12 +1,9 @@
-name: SMS Command Center — Genesis AI Systems
+name: Telegram Command Center — Genesis AI Systems
 on:
   workflow_dispatch:
     inputs:
       command:
-        description: 'SMS command from Trendell'
-        required: true
-      from_number:
-        description: 'Sender phone number'
+        description: 'Command to process'
         required: true
 
 jobs:
@@ -18,15 +15,12 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install deps
-        run: pip install twilio requests python-dotenv
-      - name: Process SMS command
+        run: pip install requests python-dotenv
+      - name: Process command
         env:
           COMMAND: ${{ github.event.inputs.command }}
-          FROM_NUMBER: ${{ github.event.inputs.from_number }}
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
-          ALERT_PHONE_NUMBER: ${{ secrets.ALERT_PHONE_NUMBER }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DEMO_SERVER_URL: ${{ secrets.DEMO_SERVER_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

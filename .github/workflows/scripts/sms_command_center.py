@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
-"""Turn simple text commands into helpful business actions."""
+"""Accept commands and reply via Telegram."""
 
 from __future__ import annotations
 
-import json
 import os
-from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
-from twilio.rest import Client
 
 load_dotenv()
-
-ALLOWED_NUMBERS = ["+13134002575"]
 
 COMMANDS = {
     "STATUS": "handle_status",
@@ -31,34 +26,25 @@ COMMANDS = {
 }
 
 
-class SMSCommandCenter:
-    """Receive text commands from Trendell and answer fast."""
+class TelegramCommandCenter:
+    """Receive commands and reply via Telegram."""
 
     def __init__(self) -> None:
-        self.client = Client(
-            os.getenv("TWILIO_ACCOUNT_SID"),
-            os.getenv("TWILIO_AUTH_TOKEN"),
-        )
-        self.from_num = os.getenv("TWILIO_FROM_NUMBER")
-        self.to_num = os.getenv("ALERT_PHONE_NUMBER")
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        self.chat = os.getenv("TELEGRAM_CHAT_ID", "")
         self.demo_server = os.getenv("DEMO_SERVER_URL", "https://genesis-ai-systems-demo.onrender.com")
         self.github_token = os.getenv("GITHUB_TOKEN", "")
 
     def run(self) -> None:
-        from_number = os.getenv("FROM_NUMBER", "")
         command = os.getenv("COMMAND", "").strip().upper()
-        if from_number not in ALLOWED_NUMBERS:
-            print(f"Rejected command from {from_number}")
-            return
         parts = command.split()
         cmd = parts[0] if parts else ""
         args = parts[1:] if len(parts) > 1 else []
         handler = COMMANDS.get(cmd)
         response = getattr(self, handler)(args) if handler else self.handle_help([])
-        self.send_sms(response)
+        self.send_telegram(response)
 
     def github_dispatch(self, workflow_name: str) -> bool:
-        """Start a GitHub Action by name."""
         try:
             response = requests.post(
                 f"https://api.github.com/repos/prosperouscollection-prog/ai-automation-portfolio/actions/workflows/{workflow_name}/dispatches",
@@ -78,15 +64,13 @@ class SMSCommandCenter:
             response = requests.get(f"{self.demo_server}/stats/health", timeout=10)
             data = response.json() if response.ok else {}
             site = data.get("site", "?")
-            server = data.get("demo_server", "?")
             uptime = data.get("uptime", "?")
         except Exception:
-            site = server = uptime = "checking..."
+            site = uptime = "checking..."
         return (
             "Genesis AI Systems Status\n"
             "====================\n"
             f"Site: {'✅' if site == '200' else '⚠️'} Online\n"
-            f"Demo Server: {'✅' if server == '200' else '⚠️'}\n"
             f"Uptime: {uptime}\n"
             "Agents: All running ✅\n"
             "genesisai.systems"
@@ -107,7 +91,6 @@ class SMSCommandCenter:
             f"Total: {count}\n"
             f"🔥 HOT: {high}\n"
             f"✅ WARM: {medium}\n"
-            "Reply LEAD 1 for details\n"
             "genesisai.systems"
         )
 
@@ -157,7 +140,7 @@ class SMSCommandCenter:
             "Marketing: ✅ 7am daily\n"
             "Client Success: ✅ 9am daily\n"
             "Lead Generator: ✅ 6am daily\n"
-            "SMS Center: ✅ On demand\n"
+            "Telegram Center: ✅ On demand\n"
             "Check: github.com/prosperouscollection-prog"
         )
 
@@ -178,18 +161,21 @@ class SMSCommandCenter:
             "HELP — this list"
         )
 
-    def send_sms(self, message: str) -> None:
+    def send_telegram(self, message: str) -> None:
+        if not self.token or not self.chat:
+            print("⚠️ Telegram not configured")
+            return
         try:
-            self.client.messages.create(
-                body=message[:1600],
-                from_=self.from_num,
-                to=self.to_num,
+            r = requests.post(
+                f"https://api.telegram.org/bot{self.token}/sendMessage",
+                json={"chat_id": self.chat, "text": message[:4096]},
+                timeout=10,
             )
-            print("✅ Response sent")
+            print("✅ Telegram response sent" if r.ok else f"⚠️ Telegram {r.status_code}")
         except Exception as error:
-            print(f"❌ SMS response failed: {error}")
+            print(f"⚠️ Telegram failed: {error}")
 
 
 if __name__ == "__main__":
-    center = SMSCommandCenter()
+    center = TelegramCommandCenter()
     center.run()
