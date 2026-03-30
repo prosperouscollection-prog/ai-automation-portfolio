@@ -331,6 +331,31 @@ function getPersonalizedResponse(businessType, score) {
   return group[score] || defaults[score] || defaults.MEDIUM;
 }
 
+async function callClaude(prompt, maxTokens = 300) {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return null;
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    return data?.content?.[0]?.text || null;
+  } catch (error) {
+    console.error('Claude API error:', error.message);
+    return null;
+  }
+}
+
 function todayLeadBreakdown() {
   const today = new Date().toDateString();
   const leads = memory.leads.filter((lead) => new Date(lead.timestamp).toDateString() === today);
@@ -667,26 +692,33 @@ app.get('/', (req, res) => {
 
 app.post('/demo/lead-capture', async (req, res) => {
   const message = req.body.message || 'Need help';
-  const score = String(message).toLowerCase().includes('emergency') ? 'HIGH' : 'MEDIUM';
+  const text = String(message).toLowerCase();
+  const score = (text.includes('emergency') || text.includes('after hours') || text.includes('miss')) ? 'HIGH' : 'MEDIUM';
+  const claudeReply = await callClaude(
+    `You are a helpful AI assistant for a local business. A potential customer sent this message: "${message}". Write a warm, professional first reply in 1-2 sentences. Plain English only. No jargon.`
+  );
+  const response = claudeReply || 'Thanks for reaching out. We got your message and will follow up fast.';
   saveActivity(`🎯 Demo lead handled — Score: ${score}`);
-  res.json(standardResponse({
-    success: true,
-    score,
-    response: 'Thanks for reaching out. We got your message and will follow up fast.'
-  }));
+  res.json(standardResponse({ success: true, score, response }));
 });
 
 app.post('/demo/rag-chatbot', async (req, res) => {
-  const question = String(req.body.question || '').toLowerCase();
-  let answer = 'We help local businesses answer calls, capture leads, and book appointments even while you sleep.';
-  if (question.includes('price')) {
-    answer = 'You can start at $500 setup and $150 per month.';
-  }
-  if (question.includes('restaurant')) {
-    answer = 'For restaurants we answer calls, take reservations, and reply to menu questions right away.';
-  }
-  if (question.includes('hours')) {
-    answer = 'We answer your website and phone 24 hours a day.';
+  const question = String(req.body.question || req.body.message || '');
+  const claudeAnswer = await callClaude(
+    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer this customer question in 2-3 sentences. Plain English only — no jargon. Facts: we build AI phone helpers, website chat helpers, lead capture systems, and social content tools for local businesses. Starter package is $500 setup + $150/month. Answer the question: "${question}"`
+  );
+  let answer = claudeAnswer;
+  if (!answer) {
+    const q = question.toLowerCase();
+    if (q.includes('price') || q.includes('cost')) {
+      answer = 'You can start at $500 setup and $150 per month.';
+    } else if (q.includes('restaurant')) {
+      answer = 'For restaurants we answer calls, take reservations, and reply to menu questions right away.';
+    } else if (q.includes('hours')) {
+      answer = 'We answer your website and phone 24 hours a day.';
+    } else {
+      answer = 'We help local businesses answer calls, capture leads, and book appointments even while you sleep.';
+    }
   }
   memory.demos += 1;
   saveActivity('💬 Chat helper answered a question');
@@ -695,17 +727,100 @@ app.post('/demo/rag-chatbot', async (req, res) => {
 
 app.post('/demo/video-automation', async (req, res) => {
   const topic = req.body.topic || '5 reasons to choose Invisalign';
+  const claudeContent = await callClaude(
+    `Create a short-form video content package for a local Detroit business. Topic: "${topic}". Return ONLY valid JSON with these exact keys: script (2-3 sentence hook + body + call to action), captions (array of 3 caption ideas), hashtags (array of 5 hashtags including #DetroitBusiness), thumbnail_text (short punchy headline under 8 words). No markdown, just raw JSON.`,
+    400
+  );
+  let parsed = null;
+  if (claudeContent) {
+    try { parsed = JSON.parse(claudeContent); } catch (_) { parsed = null; }
+  }
   res.json(standardResponse({
     success: true,
     topic,
-    script: `Hook: Stop scrolling if you want a better smile.\nBody: Here are 5 reasons people choose ${topic}.\nCall to action: Message us to learn more.`,
-    captions: [
-      `Thinking about ${topic}? Here is why people choose it.`,
-      `${topic} can make a big difference fast.`,
-      `Want help deciding if ${topic} is right for you?`
+    script: parsed?.script || `Hook: Stop scrolling if this matters to you.\nBody: Here are the top reasons ${topic} works.\nCall to action: Message us to learn more.`,
+    captions: parsed?.captions || [
+      `Thinking about ${topic}? Here is why it works.`,
+      `${topic} can make a real difference fast.`,
+      `Want help with ${topic} for your business?`
     ],
-    hashtags: ['#DetroitBusiness', '#SmileMore', '#GenesisAISystems'],
-    thumbnail_text: '5 Reasons People Choose It'
+    hashtags: parsed?.hashtags || ['#DetroitBusiness', '#LocalBusiness', '#AIAutomation', '#GenesisAISystems', '#Detroit'],
+    thumbnail_text: parsed?.thumbnail_text || `Why ${topic} matters`
+  }));
+});
+
+app.post('/demo/faq-bot', async (req, res) => {
+  const question = String(req.body.question || req.body.message || '');
+  const claudeAnswer = await callClaude(
+    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer this customer question in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat helpers, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Question: "${question}"`
+  );
+  const answer = claudeAnswer || 'We help local businesses answer calls, capture leads, and book appointments automatically. Ask us anything about pricing, what we build, or how it works.';
+  memory.demos += 1;
+  saveActivity('💬 FAQ bot answered a question');
+  res.json(standardResponse({ success: true, answer }));
+});
+
+app.post('/demo/workflow', async (req, res) => {
+  const message = req.body.message || 'New lead came in';
+  const claudeSummary = await callClaude(
+    `Briefly describe (2 sentences) what an AI automation system would do after receiving this business lead: "${message}". Plain English, no jargon.`
+  );
+  const summary = claudeSummary || 'The lead was captured, scored, saved to your list, and a first reply was sent automatically. You did not have to touch a thing.';
+  saveActivity('🔄 Workflow demo ran');
+  res.json(standardResponse({
+    success: true,
+    steps: [
+      { id: 'capture', label: '📥 Lead came in', status: 'done' },
+      { id: 'score', label: '🎯 Lead got sorted', status: 'done' },
+      { id: 'save', label: '📋 Lead saved to the list', status: 'done' },
+      { id: 'reply', label: '💬 First reply sent', status: 'done' }
+    ],
+    summary
+  }));
+});
+
+app.post('/demo/follow-up', async (req, res) => {
+  const context = req.body.message || req.body.context || 'A lead expressed interest in AI automation for their restaurant';
+  const claudeFollowUp = await callClaude(
+    `Write a short, friendly follow-up message (3-4 sentences) from Trendell Fordham at Genesis AI Systems to a potential client. Context: "${context}". Plain English, warm tone, ends with a clear next step like booking a call.`
+  );
+  const followUp = claudeFollowUp || 'Hi, thanks for reaching out. I wanted to follow up and see if you had any questions about how we can help your business. I would love to jump on a quick 15-minute call to walk you through what this looks like. You can book a time at genesisai.systems.';
+  saveActivity('📧 Follow-up message generated');
+  res.json(standardResponse({ success: true, follow_up: followUp }));
+});
+
+app.post('/demo/chat', async (req, res) => {
+  const message = String(req.body.message || req.body.question || '');
+  const claudeReply = await callClaude(
+    `You are the AI chat assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Message: "${message}"`
+  );
+  const reply = claudeReply || 'We help local businesses answer calls, capture leads, and book appointments even while you sleep. What would you like to know?';
+  memory.demos += 1;
+  saveActivity('💬 Chat demo answered a message');
+  res.json(standardResponse({ success: true, reply }));
+});
+
+app.post('/demo/video-content', async (req, res) => {
+  const topic = req.body.topic || req.body.message || 'AI automation for local business';
+  const claudeContent = await callClaude(
+    `Create a short-form video content package for a local Detroit business. Topic: "${topic}". Return ONLY valid JSON with these exact keys: script (2-3 sentence hook + body + call to action), captions (array of 3 caption ideas), hashtags (array of 5 hashtags including #DetroitBusiness), thumbnail_text (short punchy headline under 8 words). No markdown, just raw JSON.`,
+    400
+  );
+  let parsed = null;
+  if (claudeContent) {
+    try { parsed = JSON.parse(claudeContent); } catch (_) { parsed = null; }
+  }
+  res.json(standardResponse({
+    success: true,
+    topic,
+    script: parsed?.script || `Hook: Stop scrolling if this matters to you.\nBody: Here is why ${topic} works for local businesses.\nCall to action: Message us to learn more.`,
+    captions: parsed?.captions || [
+      `Thinking about ${topic}? Here is why it works.`,
+      `${topic} can make a real difference fast.`,
+      `Want help with ${topic} for your business?`
+    ],
+    hashtags: parsed?.hashtags || ['#DetroitBusiness', '#LocalBusiness', '#AIAutomation', '#GenesisAISystems', '#Detroit'],
+    thumbnail_text: parsed?.thumbnail_text || `Why ${topic} matters`
   }));
 });
 
