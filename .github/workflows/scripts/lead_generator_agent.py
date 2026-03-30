@@ -62,37 +62,63 @@ class LeadGeneratorAgent:
         print(f"🔥 HOT leads: {len(hot)}")
 
     def search_apollo(self, industry: str, keywords: list[str]) -> list[dict]:
-        """Search Apollo.io for Detroit businesses in this industry."""
+        """Search Apollo.io for Detroit business contacts in this industry.
+        Uses /v1/people/search — available on free plan.
+        Returns org-shaped dicts so downstream code stays unchanged.
+        """
         try:
             response = requests.post(
-                "https://api.apollo.io/v1/mixed_companies/search",
+                "https://api.apollo.io/v1/people/search",
                 headers={
                     "Content-Type": "application/json",
                     "X-Api-Key": self.apollo_key,
                 },
                 json={
-                    "q_organization_name": "",
+                    "person_titles": ["owner", "manager", "operator", "founder", "general manager"],
                     "organization_locations": ["Detroit, Michigan, United States"],
                     "organization_keyword_tags": keywords,
+                    "contact_email_status": ["verified", "likely to engage"],
                     "page": 1,
                     "per_page": 25,
                 },
                 timeout=30,
             )
             if response.status_code == 401:
-                print(f"❌ Apollo auth failed (401) — check APOLLO_API_KEY secret")
+                print("❌ Apollo auth failed (401) — check APOLLO_API_KEY secret")
+                return []
+            if response.status_code == 403:
+                print("❌ Apollo 403 — endpoint not accessible on this plan")
+                print(f"   {response.text[:300]}")
                 return []
             if response.status_code == 422:
-                print(f"❌ Apollo rejected request (422) — check payload format")
-                print(f"   Response: {response.text[:300]}")
+                print(f"❌ Apollo 422 — bad request: {response.text[:300]}")
                 return []
             if not response.ok:
-                print(f"❌ Apollo error {response.status_code}: {response.text[:300]}")
+                print(f"❌ Apollo {response.status_code}: {response.text[:300]}")
                 return []
             data = response.json()
-            orgs = data.get("organizations", [])
-            print(f"✅ Apollo returned {len(orgs)} organizations")
-            return orgs
+            people = data.get("people", [])
+            print(f"✅ Apollo returned {len(people)} contacts")
+            # Normalize people records to org-shaped dicts
+            results = []
+            for person in people:
+                org = person.get("organization") or {}
+                results.append({
+                    "name": org.get("name") or person.get("name", "Unknown"),
+                    "primary_domain": org.get("primary_domain", ""),
+                    "phone": (
+                        person.get("phone_numbers", [{}])[0].get("raw_number", "")
+                        if person.get("phone_numbers") else ""
+                    ),
+                    "email": person.get("email", ""),
+                    "contact_name": person.get("name", ""),
+                    "title": person.get("title", ""),
+                    "estimated_num_employees": org.get("estimated_num_employees", 0),
+                    "city": "Detroit",
+                    "industry": industry,
+                    "linkedin_url": person.get("linkedin_url", ""),
+                })
+            return results
         except Exception as error:
             print(f"❌ Apollo exception: {error}")
             return []
@@ -132,6 +158,17 @@ class LeadGeneratorAgent:
             scored.append(prospect)
         return scored
 
+    # HubSpot requires specific enum values for the industry field
+    HUBSPOT_INDUSTRY_MAP = {
+        "restaurant": "FOOD_BEVERAGES",
+        "dental": "HEALTH_WELLNESS_AND_FITNESS",
+        "hvac": "CONSTRUCTION",
+        "salon": "COSMETICS",
+        "real_estate": "REAL_ESTATE",
+        "retail": "RETAIL",
+        "mixed": "OTHER",
+    }
+
     # ------------------------------------------------------------------
     # REAL HubSpot save — creates a Company record for each HOT lead
     # ------------------------------------------------------------------
@@ -156,12 +193,19 @@ class LeadGeneratorAgent:
                         "domain": prospect.get("primary_domain", ""),
                         "phone": prospect.get("phone", ""),
                         "city": prospect.get("city", "Detroit"),
-                        "industry": prospect.get("industry", ""),
-                        "numberofemployees": str(prospect.get("estimated_num_employees", "")),
+                        "state": "Michigan",
+                        "country": "United States",
+                        "industry": self.HUBSPOT_INDUSTRY_MAP.get(
+                            prospect.get("industry", ""), "OTHER"
+                        ),
+                        "numberofemployees": str(prospect.get("estimated_num_employees", "") or ""),
                         "description": (
                             f"Score: {prospect.get('score','')}\n"
                             f"Reason: {prospect.get('reason','')}\n"
-                            f"Product: {prospect.get('recommended_product','')}"
+                            f"Product: {prospect.get('recommended_product','')}\n"
+                            f"Contact: {prospect.get('contact_name','')}, {prospect.get('title','')}\n"
+                            f"Email: {prospect.get('email','')}\n"
+                            f"LinkedIn: {prospect.get('linkedin_url','')}"
                         ),
                         "hs_lead_status": "NEW",
                     }
