@@ -238,15 +238,12 @@
         <div class="exit-overlay" id="exitOverlay" aria-hidden="true">
           <div class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exitTitle">
             <button class="exit-close" id="exitClose" aria-label="Close popup">✕</button>
-            <h3 id="exitTitle">Before you go</h3>
-            <p>Leave your email and Trendell will send the next best step for your business.</p>
-            <form id="exitForm" class="contact-form">
-              <label>
-                Email address
-                <input id="exitEmail" type="email" required placeholder="you@yourbusiness.com">
-              </label>
-              <button class="button button-primary full" type="submit">Get My Free Recommendation</button>
-            </form>
+            <h3 id="exitTitle">Before you go — book a free 15-minute call</h3>
+            <p>Tell Trendell what is slowing the business down and he will tell you exactly what to build first. No pitch. No pressure.</p>
+            <div class="exit-actions">
+              <a id="exitCalendly" class="button button-primary full" href="${config.urls.calendly}" target="_blank" rel="noreferrer">Book Free Call</a>
+              <button id="exitDismiss" class="button button-ghost full">No thanks</button>
+            </div>
           </div>
         </div>
       `
@@ -451,18 +448,33 @@
   function initExitModal() {
     const overlay = document.getElementById("exitOverlay");
     const close = document.getElementById("exitClose");
-    const form = document.getElementById("exitForm");
-    const email = document.getElementById("exitEmail");
-    if (!overlay || !close || !form || !email) return;
+    const dismiss = document.getElementById("exitDismiss");
+    const calendly = document.getElementById("exitCalendly");
+    if (!overlay || !close) return;
+
+    const COOKIE_KEY = "genesis_exit_shown";
+    const COOKIE_DAYS = 7;
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+      return match ? decodeURIComponent(match[1]) : null;
+    }
+
+    function setCookie(name, value, days) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/; SameSite=Lax";
+    }
 
     let shown = false;
 
     const open = () => {
+      if (shown || getCookie(COOKIE_KEY)) return;
       shown = true;
+      setCookie(COOKIE_KEY, "1", COOKIE_DAYS);
       overlay.classList.add("show");
       overlay.setAttribute("aria-hidden", "false");
       document.body.classList.add("no-scroll");
-      email.focus();
+      if (calendly) calendly.focus();
       trackEvent("exit_intent_popup_open", { location: window.location.pathname });
     };
 
@@ -473,32 +485,19 @@
     };
 
     close.addEventListener("click", shut);
+    if (dismiss) dismiss.addEventListener("click", shut);
     overlay.addEventListener("click", (event) => {
       if (event.target === overlay) shut();
     });
+    if (calendly) {
+      calendly.addEventListener("click", () => {
+        trackEvent("exit_intent_popup_calendly_click", { location: window.location.pathname });
+      });
+    }
 
     document.addEventListener("mouseout", (event) => {
-      if (shown || window.innerWidth < 768 || window.scrollY < 220) return;
+      if (window.innerWidth < 768 || window.scrollY < 220) return;
       if (event.clientY <= 24) open();
-    });
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const value = email.value.trim();
-      if (!value) return;
-      localStorage.setItem("genesis_exit_email", value);
-      trackEvent("exit_intent_popup_submit", {
-        location: window.location.pathname
-      });
-      shut();
-      const contact = document.getElementById("contact");
-      if (contact) {
-        contact.scrollIntoView({ behavior: "smooth", block: "start" });
-        const contactEmail = document.querySelector('input[name="email"]');
-        if (contactEmail && !contactEmail.value) contactEmail.value = value;
-      } else {
-        window.location.href = "/#contact";
-      }
     });
   }
 

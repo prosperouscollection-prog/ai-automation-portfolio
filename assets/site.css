@@ -1437,6 +1437,31 @@ body.sticky-visible .chat-window {
   border: 1px solid rgba(148, 163, 184, 0.24);
   background: transparent;
   color: var(--white);
+  cursor: pointer;
+}
+
+.exit-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.button-ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--muted);
+  border-radius: 14px;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.button-ghost:hover {
+  border-color: rgba(148, 163, 184, 0.6);
+  color: var(--white);
 }
 
 .simple-hero {

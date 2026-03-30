@@ -400,6 +400,7 @@
   </main>
 
   <div id="siteFooterMount"></div>
+  <div id="siteExitMount"></div>
 
   <script src="/assets/site-config.js"></script>
   <script src="/assets/site.js"></script>
@@ -408,7 +409,8 @@
 
     window.GenesisSite.mountShell({
       page: "demos",
-      chat: true
+      chat: true,
+      exitModal: true
     });
     window.GenesisSite.initCommon();
 
