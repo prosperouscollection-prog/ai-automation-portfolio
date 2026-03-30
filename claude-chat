@@ -1,0 +1,9 @@
+#!/bin/bash
+# Claude Chat - Simple One-Command Launcher
+
+VENV="/Users/genesisai/portfolio/claude-api-phone-access/backend/venv"
+SCRIPT="/Users/genesisai/portfolio/claude-api-phone-access/imessage-integration/claude-chat-simple"
+
+# Activate venv and run
+source "$VENV/bin/activate"
+exec python3 "$SCRIPT"
