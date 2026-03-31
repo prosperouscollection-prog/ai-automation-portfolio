@@ -118,6 +118,7 @@ class SalesAgent:
                     address=row[5] if len(row) > 5 else "",
                     yelp_rating=row[7] if len(row) > 7 else "",
                     yelp_url=row[12] if len(row) > 12 else "",
+                    website=row[3] if len(row) > 3 else "",
                 ))
             print(f"✅ Read {len(leads)} leads from Sheets")
             return leads
