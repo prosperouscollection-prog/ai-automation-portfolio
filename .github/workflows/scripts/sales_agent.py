@@ -45,6 +45,7 @@ class Lead:
     yelp_rating: str = ""
     yelp_url: str = ""
     website: str = ""
+    sheet_row: int = 0
 
 
 class SalesAgent:
@@ -55,6 +56,7 @@ class SalesAgent:
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
         self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
         self.resend_key = os.getenv("RESEND_API_KEY", "").strip()
+        self._sheets_service = None
 
     def run(self) -> None:
         leads = self.get_leads_from_sheets()
@@ -95,17 +97,21 @@ class SalesAgent:
                 scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
             service = build("sheets", "v4", credentials=creds)
+            self._sheets_service = service  # store for _mark_notified
             result = service.spreadsheets().values().get(
                 spreadsheetId=self.sheet_id,
-                range="Leads!A2:N",
+                range="Leads!A2:O",
             ).execute()
             rows = result.get("values", [])
             leads = []
-            for row in rows:
+            for i, row in enumerate(rows):
                 if len(row) < 10:
                     continue
                 score = row[9] if len(row) > 9 else "WARM"
                 if score not in ("HOT", "WARM"):
+                    continue
+                # Skip leads already notified (column O = index 14)
+                if len(row) > 14 and row[14].strip() == "Y":
                     continue
                 leads.append(Lead(
                     name=row[2] if len(row) > 2 else "Business Owner",
@@ -119,6 +125,7 @@ class SalesAgent:
                     yelp_rating=row[7] if len(row) > 7 else "",
                     yelp_url=row[12] if len(row) > 12 else "",
                     website=row[3] if len(row) > 3 else "",
+                    sheet_row=i + 2,  # +2 for 1-based index + header row
                 ))
             print(f"✅ Read {len(leads)} leads from Sheets")
             return leads
@@ -126,6 +133,19 @@ class SalesAgent:
             print(f"❌ Sheets read error: {e}")
             return []
 
+    def _mark_notified(self, sheet_row: int) -> None:
+        """Write Y to column O of the given Leads row to suppress re-notification."""
+        if not self._sheets_service or not self.sheet_id:
+            return
+        try:
+            self._sheets_service.spreadsheets().values().update(
+                spreadsheetId=self.sheet_id,
+                range=f"Leads!O{sheet_row}",
+                valueInputOption="RAW",
+                body={"values": [["Y"]]},
+            ).execute()
+        except Exception as e:
+            print(f"⚠️  _mark_notified failed for row {sheet_row}: {e}")
 
     def get_email_body(self, lead: Lead) -> tuple[str, str]:
         """Return (subject, body) for this lead's business type."""
@@ -203,6 +223,8 @@ class SalesAgent:
             email=lead.email,
             draft=f"{subject}\n\n{body[:300]}",
         )
+        # Persist notified flag immediately so this lead is not re-prompted on the next run
+        self._mark_notified(lead.sheet_row)
         status = get_flow().wait_for_approval(req.request_id, timeout_seconds=600)
         if status == ApprovalStatus.APPROVED:
             ok = resend_email(lead.email, subject, body, priority="MEDIUM")
