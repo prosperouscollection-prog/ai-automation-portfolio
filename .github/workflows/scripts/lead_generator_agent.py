@@ -47,8 +47,23 @@ class LeadGeneratorAgent:
         else:
             prospects = self.search_yelp(industry, schedule["yelp_categories"])
 
+        # --- Apollo search (runs alongside Yelp, deduplicated by name) ---
+        if self.apollo_key:
+            apollo_results = self.search_apollo(industry, schedule["keywords"])
+            if apollo_results:
+                existing_names = {p["name"].lower() for p in prospects}
+                added = 0
+                for ap in apollo_results:
+                    if ap["name"].lower() not in existing_names:
+                        prospects.append(ap)
+                        existing_names.add(ap["name"].lower())
+                        added += 1
+                print(f"✅ Apollo added {added} deduplicated leads")
+        else:
+            print("ℹ️  APOLLO_API_KEY not set — Apollo skipped")
+
         if not prospects:
-            print("⚠️  No Apollo results — falling back to mock data for testing")
+            print("⚠️  No results from any source — falling back to mock data for testing")
             prospects = self.get_mock_prospects(industry)
 
         scored = self.score_prospects(prospects)
@@ -150,6 +165,10 @@ class LeadGeneratorAgent:
             data = response.json()
             people = data.get("people", [])
             print(f"✅ Apollo returned {len(people)} contacts")
+            # Log first result's domain field for verification
+            if people:
+                first_org = (people[0].get("organization") or {})
+                print(f"ℹ️  Apollo domain field sample — primary_domain: '{first_org.get('primary_domain', 'NOT RETURNED')}'")
             # Normalize people records to org-shaped dicts
             results = []
             for person in people:
