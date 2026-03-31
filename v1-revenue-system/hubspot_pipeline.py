@@ -36,14 +36,14 @@ class Stage(Enum):
     Lean V1 path only. QA state lives in GitHub Actions + Render, not here.
     LOST is terminal from any stage.
     """
-    NEW_LEAD = "new_lead"
-    OUTREACH_SENT = "outreach_sent"
-    DEMO_BOOKED = "demo_booked"
-    PROPOSAL_SENT = "proposal_sent"
-    PAYMENT_RECEIVED = "payment_received"
-    INTAKE_COMPLETE = "intake_complete"
-    DEPLOYED = "deployed"
-    LOST = "lost"  # Terminal — can be set from any stage
+    NEW_LEAD = "3432069862"
+    OUTREACH_SENT = "3432069863"
+    DEMO_BOOKED = "3432069864"
+    PROPOSAL_SENT = "3432069865"
+    PAYMENT_RECEIVED = "3432069866"
+    INTAKE_COMPLETE = "3432069867"
+    DEPLOYED = "3432069868"
+    LOST = "3432069869"  # Terminal — can be set from any stage
 
 
 # Ordered list for progression checks (LOST excluded)
