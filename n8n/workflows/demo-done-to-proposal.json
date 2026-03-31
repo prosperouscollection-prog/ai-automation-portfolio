@@ -1,0 +1,234 @@
+{
+  "name": "demo-done-to-proposal",
+  "_comment": "Entry point: n8n Telegram Trigger (single path — no webhook, no second trigger). Purpose: confirm demo happened, validate HubSpot stage, send founder client details + HoneyBook send instructions. HubSpot does NOT advance here. PROPOSAL_SENT is set manually by the founder in HubSpot after they confirm the proposal was sent from HoneyBook dashboard. HoneyBook API is unverified — proposal send is manual founder action.",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "node-telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot-credential",
+          "name": "Telegram Bot"
+        }
+      },
+      "_setup_note": "Configure 'Telegram Bot' credential in n8n Settings > Credentials with TELEGRAM_BOT_TOKEN before activating."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message.text }}",
+              "operation": "startsWith",
+              "value2": "/demo-done"
+            },
+            {
+              "value1": "={{ String($json.message.chat.id) }}",
+              "operation": "equal",
+              "value2": "={{ $env.TELEGRAM_CHAT_ID }}"
+            }
+          ]
+        },
+        "combineOperation": "all"
+      },
+      "id": "node-filter-command",
+      "name": "Filter: /demo-done from founder",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.message.text.trim().split(' ').length }}",
+              "operation": "largerEqual",
+              "value2": 2
+            }
+          ]
+        }
+      },
+      "id": "node-check-deal-id",
+      "name": "Check: deal_id present",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 240]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "requestMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $env.TELEGRAM_CHAT_ID }}" },
+            { "name": "parse_mode", "value": "HTML" },
+            { "name": "text", "value": "⚠️ <b>Usage:</b> <code>/demo-done &lt;deal_id&gt;</code>\n\nExample: <code>/demo-done 12345678</code>\n\nFind deal_id in HubSpot URL:\n<code>app.hubspot.com/contacts/.../deals/<b>12345678</b>/view</code>" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-telegram-usage-hint",
+      "name": "Telegram: Usage hint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [900, 120]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "requestMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $env.TELEGRAM_CHAT_ID }}" },
+            { "name": "parse_mode", "value": "HTML" },
+            { "name": "text", "value": "=⏳ <b>Checking deal {{ $json.message.text.trim().split(' ')[1] }}...</b>\nValidating HubSpot stage. Stand by." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-telegram-ack",
+      "name": "Telegram: Acknowledge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.hubapi.com/crm/v3/objects/deals/{{ $('Filter: /demo-done from founder').item.json.message.text.trim().split(' ')[1] }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}" }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "properties", "value": "dealname,dealstage,owner_email,proposal_type,amount" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      },
+      "id": "node-hubspot-get-deal",
+      "name": "HubSpot: GET Deal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.properties.dealstage }}",
+              "operation": "equal",
+              "value2": "demo_booked"
+            }
+          ]
+        }
+      },
+      "id": "node-check-stage",
+      "name": "Check: stage == demo_booked",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "requestMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $env.TELEGRAM_CHAT_ID }}" },
+            { "name": "parse_mode", "value": "HTML" },
+            { "name": "text", "value": "=⚠️ <b>/demo-done: Wrong stage</b>\n\nDeal: <b>{{ $('HubSpot: GET Deal').item.json.properties.dealname }}</b>\nDeal ID: <code>{{ $('Filter: /demo-done from founder').item.json.message.text.trim().split(' ')[1] }}</code>\nCurrent stage: <code>{{ $('HubSpot: GET Deal').item.json.properties.dealstage }}</code>\n\nExpected: <code>demo_booked</code>\n\nCheck HubSpot — the deal may have already advanced or was entered with the wrong ID." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-telegram-wrong-stage",
+      "name": "Telegram: Wrong stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1560, 420]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "requestMethod": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "chat_id", "value": "={{ $env.TELEGRAM_CHAT_ID }}" },
+            { "name": "parse_mode", "value": "HTML" },
+            {
+              "name": "text",
+              "value": "=📋 <b>Demo confirmed — send proposal now</b>\n\nClient: <b>{{ $('HubSpot: GET Deal').item.json.properties.dealname }}</b>\nEmail: <code>{{ $('HubSpot: GET Deal').item.json.properties.owner_email }}</code>\nPlan: {{ $('HubSpot: GET Deal').item.json.properties.proposal_type || 'Starter ($500 setup + $150/mo)' }}\nDeal ID: <code>{{ $('Filter: /demo-done from founder').item.json.message.text.trim().split(' ')[1] }}</code>\n\n━━━━━━━━━━━━━━━━━━━━\n<b>Steps:</b>\n1. Go to app.honeybook.com\n2. Create new project for <code>{{ $('HubSpot: GET Deal').item.json.properties.owner_email }}</code>\n3. Use {{ $('HubSpot: GET Deal').item.json.properties.proposal_type || 'Starter' }} proposal template\n4. Send from HoneyBook\n5. After sending, open HubSpot deal <code>{{ $('Filter: /demo-done from founder').item.json.message.text.trim().split(' ')[1] }}</code> and move stage to <b>PROPOSAL_SENT</b>\n\n<i>HubSpot stays at DEMO_BOOKED until you confirm the proposal was sent.</i>"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-telegram-proposal-instructions",
+      "name": "Telegram: Proposal instructions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1560, 240]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [{ "node": "Filter: /demo-done from founder", "type": "main", "index": 0 }]
+      ]
+    },
+    "Filter: /demo-done from founder": {
+      "main": [
+        [{ "node": "Check: deal_id present", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Check: deal_id present": {
+      "main": [
+        [{ "node": "Telegram: Acknowledge", "type": "main", "index": 0 }],
+        [{ "node": "Telegram: Usage hint", "type": "main", "index": 0 }]
+      ]
+    },
+    "Telegram: Acknowledge": {
+      "main": [
+        [{ "node": "HubSpot: GET Deal", "type": "main", "index": 0 }]
+      ]
+    },
+    "HubSpot: GET Deal": {
+      "main": [
+        [{ "node": "Check: stage == demo_booked", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check: stage == demo_booked": {
+      "main": [
+        [{ "node": "Telegram: Proposal instructions", "type": "main", "index": 0 }],
+        [{ "node": "Telegram: Wrong stage", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["v1-revenue", "proposals", "demo-done"],
+  "triggerCount": 1,
+  "updatedAt": "2026-03-31T00:00:00.000Z",
+  "versionId": "3"
+}

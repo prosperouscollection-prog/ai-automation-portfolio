@@ -1,0 +1,47 @@
+name: CRM Pipeline Agent — Genesis AI Systems
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  pipeline-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Sync pipeline
+        env:
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SERVICE_ACCOUNT: ${{ secrets.GOOGLE_SERVICE_ACCOUNT }}
+          HUBSPOT_ACCESS_TOKEN: ${{ secrets.HUBSPOT_ACCESS_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFICATION_EMAIL: ${{ secrets.NOTIFICATION_EMAIL }}
+        run: |
+          pip install requests python-dotenv resend google-auth google-api-python-client -q
+          cd .github/workflows/scripts
+          python3 crm_pipeline_agent.py
+      - name: Telegram alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          pip install requests -q
+          python3 - << 'PYEOF'
+          import os, requests
+          token = os.getenv('TELEGRAM_BOT_TOKEN', '')
+          chat = os.getenv('TELEGRAM_CHAT_ID', '')
+          msg = "🚨 CRM Pipeline Agent FAILED\nCheck GitHub Actions:\ngithub.com/prosperouscollection-prog/ai-automation-portfolio/actions"
+          if token and chat:
+              try:
+                  r = requests.post(f'https://api.telegram.org/bot{token}/sendMessage',
+                      json={'chat_id': chat, 'text': msg}, timeout=10)
+                  print('✅ Telegram alert sent' if r.ok else f'⚠️ Telegram {r.status_code}')
+              except Exception as e:
+                  print(f'⚠️ Telegram failed: {e}')
+          PYEOF

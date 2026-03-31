@@ -1,0 +1,109 @@
+{
+  "name": "Stripe Payment → Intake Form",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "stripe-payment",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "name": "Webhook — Stripe",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse Stripe checkout.session.completed event\nconst payload = items[0].json.body || items[0].json;\nconst event_type = payload.type || '';\nconst session = payload.data?.object || {};\n\n// Only process successful payments\nif (event_type !== 'checkout.session.completed' || session.payment_status !== 'paid') {\n  return [];\n}\n\nconst email = session.customer_email || session.customer_details?.email || '';\nconst name = session.customer_details?.name || session.metadata?.client_name || '';\nconst amount = (session.amount_total || 0) / 100;\nconst plan = session.metadata?.plan || 'starter';\nconst payment_id = session.id || '';\n\nreturn [{\n  json: {\n    email: email.toLowerCase().trim(),\n    name: name,\n    amount: amount,\n    plan: plan,\n    payment_id: payment_id,\n    source: session.metadata?.source || 'direct'\n  }\n}];"
+      },
+      "name": "Parse Payment",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "headerParametersJson": "{\"Authorization\": \"Bearer {{$credentials.hubspotAccessToken}}\", \"Content-Type\": \"application/json\"}",
+        "bodyParametersJson": "={\"filterGroups\":[{\"filters\":[{\"propertyName\":\"owner_email\",\"operator\":\"EQ\",\"value\":\"{{$json.email}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"owner_email\",\"proposal_type\"],\"limit\":1}"
+      },
+      "name": "Find Deal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.total}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Deal Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/deals/{{$node['Find Deal'].json.results[0].id}}",
+        "headerParametersJson": "{\"Authorization\": \"Bearer {{$credentials.hubspotAccessToken}}\", \"Content-Type\": \"application/json\"}",
+        "bodyParametersJson": "={\"properties\":{\"dealstage\":\"payment_received\",\"stripe_payment_id\":\"{{$node['Parse Payment'].json.payment_id}}\",\"amount\":\"{{$node['Parse Payment'].json.amount}}\"}}"
+      },
+      "name": "Update to PAYMENT_RECEIVED",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "bodyParametersJson": "={\"chat_id\":\"{{$credentials.telegramChatId}}\",\"text\":\"💰 PAYMENT RECEIVED!\\n\\n{{$node['Parse Payment'].json.name}}\\nAmount: ${{$node['Parse Payment'].json.amount}}\\nPlan: {{$node['Parse Payment'].json.plan}}\\n\\nIntake form will be sent automatically.\\nDeal updated to PAYMENT_RECEIVED.\",\"parse_mode\":\"HTML\"}"
+      },
+      "name": "Telegram — Payment Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "bodyParametersJson": "={\"chat_id\":\"{{$credentials.telegramChatId}}\",\"text\":\"💰 Payment from {{$node['Parse Payment'].json.email}} (${{$node['Parse Payment'].json.amount}}) but NO matching deal in HubSpot!\\n\\nCreate deal manually and send intake form.\"}"
+      },
+      "name": "Telegram — No Match",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Webhook — Stripe": {
+      "main": [[{"node": "Parse Payment", "type": "main", "index": 0}]]
+    },
+    "Parse Payment": {
+      "main": [[{"node": "Find Deal", "type": "main", "index": 0}]]
+    },
+    "Find Deal": {
+      "main": [[{"node": "Deal Found?", "type": "main", "index": 0}]]
+    },
+    "Deal Found?": {
+      "main": [
+        [{"node": "Update to PAYMENT_RECEIVED", "type": "main", "index": 0}],
+        [{"node": "Telegram — No Match", "type": "main", "index": 0}]
+      ]
+    },
+    "Update to PAYMENT_RECEIVED": {
+      "main": [[{"node": "Telegram — Payment Alert", "type": "main", "index": 0}]]
+    }
+  }
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -15,6 +16,10 @@ load_dotenv()
 
 # Shared notification helpers from notify.py
 from notify import telegram_notify, resend_email
+
+# Outreach approval gate — founder must approve before any email sends
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "v1-revenue-system"))
+from approval_flow import request_outreach_approval, ApprovalStatus, get_flow
 
 HUBSPOT_INDUSTRY_MAP = {
     "restaurant": "FOOD_BEVERAGES",
@@ -169,16 +174,37 @@ class SalesAgent:
         return templates.get(btype, default)
 
     def send_outreach_email(self, lead: Lead) -> None:
-        """Send a Resend outreach email to this lead. Skip if no email on record."""
+        """Send a Resend outreach email to this lead. Skip if no email on record.
+
+        Requires explicit Telegram approval from the founder before sending.
+        Approval window: 10 minutes per lead. No response = no send.
+        """
         if not lead.email:
             print(f"ℹ️  No email for {lead.business} — outreach via phone: {lead.phone}")
             return
         subject, body = self.get_email_body(lead)
-        ok = resend_email(lead.email, subject, body, priority="MEDIUM")
-        if ok:
-            print(f"✅ Outreach email sent to {lead.business} ({lead.email})")
+        # Request founder approval before sending
+        req = request_outreach_approval(
+            name=lead.business,
+            email=lead.email,
+            draft=f"{subject}\n\n{body[:300]}",
+        )
+        status = get_flow().wait_for_approval(req.request_id, timeout_seconds=600)
+        if status == ApprovalStatus.APPROVED:
+            ok = resend_email(lead.email, subject, body, priority="MEDIUM")
+            if ok:
+                print(f"✅ Outreach email sent to {lead.business} ({lead.email})")
+            else:
+                print(f"⚠️  Email failed for {lead.business}")
         else:
-            print(f"⚠️  Email failed for {lead.business}")
+            reason = "skipped by founder" if status == ApprovalStatus.SKIPPED else "no response — timed out"
+            print(f"⏭️  Outreach not sent for {lead.business} — {reason}")
+            telegram_notify(
+                "Sales Agent",
+                f"⏭️ Outreach <b>not sent</b> for {lead.business} ({lead.email})\n"
+                f"Reason: {reason}",
+                "MEDIUM",
+            )
 
 
     def save_to_pipeline(self, lead: Lead) -> None:

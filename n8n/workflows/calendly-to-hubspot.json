@@ -1,0 +1,109 @@
+{
+  "name": "Calendly → HubSpot DEMO_BOOKED",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "calendly-booked",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "name": "Webhook — Calendly",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extract invitee email from Calendly payload\nconst payload = items[0].json.body || items[0].json;\nconst invitee = payload.payload || payload;\nconst email = invitee.invitee?.email || invitee.email || '';\nconst name = invitee.invitee?.name || invitee.name || '';\nconst eventName = invitee.event_type?.name || 'Demo Call';\n\nreturn [{\n  json: {\n    email: email.toLowerCase().trim(),\n    name: name,\n    event: eventName,\n    scheduled_at: invitee.event?.start_time || new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Extract Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "headerParametersJson": "{\"Authorization\": \"Bearer {{$credentials.hubspotAccessToken}}\", \"Content-Type\": \"application/json\"}",
+        "bodyParametersJson": "={\"filterGroups\":[{\"filters\":[{\"propertyName\":\"owner_email\",\"operator\":\"EQ\",\"value\":\"{{$json.email}}\"}]}],\"properties\":[\"dealname\",\"dealstage\",\"owner_email\"],\"limit\":1}"
+      },
+      "name": "Find Deal by Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.total}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Deal Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "requestMethod": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/deals/{{$node['Find Deal by Email'].json.results[0].id}}",
+        "headerParametersJson": "{\"Authorization\": \"Bearer {{$credentials.hubspotAccessToken}}\", \"Content-Type\": \"application/json\"}",
+        "bodyParametersJson": "{\"properties\":{\"dealstage\":\"demo_booked\"}}"
+      },
+      "name": "Update to DEMO_BOOKED",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "bodyParametersJson": "={\"chat_id\":\"{{$credentials.telegramChatId}}\",\"text\":\"📅 DEMO BOOKED\\n\\n{{$node['Extract Email'].json.name}} ({{$node['Extract Email'].json.email}})\\nScheduled: {{$node['Extract Email'].json.scheduled_at}}\\n\\nDeal updated to DEMO_BOOKED in HubSpot.\",\"parse_mode\":\"HTML\"}"
+      },
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.telegram.org/bot{{$credentials.telegramBotToken}}/sendMessage",
+        "bodyParametersJson": "={\"chat_id\":\"{{$credentials.telegramChatId}}\",\"text\":\"⚠️ Calendly booking from {{$node['Extract Email'].json.email}} but no matching deal found in HubSpot. Create deal manually.\"}"
+      },
+      "name": "Telegram — No Match",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Webhook — Calendly": {
+      "main": [[{"node": "Extract Email", "type": "main", "index": 0}]]
+    },
+    "Extract Email": {
+      "main": [[{"node": "Find Deal by Email", "type": "main", "index": 0}]]
+    },
+    "Find Deal by Email": {
+      "main": [[{"node": "Deal Found?", "type": "main", "index": 0}]]
+    },
+    "Deal Found?": {
+      "main": [
+        [{"node": "Update to DEMO_BOOKED", "type": "main", "index": 0}],
+        [{"node": "Telegram — No Match", "type": "main", "index": 0}]
+      ]
+    },
+    "Update to DEMO_BOOKED": {
+      "main": [[{"node": "Telegram Alert", "type": "main", "index": 0}]]
+    }
+  }
+}
