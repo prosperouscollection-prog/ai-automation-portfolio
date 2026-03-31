@@ -23,4 +23,4 @@ jobs:
           CALENDLY_TOKEN: ${{ secrets.CALENDLY_TOKEN }}
           CALENDLY_ORG_URL: ${{ secrets.CALENDLY_ORG_URL }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-        run: python v1-revenue-system/register_webhooks.py
+        run: python -u v1-revenue-system/register_webhooks.py
