@@ -32,6 +32,9 @@ class TelegramBot:
         "/prospects": "handle_prospects",
         "/followup": "handle_followup",
         "/help": "handle_help",
+        # /demo-done is handled exclusively by the n8n Telegram Trigger workflow
+        # (demo-done-to-proposal.json). Do not add it here — that would create a
+        # second trigger path. n8n is the single orchestration owner.
     }
 
     def __init__(self) -> None:
@@ -265,7 +268,8 @@ class TelegramBot:
             "/revenue — MRR summary\n"
             "/report — weekly summary\n"
             "/clients — client roster\n"
-            "/help — this list"
+            "/help — this list\n\n"
+            "<i>/demo-done is handled directly by n8n — type it in Telegram normally</i>"
         )
 
     def process_update(self, update: dict) -> None:
