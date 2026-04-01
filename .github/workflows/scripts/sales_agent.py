@@ -192,16 +192,15 @@ class SalesAgent:
                 print(f"  ⚠️  Draft failed for {lead.business}: {exc} — skipping")
                 continue
 
-            # Send Telegram approval prompt; wait up to 10 min for SEND/SKIP
+            # Send Telegram approval prompt + attach inline buttons, then wait
             req = self._flow.request_approval(
                 action_type=ActionType.OUTREACH,
                 target_name=lead.business,
                 target_email=lead.email,
                 preview=f"Subject: {subject}\n\n{body[:280]}",
             )
-            status = self._flow.wait_for_approval(
-                req.request_id, timeout_seconds=600, poll_interval=15
-            )
+            self._attach_approval_buttons(req.message_id)
+            status = self._wait_for_callback(req.message_id, timeout_seconds=600)
 
             # Act on founder decision + send Telegram confirmation
             if status == ApprovalStatus.APPROVED:
@@ -238,6 +237,7 @@ class SalesAgent:
                 category=lead.industry, draft_variant=variant, pass_type=pass_type,
             )
             self._mark_notified(lead.sheet_row)
+            print(f"  📤 approval action complete: {log_status}")
             processed_count += 1  # increment for every lead that completed the flow
 
         print(f"✅ Sales Agent complete — {processed_count} lead(s) processed this run")
@@ -259,6 +259,100 @@ class SalesAgent:
                 )
         except Exception:
             pass
+
+    def _attach_approval_buttons(self, message_id: int | None) -> None:
+        """Edit the approval message to add inline SEND / SKIP buttons.
+
+        This lets the founder tap a button instead of typing a reply.
+        The callback_query from the button is what _wait_for_callback detects.
+        """
+        if not message_id:
+            return
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        chat = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        if not token or not chat:
+            return
+        try:
+            requests.post(
+                f"https://api.telegram.org/bot{token}/editMessageReplyMarkup",
+                json={
+                    "chat_id": chat,
+                    "message_id": message_id,
+                    "reply_markup": {
+                        "inline_keyboard": [[
+                            {"text": "✅ SEND", "callback_data": "send"},
+                            {"text": "⏭️ SKIP", "callback_data": "skip"},
+                        ]]
+                    },
+                },
+                timeout=10,
+            )
+        except Exception:
+            pass
+
+    def _wait_for_callback(
+        self,
+        message_id: int | None,
+        timeout_seconds: int = 600,
+        poll_interval: int = 15,
+    ) -> ApprovalStatus:
+        """Poll getUpdates for SEND/SKIP as either callback_query or text reply.
+
+        Answers the callback_query immediately so the Telegram spinner clears
+        and the action branch runs before the Command Center can respond.
+        Text reply detection is kept as a fallback for non-button responses.
+        """
+        token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+        chat = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+        if not token or not chat:
+            return ApprovalStatus.EXPIRED
+
+        start = time.time()
+        while time.time() - start < timeout_seconds:
+            try:
+                resp = requests.get(
+                    f"https://api.telegram.org/bot{token}/getUpdates",
+                    params={"timeout": 5, "offset": -20},
+                    timeout=20,
+                )
+                if resp.ok:
+                    for update in resp.json().get("result", []):
+                        # --- inline keyboard callback_query (primary path) ---
+                        cq = update.get("callback_query", {})
+                        if cq:
+                            cq_chat = str(cq.get("message", {}).get("chat", {}).get("id", ""))
+                            if cq_chat == chat:
+                                data = cq.get("data", "").strip().lower()
+                                # Answer immediately to clear Telegram spinner
+                                # before the action branch runs
+                                try:
+                                    requests.post(
+                                        f"https://api.telegram.org/bot{token}/answerCallbackQuery",
+                                        json={"callback_query_id": cq.get("id", "")},
+                                        timeout=5,
+                                    )
+                                except Exception:
+                                    pass
+                                if data in ("send", "yes", "approve"):
+                                    return ApprovalStatus.APPROVED
+                                if data in ("skip", "no", "pass"):
+                                    return ApprovalStatus.SKIPPED
+
+                        # --- plain text reply (fallback) ---
+                        msg = update.get("message", {})
+                        if msg and str(msg.get("chat", {}).get("id", "")) == chat:
+                            if message_id and msg.get("message_id", 0) > message_id:
+                                text = msg.get("text", "").strip().lower()
+                                if text in ("send", "yes", "approve"):
+                                    return ApprovalStatus.APPROVED
+                                if text in ("skip", "no", "pass"):
+                                    return ApprovalStatus.SKIPPED
+            except Exception as exc:
+                print(f"  ⚠️  getUpdates error: {exc}")
+
+            time.sleep(poll_interval)
+
+        return ApprovalStatus.EXPIRED
 
     # ------------------------------------------------------------------
     # SHEETS — read leads
