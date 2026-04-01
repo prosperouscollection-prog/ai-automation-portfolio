@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
+from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
@@ -28,7 +29,6 @@ class LeadGeneratorAgent:
 
     def __init__(self) -> None:
         self.apollo_key = os.getenv("APOLLO_API_KEY", "").strip()
-        self.yelp_key = os.getenv("YELP_API_KEY", "").strip()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
         self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
@@ -42,27 +42,12 @@ class LeadGeneratorAgent:
         industry = schedule["industry"]
         print(f"🔍 Searching for {industry} businesses in Detroit...")
 
-        # --- Yelp search (free, 500/day) ---
+        # --- Outscraper Maps discovery (primary source) ---
         prospects = []
-        if not self.yelp_key:
-            print("⚠️  YELP_API_KEY missing — falling back to mock data")
+        if not self.outscraper_key:
+            print("⚠️  OUTSCRAPER_API_KEY missing — falling back to mock data")
         else:
-            prospects = self.search_yelp(industry, schedule["yelp_categories"])
-
-        # --- Apollo search (runs alongside Yelp, deduplicated by name) ---
-        if self.apollo_key:
-            apollo_results = self.search_apollo(industry, schedule["keywords"])
-            if apollo_results:
-                existing_names = {p["name"].lower() for p in prospects}
-                added = 0
-                for ap in apollo_results:
-                    if ap["name"].lower() not in existing_names:
-                        prospects.append(ap)
-                        existing_names.add(ap["name"].lower())
-                        added += 1
-                print(f"✅ Apollo added {added} deduplicated leads")
-        else:
-            print("ℹ️  APOLLO_API_KEY not set — Apollo skipped")
+            prospects = self.search_outscraper_maps(industry)
 
         if not prospects:
             print("⚠️  No results from any source — falling back to mock data for testing")
@@ -84,6 +69,85 @@ class LeadGeneratorAgent:
 
         print(f"✅ Found {len(prospects)} prospects")
         print(f"🔥 HOT leads: {len(hot)}")
+
+    # Maps query for each day's industry — Detroit-scoped
+    MAPS_QUERY = {
+        "restaurant":  "restaurants Detroit MI",
+        "dental":      "dentists Detroit MI",
+        "hvac":        "hvac contractors Detroit MI",
+        "salon":       "hair salons Detroit MI",
+        "real_estate": "real estate agents Detroit MI",
+        "retail":      "retail stores Detroit MI",
+        "mixed":       "local businesses Detroit MI",
+    }
+
+    def _normalize_domain(self, raw: str) -> str:
+        """Strip protocol/www/path. Reject social & aggregator domains. Return bare domain or ''."""
+        if not raw or not raw.strip():
+            return ""
+        s = raw.strip().lower()
+        if not s.startswith("http"):
+            s = "https://" + s
+        try:
+            netloc = urlparse(s).netloc or ""
+            domain = netloc.replace("www.", "").strip()
+            blocked = ("yelp.com", "google.com", "facebook.com", "instagram.com",
+                       "twitter.com", "linkedin.com", "maps.google")
+            if any(b in domain for b in blocked):
+                return ""
+            if "." not in domain or " " in domain:
+                return ""
+            return domain
+        except Exception:
+            return ""
+
+    def search_outscraper_maps(self, industry: str) -> list[dict]:
+        """Search Outscraper Maps for Detroit businesses in today's niche.
+
+        Maps each result into the standard lead dict with primary_domain
+        populated from the `website` field — enabling enrich_email() to fire.
+        """
+        query = self.MAPS_QUERY.get(industry, f"{industry} Detroit MI")
+        print(f"  Maps query: {query!r}")
+        try:
+            resp = requests.get(
+                "https://api.app.outscraper.com/maps/search-v2",
+                headers={"X-API-KEY": self.outscraper_key},
+                params={"query": query, "limit": 25, "async": "false"},
+                timeout=90,
+            )
+            if not resp.ok:
+                print(f"❌ Outscraper Maps {resp.status_code}: {resp.text[:300]}")
+                return []
+            raw = resp.json().get("data", [])
+            records = raw[0] if raw and isinstance(raw[0], list) else raw
+            if not isinstance(records, list):
+                records = []
+            print(f"✅ Outscraper Maps returned {len(records)} businesses")
+            results = []
+            for biz in records:
+                domain = self._normalize_domain(biz.get("website", ""))
+                results.append({
+                    "name": biz.get("name", "Unknown"),
+                    "primary_domain": domain,
+                    "phone": biz.get("phone", ""),
+                    "email": "",
+                    "contact_name": "",
+                    "title": "",
+                    "estimated_num_employees": 0,
+                    "city": "Detroit",
+                    "address": biz.get("full_address", "Detroit, MI"),
+                    "industry": industry,
+                    "yelp_rating": biz.get("rating", ""),
+                    "yelp_reviews": biz.get("reviews_count", 0),
+                    "yelp_url": "",
+                    "linkedin_url": "",
+                    "source": "outscraper_maps",
+                })
+            return results
+        except Exception as exc:
+            print(f"❌ Outscraper Maps exception: {exc}")
+            return []
 
     def search_yelp(self, industry: str, categories: str) -> list[dict]:
         """Search Yelp Fusion for Detroit businesses — free, 500 calls/day."""

@@ -14,7 +14,6 @@ jobs:
           python-version: '3.11'
       - name: Run lead generator
         env:
-          YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
           OUTSCRAPER_API_KEY: ${{ secrets.OUTSCRAPER_API_KEY }}
           HUNTER_API_KEY: ${{ secrets.HUNTER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
