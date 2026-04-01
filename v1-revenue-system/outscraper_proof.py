@@ -77,7 +77,7 @@ def run_outscraper_proof():
                 "async": "false",
                 "fields": "name,full_address,phone,site,category,rating,reviews_count",
             },
-            timeout=30,
+            timeout=90,
         )
         print(f"  HTTP {resp.status_code}")
         if not resp.ok:
