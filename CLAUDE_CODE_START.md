@@ -1,5 +1,5 @@
 # Genesis AI Systems — Claude Code Master Build Document
-## Version 5 — Updated March 31, 2026
+## Version 6 — Updated April 1, 2026
 ## Paste this file as your first message in every Claude Code session
 
 ---
@@ -13,6 +13,7 @@
 | v3 | March 30, 2026 | n8n deployed to DigitalOcean, exit intent, robots.txt, sitemap expanded |
 | v4 | March 30, 2026 | Twilio fully stripped from all 6 Python scripts, exit intent live, all 11 agents green |
 | v5 | March 31, 2026 | Added agent brainstorm, approval framework, social posting plan, version history system |
+| v6 | April 1, 2026 | Outscraper email enrichment wired into Lead Generator (primary) + Hunter fallback; email enrichment step on path-to-outreach marked ✅ |
 
 ---
 
@@ -116,8 +117,8 @@ This is the north star. Every build decision should move agents from "Today" tow
 **Anything that touches the outside world (emails to leads, social posts, proposals) starts in Approval Mode.**
 
 ### Agent 1 — Lead Generator
-**Today:** Finds 25 Detroit businesses via Yelp, scores them, saves to Sheets, Telegram top 3, pushes to HubSpot. Leads sit in Sheets with no action.
-**Complete:** Finds leads → pulls owner emails via Hunter.io → drafts personalized outreach email per lead → sends Telegram: "5 HOT leads ready, reply SEND to approve outreach" → Trendell approves → emails go out → logged to Outreach Log tab.
+**Today:** Finds 25 Detroit businesses via Yelp, scores them, enriches HOT leads with email via Outscraper (Hunter fallback), saves to Sheets, Telegram top 3 with email, pushes to HubSpot. Leads sit in Sheets with no outreach action yet.
+**Complete:** Finds leads → enriches emails → drafts personalized outreach email per lead → sends Telegram: "5 HOT leads ready, reply SEND to approve outreach" → Trendell approves → emails go out → logged to Outreach Log tab.
 **Approval required:** Yes — before any email sends.
 
 ### Agent 2 — Sales Agent
@@ -187,8 +188,8 @@ This is the north star. Every build decision should move agents from "Today" tow
 | Instantly.ai | Waiting — no email list yet | Activate when Outscraper enrichment wired |
 | Lindy AI | Waiting — activate with first inbound leads | No email addresses to follow up yet |
 | HoneyBook | Build templates now — use on first close | 30 min setup, ready to send day 1 |
-| Outscraper Emails | Proven primary enrichment — 90% email fill rate | /emails-and-contacts endpoint, $3/1000 domains, 500 free/mo |
-| Hunter.io | Demoted to optional fallback — not needed in V1 core | Free tier: 25/mo. Only activate if Outscraper gaps become a problem |
+| Outscraper Emails | Primary enrichment — 90% fill rate, wired into Lead Generator | Replaced Hunter after proof 2026-03-31; /emails-and-contacts, $3/1000 domains |
+| Hunter.io | Optional fallback only — already wired as second try | Free tier: 25/mo. Fires automatically if Outscraper returns no email |
 | Twilio | Fully removed — never use again | 866 toll-free can't SMS mobile phones |
 | Full Stack tier | Removed from site entirely | No Stripe link, overwhelming for cold visitors |
 | Approval flow | Telegram SEND/CONFIRM replies | Simplest mobile-first approval before any external action |
@@ -274,12 +275,11 @@ Flag any that return hardcoded fallback strings. Fix by ensuring callClaude() is
 
 ### 🟡 THIS WEEK — Make Agents Actually Do Things
 
-**TASK 4 — Wire Outscraper Emails & Contacts into Lead Generator**
-Lead Generator finds businesses via Outscraper Maps but gets no email addresses.
-Outscraper Emails & Contacts: 90% email fill rate proven on 10 Detroit domains (2026-03-31 proof).
-Also returns phones (100% hit rate), socials, and some contact names/titles.
-Wire: for each HOT lead, take domain from Maps → GET /emails-and-contacts → get owner email + phone → add to lead record before saving to Sheets + sending outreach draft.
-OUTSCRAPER_API_KEY already in GitHub secrets. Hunter.io is optional fallback only.
+**TASK 4 — ✅ DONE — Wire Outscraper Emails & Contacts into Lead Generator**
+Completed April 1, 2026.
+Enrichment path: HOT lead with primary_domain → Outscraper /emails-and-contacts → Hunter domain-search fallback → email written to prospect["email"] before Sheets + HubSpot write.
+Decision: Outscraper primary (90% fill rate proven), Hunter fallback. APOLLO_API_KEY removed from workflow env.
+Note: Yelp leads have empty primary_domain — enrichment correctly skips them. Enrichment will fire when Outscraper Maps domain data is present in leads.
 
 **TASK 5 — Build Sales Agent outreach approval flow**
 When Lead Generator finds HOT leads with emails (from Outscraper Emails & Contacts):
@@ -396,7 +396,7 @@ Keeps Playwright but runs on demand only, not as a scheduled job.
 Before Genesis AI sends its first automated outreach email to a real Detroit business:
 
 1. ✅ Lead Generator finds real HOT leads daily (done)
-2. ❌ Outscraper Emails & Contacts wired → leads get owner emails automatically (Task 4, 90% proven)
+2. ✅ Outscraper Emails & Contacts wired → HOT leads with domain get owner email automatically (Task 4 done)
 3. ❌ Sales Agent drafts personalized email per HOT lead (Task 5)
 4. ❌ Telegram approval flow — Trendell replies SEND (Task 5)
 5. ❌ Resend sends email from info@genesisai.systems (requires Task 2 DNS)
