@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
-"""Sales helper — reads leads from Sheets, sends outreach via Resend, alerts Trendell on HOT ones."""
+"""Sales Agent — Genesis AI Systems.
+
+Reads HOT leads from Google Sheets Leads tab, enriches emails via Outscraper
+(Hunter fallback), drafts personalized outreach via Claude Haiku, sends a
+Telegram SEND/SKIP approval prompt to Trendell, delivers via Resend on approval,
+and logs every outcome to the Outreach Log tab.
+
+Approval gate: Trendell must reply SEND within 10 minutes. No email sends without it.
+Max 3 outreach emails per run to keep the approval burden manageable.
+"""
 
 from __future__ import annotations
 
 import json
 import os
 import sys
-from dataclasses import dataclass
+import time
+from dataclasses import dataclass, field
 from datetime import datetime
 
 import requests
@@ -14,13 +24,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Shared notification helpers from notify.py
+# Shared notification helpers
 from notify import telegram_notify, resend_email
 
-# Outreach approval gate — founder must approve before any email sends
+# Outreach approval gate — Trendell must reply SEND before any email goes out
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "v1-revenue-system"))
-from approval_flow import request_outreach_approval, ApprovalStatus, get_flow
-from hunter_lookup import HunterLookup
+from approval_flow import ApprovalFlow, ApprovalStatus, ActionType
+
+try:
+    import anthropic as _anthropic
+except ImportError:
+    _anthropic = None
 
 HUBSPOT_INDUSTRY_MAP = {
     "restaurant": "FOOD_BEVERAGES",
@@ -31,60 +45,132 @@ HUBSPOT_INDUSTRY_MAP = {
     "retail": "RETAIL",
 }
 
+# Sheets column indices (0-based) written by Lead Generator
+# A=date, B=industry, C=name, D=primary_domain, E=phone, F=address,
+# G=employees, H=yelp_rating, I=yelp_reviews, J=score, K=reason,
+# L=recommended_product, M=yelp_url, N=outreach_email_template, O=notified
+COL = {
+    "date": 0, "industry": 1, "name": 2, "domain": 3, "phone": 4,
+    "address": 5, "employees": 6, "yelp_rating": 7, "yelp_reviews": 8,
+    "score": 9, "reason": 10, "product": 11, "yelp_url": 12,
+    "email_template": 13, "notified": 14,
+}
+
+# Industry-specific pain point framing for Claude prompt
+INDUSTRY_CONTEXT = {
+    "restaurant": "restaurants that miss reservation calls during the dinner rush",
+    "dental": "dental offices that lose after-hours appointment requests",
+    "hvac": "HVAC contractors that miss emergency calls overnight or on weekends",
+    "salon": "salons still taking bookings manually by phone",
+    "real_estate": "real estate agents slow to follow up on new leads",
+    "retail": "retail stores that miss customer inquiries after hours",
+}
+
 
 @dataclass
 class Lead:
-    name: str
     business: str
-    email: str
+    domain: str
     phone: str
-    business_type: str
-    pain_point: str
+    address: str
+    industry: str
     score: str
-    address: str = ""
-    yelp_rating: str = ""
-    yelp_url: str = ""
-    website: str = ""
-    sheet_row: int = 0
+    yelp_rating: str
+    sheet_row: int
+    email: str = ""
 
 
 class SalesAgent:
-    """Reads HOT leads from Google Sheets, sends outreach via Resend, alerts Trendell via Telegram."""
+    """Reads HOT leads from Sheets, enriches email, drafts via Claude,
+    sends Telegram approval prompt, delivers via Resend, logs result."""
 
     def __init__(self) -> None:
         self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
         self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
         self.resend_key = os.getenv("RESEND_API_KEY", "").strip()
+        self.outscraper_key = os.getenv("OUTSCRAPER_API_KEY", "").strip()
+        self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
+        self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+        self.run_id = os.getenv("GITHUB_RUN_ID", f"local-{int(time.time())}")
         self._sheets_service = None
+        self._flow = ApprovalFlow()
+
+    # ------------------------------------------------------------------
+    # MAIN ENTRY POINT
+    # ------------------------------------------------------------------
 
     def run(self) -> None:
-        leads = self.get_leads_from_sheets()
+        leads = self.get_hot_leads_from_sheets()
         if not leads:
-            print("ℹ️  No leads to process today")
-            telegram_notify("Sales Agent", "No new leads to process today.", "INFO")
+            print("ℹ️  No HOT leads with domain found in Sheets")
+            telegram_notify("Sales Agent", "No HOT leads with domain to process today.", "INFO")
             return
 
-        hot = [l for l in leads if l.score == "HOT"]
-        warm = [l for l in leads if l.score == "WARM"]
+        print(f"📋 Found {len(leads)} HOT leads with domain — processing up to 3")
+        sent_count = 0
 
-        print(f"📋 Processing {len(leads)} leads — {len(hot)} HOT, {len(warm)} WARM")
+        for lead in leads:
+            if sent_count >= 3:
+                print("ℹ️  Reached 3-lead limit for this run")
+                break
 
-        for lead in hot[:10]:
-            self.send_outreach_email(lead)
-            self.save_to_hubspot(lead)
-            self.save_to_pipeline(lead)
+            # Deduplication: skip if already in Outreach Log
+            if self._already_outreached(lead.business):
+                print(f"  ⏭️  {lead.business} already in Outreach Log — skipping")
+                continue
 
-        for lead in warm[:5]:
-            self.send_outreach_email(lead)
+            # Enrich email via Outscraper (Hunter fallback)
+            email = self._enrich_email(lead.domain)
+            if not email:
+                print(f"  ℹ️  No email found for {lead.business} ({lead.domain}) — skipping")
+                continue
+            lead.email = email
 
-        self.alert_trendell_hot(hot[:3])
-        self.send_pipeline_report(hot, warm)
-        print(f"✅ Sales Agent complete — {len(hot)} HOT leads processed")
+            # Draft personalized email with Claude Haiku
+            try:
+                subject, body = self._draft_email(lead)
+            except Exception as exc:
+                print(f"  ⚠️  Draft failed for {lead.business}: {exc} — skipping")
+                continue
 
+            # Send Telegram approval prompt; wait up to 10 min for SEND/SKIP
+            req = self._flow.request_approval(
+                action_type=ActionType.OUTREACH,
+                target_name=lead.business,
+                target_email=email,
+                preview=f"Subject: {subject}\n\n{body[:250]}",
+            )
+            status = self._flow.wait_for_approval(
+                req.request_id, timeout_seconds=600, poll_interval=15
+            )
 
-    def get_leads_from_sheets(self) -> list[Lead]:
-        """Read HOT/WARM prospects from the Leads Google Sheet."""
+            if status == ApprovalStatus.APPROVED:
+                ok = resend_email(email, subject, body, priority="MEDIUM")
+                log_status = "sent" if ok else "failed"
+                if ok:
+                    print(f"  ✅ Email sent to {lead.business} ({email})")
+                    sent_count += 1
+                else:
+                    print(f"  ⚠️  Resend failed for {lead.business}")
+            elif status == ApprovalStatus.SKIPPED:
+                log_status = "skipped"
+                print(f"  ⏭️  Skipped by founder: {lead.business}")
+            else:
+                log_status = "timeout"
+                print(f"  ⏰ No response in 10 minutes: {lead.business}")
+
+            self._log_outreach(lead.business, email, subject, log_status)
+            self._mark_notified(lead.sheet_row)
+
+        print(f"✅ Sales Agent complete — {sent_count} email(s) sent this run")
+
+    # ------------------------------------------------------------------
+    # SHEETS — read leads
+    # ------------------------------------------------------------------
+
+    def get_hot_leads_from_sheets(self) -> list[Lead]:
+        """Read HOT leads that have a primary_domain from the Leads tab."""
         if not self.sheet_id or not self.service_account_json:
             print("⚠️  Sheets not configured — no leads to process")
             return []
@@ -97,7 +183,8 @@ class SalesAgent:
                 scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
             service = build("sheets", "v4", credentials=creds)
-            self._sheets_service = service  # store for _mark_notified
+            self._sheets_service = service
+
             result = service.spreadsheets().values().get(
                 spreadsheetId=self.sheet_id,
                 range="Leads!A2:O",
@@ -105,36 +192,78 @@ class SalesAgent:
             rows = result.get("values", [])
             leads = []
             for i, row in enumerate(rows):
-                if len(row) < 10:
+                if len(row) <= COL["score"]:
                     continue
-                score = row[9] if len(row) > 9 else "WARM"
-                if score not in ("HOT", "WARM"):
+                score = row[COL["score"]] if len(row) > COL["score"] else ""
+                if score != "HOT":
                     continue
-                # Skip leads already notified (column O = index 14)
-                if len(row) > 14 and row[14].strip() == "Y":
+                # Skip rows already marked notified (col O)
+                if len(row) > COL["notified"] and row[COL["notified"]].strip() == "Y":
+                    continue
+                domain = row[COL["domain"]].strip() if len(row) > COL["domain"] else ""
+                if not domain:
                     continue
                 leads.append(Lead(
-                    name=row[2] if len(row) > 2 else "Business Owner",
-                    business=row[2] if len(row) > 2 else "Local Business",
-                    email="",  # Yelp leads don't have email — outreach via phone/visit
-                    phone=row[4] if len(row) > 4 else "",
-                    business_type=row[1] if len(row) > 1 else "retail",
-                    pain_point="Missed calls and slow follow-up",
+                    business=row[COL["name"]].strip() if len(row) > COL["name"] else "Local Business",
+                    domain=domain,
+                    phone=row[COL["phone"]] if len(row) > COL["phone"] else "",
+                    address=row[COL["address"]] if len(row) > COL["address"] else "",
+                    industry=row[COL["industry"]] if len(row) > COL["industry"] else "retail",
                     score=score,
-                    address=row[5] if len(row) > 5 else "",
-                    yelp_rating=row[7] if len(row) > 7 else "",
-                    yelp_url=row[12] if len(row) > 12 else "",
-                    website=row[3] if len(row) > 3 else "",
-                    sheet_row=i + 2,  # +2 for 1-based index + header row
+                    yelp_rating=row[COL["yelp_rating"]] if len(row) > COL["yelp_rating"] else "",
+                    sheet_row=i + 2,  # +2: 1-based index + header row
                 ))
-            print(f"✅ Read {len(leads)} leads from Sheets")
+            print(f"✅ Read {len(leads)} HOT leads with domain from Sheets")
             return leads
         except Exception as e:
             print(f"❌ Sheets read error: {e}")
             return []
 
+    # ------------------------------------------------------------------
+    # OUTREACH LOG — deduplication + write
+    # ------------------------------------------------------------------
+
+    def _already_outreached(self, business_name: str) -> bool:
+        """Return True if this business already has a row in Outreach Log."""
+        if not self._sheets_service or not self.sheet_id:
+            return False
+        try:
+            result = self._sheets_service.spreadsheets().values().get(
+                spreadsheetId=self.sheet_id,
+                range="Outreach Log!B2:B",
+            ).execute()
+            rows = result.get("values", [])
+            name_lower = business_name.strip().lower()
+            return any(
+                row and row[0].strip().lower() == name_lower
+                for row in rows
+            )
+        except Exception as e:
+            print(f"⚠️  Outreach Log check failed: {e}")
+            return False
+
+    def _log_outreach(
+        self, business_name: str, email: str, subject: str, status: str
+    ) -> None:
+        """Append one row to Outreach Log: timestamp|business|email|subject|status|run_id."""
+        if not self._sheets_service or not self.sheet_id:
+            print(f"  ⚠️  Cannot log outreach — Sheets not connected")
+            return
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            self._sheets_service.spreadsheets().values().append(
+                spreadsheetId=self.sheet_id,
+                range="Outreach Log!A1",
+                valueInputOption="RAW",
+                insertDataOption="INSERT_ROWS",
+                body={"values": [[timestamp, business_name, email, subject, status, self.run_id]]},
+            ).execute()
+            print(f"  📋 Outreach Log: {business_name} → {status}")
+        except Exception as e:
+            print(f"  ⚠️  Outreach Log write failed: {e}")
+
     def _mark_notified(self, sheet_row: int) -> None:
-        """Write Y to column O of the given Leads row to suppress re-notification."""
+        """Write Y to column O of the given Leads row to suppress re-processing."""
         if not self._sheets_service or not self.sheet_id:
             return
         try:
@@ -147,162 +276,150 @@ class SalesAgent:
         except Exception as e:
             print(f"⚠️  _mark_notified failed for row {sheet_row}: {e}")
 
-    def get_email_body(self, lead: Lead) -> tuple[str, str]:
-        """Return (subject, body) for this lead's business type."""
-        btype = lead.business_type.lower()
-        templates = {
-            "restaurant": (
-                f"Quick question about {lead.business}",
-                f"Hi there,\n\n"
-                f"I noticed {lead.business} in Detroit.\n\n"
-                "Quick question — what happens when someone calls for a reservation and you're slammed?\n\n"
-                "I build AI phone assistants for restaurants that answer calls and book tables 24/7.\n\n"
-                "Takes 5-7 days to set up. Starts at $500.\n\n"
-                "Worth a 10-minute call this week?\n\n"
-                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems\n(586) 636-9550"
-            ),
-            "dental": (
-                f"Patients calling {lead.business} after hours",
-                f"Hi there,\n\n"
-                f"A patient tried to book at {lead.business} after hours last week.\n\n"
-                "Nobody answered. They called another dentist.\n\n"
-                "I build AI systems for dental offices that answer after-hours calls and book appointments automatically.\n\n"
-                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
-            ),
-            "hvac": (
-                f"Emergency calls {lead.business} might be missing",
-                f"Hi there,\n\n"
-                f"When {lead.business} gets an emergency call at 10pm — who answers?\n\n"
-                "I build AI systems that catch every after-hours inquiry and text you immediately.\n\n"
-                "15-minute call this week?\n\n"
-                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
-            ),
-            "salon": (
-                f"Booking appointments for {lead.business} automatically",
-                f"Hi there,\n\n"
-                f"Are you still taking appointment calls manually at {lead.business}?\n\n"
-                "I set up AI assistants for salons that book appointments and send reminders 24/7 — automatically.\n\n"
-                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
-            ),
-        }
-        default = (
-            f"Quick question about {lead.business}",
-            f"Hi there,\n\n"
-            f"I noticed {lead.business} in Detroit and wanted to reach out.\n\n"
-            "I build done-for-you AI systems for local businesses — answering calls, capturing leads, following up fast.\n\n"
-            "Starts at $500. Live in 5-7 days.\n\n"
-            "Worth a quick 10-minute call?\n\n"
-            "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems\n(586) 636-9550"
-        )
-        return templates.get(btype, default)
+    # ------------------------------------------------------------------
+    # EMAIL ENRICHMENT — Outscraper primary, Hunter fallback
+    # ------------------------------------------------------------------
 
-    def send_outreach_email(self, lead: Lead) -> None:
-        """Send a Resend outreach email to this lead. Skip if no email on record.
-
-        Requires explicit Telegram approval from the founder before sending.
-        Approval window: 10 minutes per lead. No response = no send.
-        """
-        if not lead.email:
-            # Attempt Hunter enrichment if a business domain is available
-            domain = lead.website.strip()
-            if domain and HunterLookup().configured:
-                result = HunterLookup().find_email(domain)
-                if result and result.get("email"):
-                    lead.email = result["email"]
-                    print(f"✅ Hunter found email for {lead.business}: {lead.email}")
+    def _enrich_email(self, domain: str) -> str:
+        """Return first valid email address for domain, or empty string."""
+        if self.outscraper_key:
+            try:
+                resp = requests.get(
+                    "https://api.app.outscraper.com/emails-and-contacts",
+                    headers={"X-API-KEY": self.outscraper_key},
+                    params={"query": domain, "async": "false"},
+                    timeout=30,
+                )
+                if resp.ok:
+                    raw = resp.json().get("data", [])
+                    records = raw[0] if raw and isinstance(raw[0], list) else raw
+                    if records and isinstance(records, list):
+                        emails = records[0].get("emails", []) or []
+                        for entry in emails:
+                            val = entry.get("value", "") if isinstance(entry, dict) else entry
+                            if val and "@" in str(val):
+                                print(f"  📧 Outscraper → {domain}: {val}")
+                                return str(val)
+                    print(f"  ℹ️  Outscraper: no email for {domain}")
                 else:
-                    print(f"ℹ️  No email found via Hunter for {lead.business}")
-                    return
-            else:
-                print(f"ℹ️  No email found via Hunter for {lead.business}")
-                return
-        subject, body = self.get_email_body(lead)
-        # Request founder approval before sending
-        req = request_outreach_approval(
-            name=lead.business,
-            email=lead.email,
-            draft=f"{subject}\n\n{body[:300]}",
-        )
-        # Persist notified flag immediately so this lead is not re-prompted on the next run
-        self._mark_notified(lead.sheet_row)
-        status = get_flow().wait_for_approval(req.request_id, timeout_seconds=600)
-        if status == ApprovalStatus.APPROVED:
-            ok = resend_email(lead.email, subject, body, priority="MEDIUM")
-            if ok:
-                print(f"✅ Outreach email sent to {lead.business} ({lead.email})")
-            else:
-                print(f"⚠️  Email failed for {lead.business}")
+                    print(f"  ⚠️  Outscraper {resp.status_code} for {domain}")
+            except Exception as exc:
+                print(f"  ⚠️  Outscraper exception for {domain}: {exc}")
         else:
-            reason = "skipped by founder" if status == ApprovalStatus.SKIPPED else "no response — timed out"
-            print(f"⏭️  Outreach not sent for {lead.business} — {reason}")
-            telegram_notify(
-                "Sales Agent",
-                f"⏭️ Outreach <b>not sent</b> for {lead.business} ({lead.email})\n"
-                f"Reason: {reason}",
-                "MEDIUM",
-            )
+            print("  ℹ️  OUTSCRAPER_API_KEY not set — skipping Outscraper")
 
+        if self.hunter_key:
+            try:
+                resp = requests.get(
+                    "https://api.hunter.io/v2/domain-search",
+                    params={"domain": domain, "api_key": self.hunter_key, "limit": 5},
+                    timeout=15,
+                )
+                if resp.ok:
+                    emails = resp.json().get("data", {}).get("emails", [])
+                    if emails:
+                        val = emails[0].get("value", "")
+                        if val:
+                            print(f"  📧 Hunter → {domain}: {val}")
+                            return val
+                    print(f"  ℹ️  Hunter: no email for {domain}")
+            except Exception as exc:
+                print(f"  ⚠️  Hunter exception for {domain}: {exc}")
 
-    def save_to_pipeline(self, lead: Lead) -> None:
-        """Append HOT lead to Pipeline tab so Trendell can track outreach."""
-        if not self.sheet_id or not self.service_account_json:
-            return
-        try:
-            from google.oauth2 import service_account
-            from googleapiclient.discovery import build
-            creds = service_account.Credentials.from_service_account_info(
-                json.loads(self.service_account_json),
-                scopes=["https://www.googleapis.com/auth/spreadsheets"],
+        print(f"  ❌ No email found for {domain}")
+        return ""
+
+    # ------------------------------------------------------------------
+    # DRAFT — Claude Haiku personalized email
+    # ------------------------------------------------------------------
+
+    def _draft_email(self, lead: Lead) -> tuple[str, str]:
+        """Draft a short personalized outreach email using Claude Haiku.
+
+        Falls back to a static template if ANTHROPIC_API_KEY is missing.
+        """
+        if _anthropic is None or not self.anthropic_key:
+            subject = f"Quick question about {lead.business}"
+            body = (
+                f"Hi there,\n\n"
+                f"I noticed {lead.business} here in Detroit and wanted to reach out.\n\n"
+                "I help local businesses set up simple tools that answer calls, book appointments, "
+                "and follow up with customers automatically — so nothing falls through the cracks.\n\n"
+                "Would you have 10 minutes this week for a quick call?\n\n"
+                "Trendell Fordham\nGenesis AI Systems\ngenesisai.systems"
             )
-            service = build("sheets", "v4", credentials=creds)
-            today = datetime.now().strftime("%Y-%m-%d")
-            service.spreadsheets().values().append(
-                spreadsheetId=self.sheet_id,
-                range="Pipeline!A1",
-                valueInputOption="RAW",
-                insertDataOption="INSERT_ROWS",
-                body={"values": [[
-                    today,
-                    lead.business,
-                    lead.phone,
-                    lead.address,
-                    lead.business_type,
-                    lead.yelp_rating,
-                    lead.score,
-                    "No",       # Outreach Sent
-                    "",         # Channel
-                    "",         # Response
-                    "New",      # Status
-                    "Call or text",  # Next Step
-                    "",         # Next Follow-up Date
-                    lead.pain_point,
-                ]]},
-            ).execute()
-            print(f"✅ {lead.business} added to Pipeline")
-        except Exception as e:
-            print(f"⚠️  Pipeline save failed for {lead.business}: {e}")
+            return subject, body
+
+        context = INDUSTRY_CONTEXT.get(
+            lead.industry.lower(),
+            "local businesses that miss customer calls and inquiries",
+        )
+        prompt = (
+            f"Write a cold outreach email from Trendell Fordham of Genesis AI Systems "
+            f"to the owner of {lead.business}, a {lead.industry} business in Detroit.\n\n"
+            f"Context: You help {context}.\n\n"
+            "Rules:\n"
+            "- Plain English only. No jargon. No phrases like 'AI agents', 'automation pipeline', or 'tech stack'\n"
+            "- Sound like one Detroit entrepreneur talking to another — not a tech salesperson\n"
+            "- 3 to 5 sentences for the body, no more\n"
+            "- One clear, specific pain point relevant to their industry\n"
+            "- Soft CTA: ask for a 10-minute call, not a sale\n"
+            "- Sign off as: Trendell Fordham, Genesis AI Systems, genesisai.systems\n\n"
+            "Return in exactly this format — no extra commentary:\n"
+            "SUBJECT: [subject line]\n"
+            "BODY:\n"
+            "[email body]"
+        )
+
+        client = _anthropic.Anthropic(api_key=self.anthropic_key)
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = response.content[0].text.strip()
+
+        subject = f"Quick question about {lead.business}"
+        body_lines: list[str] = []
+        in_body = False
+        for line in text.split("\n"):
+            if line.startswith("SUBJECT:"):
+                subject = line.replace("SUBJECT:", "").strip()
+            elif line.strip() == "BODY:":
+                in_body = True
+            elif in_body:
+                body_lines.append(line)
+
+        body = "\n".join(body_lines).strip() or text
+        return subject, body
+
+    # ------------------------------------------------------------------
+    # HUBSPOT — create/update company record
+    # ------------------------------------------------------------------
 
     def save_to_hubspot(self, lead: Lead) -> None:
         """Create a Company record in HubSpot for this lead."""
         if not self.hubspot_token:
-            print("⚠️  HUBSPOT_ACCESS_TOKEN missing — skipping HubSpot save")
             return
         try:
             resp = requests.post(
                 "https://api.hubapi.com/crm/v3/objects/companies",
-                headers={"Authorization": f"Bearer {self.hubspot_token}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {self.hubspot_token}",
+                    "Content-Type": "application/json",
+                },
                 json={"properties": {
                     "name": lead.business,
                     "phone": lead.phone,
                     "city": "Detroit",
                     "state": "Michigan",
-                    "industry": HUBSPOT_INDUSTRY_MAP.get(lead.business_type.lower(), "OTHER"),
+                    "industry": HUBSPOT_INDUSTRY_MAP.get(lead.industry.lower(), "OTHER"),
                     "description": (
                         f"Score: {lead.score}\n"
-                        f"Pain point: {lead.pain_point}\n"
+                        f"Domain: {lead.domain}\n"
+                        f"Email: {lead.email}\n"
                         f"Address: {lead.address}\n"
-                        f"Yelp: {lead.yelp_rating} stars\n"
-                        f"Yelp URL: {lead.yelp_url}"
+                        f"Yelp: {lead.yelp_rating} stars"
                     ),
                     "hs_lead_status": "IN_PROGRESS",
                 }},
@@ -314,36 +431,6 @@ class SalesAgent:
                 print(f"⚠️  HubSpot {resp.status_code} for {lead.business}: {resp.text[:200]}")
         except Exception as e:
             print(f"❌ HubSpot error for {lead.business}: {e}")
-
-    def alert_trendell_hot(self, hot_leads: list[Lead]) -> None:
-        """Telegram alert for HOT leads — call them now."""
-        if not hot_leads:
-            return
-        lines = ["🔥 HOT Lead Alert — Genesis AI Systems", "=" * 28]
-        for i, lead in enumerate(hot_leads, 1):
-            lines.append(
-                f"{i}. {lead.business}\n"
-                f"   📞 {lead.phone or 'No phone'}\n"
-                f"   ⭐ Yelp {lead.yelp_rating} | {lead.address[:40]}\n"
-                f"   → Reach out NOW"
-            )
-        lines.append("\ngenesisai.systems")
-        telegram_notify("HOT Leads Ready", "\n".join(lines), "HIGH")
-
-    def send_pipeline_report(self, hot: list[Lead], warm: list[Lead]) -> None:
-        """Send a Resend email + Telegram summary of today's pipeline."""
-        today = datetime.now().strftime("%B %d, %Y")
-        body = (
-            f"Sales Pipeline — {today}\n\n"
-            f"HOT leads: {len(hot)}\n"
-            f"WARM leads: {len(warm)}\n\n"
-            + (("Top HOT leads:\n" + "\n".join(f"- {l.business} | {l.phone}" for l in hot[:5])) if hot else "No HOT leads today.")
-            + "\n\nAll leads saved to HubSpot and Google Sheets.\ngenesisai.systems"
-        )
-        trendell_email = os.getenv("NOTIFICATION_EMAIL", "info@genesisai.systems")
-        resend_email(trendell_email, f"Sales Pipeline — {today}", body, "MEDIUM")
-        telegram_notify(f"Sales Pipeline — {today}", f"HOT: {len(hot)} | WARM: {len(warm)}", "INFO")
-        print(f"✅ Pipeline report sent — {len(hot)} HOT, {len(warm)} WARM")
 
 
 if __name__ == "__main__":
