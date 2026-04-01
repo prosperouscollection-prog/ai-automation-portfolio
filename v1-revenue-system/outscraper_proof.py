@@ -102,7 +102,7 @@ def run_outscraper_proof():
                     print(f"  FIELD {k!r}: {v!r}")
 
         for biz in records[:LIMIT_PER_QUERY]:
-            site_raw = biz.get("site", "")
+            site_raw = biz.get("website", "")
             domain = normalize_domain(site_raw)
             results.append({
                 "name": biz.get("name", ""),
