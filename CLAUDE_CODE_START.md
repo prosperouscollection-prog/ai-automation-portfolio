@@ -1,5 +1,5 @@
 # Genesis AI Systems — Claude Code Master Build Document
-## Version 7 — Updated April 1, 2026
+## Version 8 — Updated April 1, 2026
 ## Paste this file as your first message in every Claude Code session
 
 ---
@@ -15,6 +15,7 @@
 | v5 | March 31, 2026 | Added agent brainstorm, approval framework, social posting plan, version history system |
 | v6 | April 1, 2026 | Outscraper email enrichment wired into Lead Generator (primary) + Hunter fallback |
 | v7 | April 1, 2026 | Lead discovery switched from Yelp to Outscraper Maps; primary_domain now populated so enrich_email() fires in production; full chain proven live |
+| v8 | April 1, 2026 | Task 5 complete: Sales Agent outreach approval flow live. Lead Generator writes owner_email to col P; Sales Agent reads col P first, re-enriches only if empty. Inline SEND/SKIP buttons on approval prompt. callback_query detection fixed (was timing out). Controlled draft variation (5 patterns/industry), plain-English guardrails, Outreach Log rows with category/variant/pass_type. |
 
 ---
 
@@ -80,8 +81,8 @@ from notify import telegram_notify, resend_email
 ### Agents — All 11 Green
 | Agent | Schedule | Status |
 |---|---|---|
-| Lead Generator | Daily 6am | ✅ Yelp → Sheets → HubSpot → Telegram |
-| Sales Agent | Every 6hrs | ✅ Sheets → Pipeline tab → HubSpot → Telegram |
+| Lead Generator | Daily 6am | ✅ Maps → enrich → col P owner_email → Sheets → HubSpot → Telegram |
+| Sales Agent | Every 6hrs | ✅ Reads col P → drafts via Claude → Telegram SEND/SKIP → Resend → Outreach Log |
 | Marketing Agent | Daily 7am | ✅ Claude content → Marketing tab → Telegram + Resend |
 | Client Success | Daily 9am | ✅ HubSpot WON → Clients tab → Resend milestones |
 | Scraper Agent | Daily 5am | ✅ Google Maps → Sheets → HubSpot → Telegram |
@@ -118,12 +119,12 @@ This is the north star. Every build decision should move agents from "Today" tow
 **Anything that touches the outside world (emails to leads, social posts, proposals) starts in Approval Mode.**
 
 ### Agent 1 — Lead Generator
-**Today:** Finds 25 Detroit businesses via Yelp, scores them, enriches HOT leads with email via Outscraper (Hunter fallback), saves to Sheets, Telegram top 3 with email, pushes to HubSpot. Leads sit in Sheets with no outreach action yet.
+**Today:** Finds 25 Detroit businesses via Outscraper Maps, scores them, enriches HOT leads with email via Outscraper (Hunter fallback), writes owner_email to Sheets col P, saves all scored leads to Sheets, pushes HOT leads to HubSpot, Telegrams top 3 with email. Clean handoff: col P is the contract between Lead Generator and Sales Agent.
 **Complete:** Finds leads → enriches emails → drafts personalized outreach email per lead → sends Telegram: "5 HOT leads ready, reply SEND to approve outreach" → Trendell approves → emails go out → logged to Outreach Log tab.
 **Approval required:** Yes — before any email sends.
 
 ### Agent 2 — Sales Agent
-**Today:** Reads HOT leads from Sheets, saves to Pipeline + HubSpot, sends Telegram + Resend report. Nothing actually contacts anyone.
+**Today:** Reads HOT leads from Sheets col P (owner_email first, re-enriches only if empty). Drafts personalized email per lead via Claude Haiku with 5 controlled opening variants per industry. Plain-English guardrails enforced in prompt. Sends Telegram approval prompt with inline SEND/SKIP buttons. On SEND: sends via Resend, logs to Outreach Log (timestamp/business/email/subject/status/run_id/category/variant/pass_type), sends confirmation, returns founder to Command Center. On SKIP: logs skipped, sends confirmation. Max 3 leads per run. Deduplicates via Outreach Log.
 **Complete:** Watches Pipeline for leads untouched 48hrs → flags in Telegram → Trendell confirms → follow-up email sends → tracks responses → flags replies immediately → triggers HoneyBook proposal when deal marked WON.
 **Approval required:** Yes — before each outreach send.
 
@@ -282,14 +283,15 @@ Enrichment path: HOT lead with primary_domain → Outscraper /emails-and-contact
 Decision: Outscraper primary (90% fill rate proven), Hunter fallback. APOLLO_API_KEY removed from workflow env.
 Note: Yelp leads have empty primary_domain — enrichment correctly skips them. Enrichment will fire when Outscraper Maps domain data is present in leads.
 
-**TASK 5 — Build Sales Agent outreach approval flow**
-When Lead Generator finds HOT leads with emails (from Outscraper Emails & Contacts):
-1. Sales Agent drafts personalized email per lead
-2. Sends Telegram to Trendell: "[Business name] — [email] — Draft: [first 100 chars of email]. Reply SEND to approve or SKIP."
-3. Telegram bot listens for reply
-4. SEND → Resend sends email → logged to Outreach Log tab with timestamp
-5. SKIP → lead stays in Pipeline as "Pending Approval"
-This is the core mechanism. Nothing external happens without Trendell's SEND reply.
+**TASK 5 — ✅ DONE — Sales Agent outreach approval flow**
+Completed April 1, 2026.
+Clean handoff: Lead Generator writes owner_email to Leads col P. Sales Agent reads col P first; re-enriches via Outscraper + Hunter only if col P is empty.
+Draft: Claude Haiku, 5 controlled opening variants per industry (variant = hash(business) % 5 + 1). Plain-English guardrails in prompt — no jargon, no banned phrases, self-check + rewrite baked in.
+Approval: Telegram message with inline SEND/SKIP buttons. callback_query detected immediately, answered before action branch runs. Text reply "SEND"/"SKIP" also accepted as fallback.
+On SEND: Resend sends from info@genesisai.systems, Telegram confirmation sent, Outreach Log row written.
+On SKIP: Outreach Log row written (skipped), Telegram confirmation sent.
+Outreach Log columns: timestamp | business_name | email | subject | status | run_id | category | draft_variant | pass_type.
+Max 3 leads processed per run (regardless of send/skip/timeout outcome).
 
 **TASK 6 — Marketing Agent approval flow + Instagram posting**
 Stage 1 — Plan approval (Sunday):
@@ -398,10 +400,10 @@ Before Genesis AI sends its first automated outreach email to a real Detroit bus
 
 1. ✅ Lead Generator finds real HOT leads daily (done)
 2. ✅ Outscraper Emails & Contacts wired → HOT leads with domain get owner email automatically (Task 4 done)
-3. ❌ Sales Agent drafts personalized email per HOT lead (Task 5)
-4. ❌ Telegram approval flow — Trendell replies SEND (Task 5)
-5. ❌ Resend sends email from info@genesisai.systems (requires Task 2 DNS)
-6. ❌ Outreach logged to Outreach Log tab automatically (Task 5)
+3. ✅ Sales Agent drafts personalized email per HOT lead — Claude Haiku, 5 variants/industry (Task 5 done)
+4. ✅ Telegram inline SEND/SKIP buttons — callback_query detected, action runs before Command Center (Task 5 done)
+5. ✅ Resend sends from info@genesisai.systems (sender verified) (Task 5 done)
+6. ✅ Outreach logged to Outreach Log tab with category/variant/pass_type (Task 5 done)
 7. ✅ Trendell follows up with phone call (manual — intentional)
 
 **Marketing runs in parallel:**
