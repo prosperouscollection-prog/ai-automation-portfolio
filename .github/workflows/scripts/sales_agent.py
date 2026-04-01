@@ -19,6 +19,9 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+DETROIT = ZoneInfo("America/Detroit")
 
 import requests
 from dotenv import load_dotenv
@@ -202,42 +205,48 @@ class SalesAgent:
             self._attach_approval_buttons(req.message_id)
             status = self._wait_for_callback(req.message_id, timeout_seconds=600)
 
-            # Act on founder decision + send Telegram confirmation
+            # Act on founder decision — full side effects before any UI response
             if status == ApprovalStatus.APPROVED:
                 ok = resend_email(lead.email, subject, body, priority="MEDIUM")
                 log_status = "sent" if ok else "failed"
-                if ok:
-                    print(f"  ✅ Email sent to {lead.business} ({lead.email})")
-                    self._telegram_confirm(
-                        f"✅ Email sent to {lead.business} ({lead.email}).\n\n"
-                        f"Reply /leads for today's pipeline or /pipeline for deal status."
-                    )
-                else:
-                    print(f"  ⚠️  Resend failed for {lead.business}")
-                    self._telegram_confirm(
-                        f"⚠️ Email FAILED for {lead.business}. Resend error. "
-                        f"Reply /leads to continue."
-                    )
+                print(f"  {'✅' if ok else '⚠️ '} Resend {'sent' if ok else 'FAILED'}: {lead.business} ({lead.email})")
             elif status == ApprovalStatus.SKIPPED:
                 log_status = "skipped"
                 print(f"  ⏭️  Skipped by founder: {lead.business}")
-                self._telegram_confirm(
-                    f"⏭️ Skipped {lead.business}. No email sent.\n\n"
-                    f"Reply /leads for today's pipeline or /pipeline for deal status."
-                )
             else:
                 log_status = "timeout"
                 print(f"  ⏰ No response in 10 minutes: {lead.business}")
-                self._telegram_confirm(
-                    f"⏰ No response for {lead.business} after 10 minutes. Email not sent, logged as timeout."
-                )
 
+            # Side effects first: log row + notified flag
             self._log_outreach(
                 lead.business, lead.email, subject, log_status,
                 category=lead.industry, draft_variant=variant, pass_type=pass_type,
             )
             self._mark_notified(lead.sheet_row)
             print(f"  📤 approval action complete: {log_status}")
+
+            # Telegram confirmation only after all side effects finish
+            if status == ApprovalStatus.APPROVED:
+                if log_status == "sent":
+                    self._telegram_confirm(
+                        f"✅ Email sent to {lead.business} ({lead.email}).\n\n"
+                        f"Reply /leads for today's pipeline or /pipeline for deal status."
+                    )
+                else:
+                    self._telegram_confirm(
+                        f"⚠️ Email FAILED for {lead.business}. Resend error. "
+                        f"Reply /leads to continue."
+                    )
+            elif status == ApprovalStatus.SKIPPED:
+                self._telegram_confirm(
+                    f"⏭️ Skipped {lead.business}. No email sent.\n\n"
+                    f"Reply /leads for today's pipeline or /pipeline for deal status."
+                )
+            else:
+                self._telegram_confirm(
+                    f"⏰ No response for {lead.business} after 10 minutes. Email not sent, logged as timeout."
+                )
+
             processed_count += 1  # increment for every lead that completed the flow
 
         print(f"✅ Sales Agent complete — {processed_count} lead(s) processed this run")
@@ -308,15 +317,22 @@ class SalesAgent:
             return ApprovalStatus.EXPIRED
 
         start = time.time()
+        last_update_id = 0
         while time.time() - start < timeout_seconds:
             try:
+                params = {
+                    "timeout": 5,
+                    "offset": last_update_id + 1 if last_update_id else -20,
+                }
                 resp = requests.get(
                     f"https://api.telegram.org/bot{token}/getUpdates",
-                    params={"timeout": 5, "offset": -20},
+                    params=params,
                     timeout=20,
                 )
                 if resp.ok:
                     for update in resp.json().get("result", []):
+                        last_update_id = max(last_update_id, update.get("update_id", 0))
+
                         # --- inline keyboard callback_query (primary path) ---
                         cq = update.get("callback_query", {})
                         if cq:
@@ -333,9 +349,9 @@ class SalesAgent:
                                     )
                                 except Exception:
                                     pass
-                                if data in ("send", "yes", "approve"):
+                                if any(kw in data for kw in ("send", "yes", "approve")):
                                     return ApprovalStatus.APPROVED
-                                if data in ("skip", "no", "pass"):
+                                if any(kw in data for kw in ("skip", "no", "pass")):
                                     return ApprovalStatus.SKIPPED
 
                         # --- plain text reply (fallback) ---
@@ -343,9 +359,9 @@ class SalesAgent:
                         if msg and str(msg.get("chat", {}).get("id", "")) == chat:
                             if message_id and msg.get("message_id", 0) > message_id:
                                 text = msg.get("text", "").strip().lower()
-                                if text in ("send", "yes", "approve"):
+                                if any(kw in text for kw in ("send", "yes", "approve")):
                                     return ApprovalStatus.APPROVED
-                                if text in ("skip", "no", "pass"):
+                                if any(kw in text for kw in ("skip", "no", "pass")):
                                     return ApprovalStatus.SKIPPED
             except Exception as exc:
                 print(f"  ⚠️  getUpdates error: {exc}")
@@ -457,7 +473,7 @@ class SalesAgent:
         if not self._sheets_service or not self.sheet_id:
             print("  ⚠️  Cannot log outreach — Sheets not connected")
             return
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now(DETROIT).strftime("%Y-%m-%d %H:%M:%S %Z")
         try:
             self._sheets_service.spreadsheets().values().append(
                 spreadsheetId=self.sheet_id,

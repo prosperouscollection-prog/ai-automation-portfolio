@@ -1,5 +1,5 @@
 # Genesis AI Systems — Claude Code Master Build Document
-## Version 8 — Updated April 1, 2026
+## Version 9 — Updated April 1, 2026
 ## Paste this file as your first message in every Claude Code session
 
 ---
@@ -16,6 +16,7 @@
 | v6 | April 1, 2026 | Outscraper email enrichment wired into Lead Generator (primary) + Hunter fallback |
 | v7 | April 1, 2026 | Lead discovery switched from Yelp to Outscraper Maps; primary_domain now populated so enrich_email() fires in production; full chain proven live |
 | v8 | April 1, 2026 | Task 5 complete: Sales Agent outreach approval flow live. Lead Generator writes owner_email to col P; Sales Agent reads col P first, re-enriches only if empty. Inline SEND/SKIP buttons on approval prompt. callback_query detection fixed (was timing out). Controlled draft variation (5 patterns/industry), plain-English guardrails, Outreach Log rows with category/variant/pass_type. |
+| v9 | April 1, 2026 | Callback hardening: update_id tracking stops stale replay; substring matching on SEND/SKIP text fallback. Action-order reliability: Resend + log + notified flag all complete before Telegram confirmation fires. Detroit-local timestamps (America/Detroit) on all Sheets writes in Lead Generator and Sales Agent. |
 
 ---
 

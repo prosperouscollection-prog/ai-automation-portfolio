@@ -6,6 +6,9 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+DETROIT = ZoneInfo("America/Detroit")
 from urllib.parse import urlparse
 
 import requests
@@ -37,7 +40,7 @@ class LeadGeneratorAgent:
         self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
 
     def run(self) -> None:
-        day = datetime.now().weekday()
+        day = datetime.now(DETROIT).weekday()
         schedule = INDUSTRIES_SCHEDULE[day]
         industry = schedule["industry"]
         print(f"🔍 Searching for {industry} businesses in Detroit...")
@@ -400,7 +403,7 @@ class LeadGeneratorAgent:
                 scopes=["https://www.googleapis.com/auth/spreadsheets"],
             )
             service = build("sheets", "v4", credentials=creds)
-            today = datetime.now().strftime("%Y-%m-%d")
+            today = datetime.now(DETROIT).strftime("%Y-%m-%d")
             rows = []
             for p in prospects:
                 rows.append([
@@ -443,7 +446,7 @@ class LeadGeneratorAgent:
         lines = [
             "🎯 Lead Generator — Genesis AI Systems",
             f"Today: {industry.title()} businesses",
-            f"Date: {datetime.now().strftime('%b %d')}",
+            f"Date: {datetime.now(DETROIT).strftime('%b %d')}",
             "=" * 28,
         ]
         for i, p in enumerate(hot_prospects, 1):
