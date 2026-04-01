@@ -1,5 +1,5 @@
 # Genesis AI Systems — Claude Code Master Build Document
-## Version 6 — Updated April 1, 2026
+## Version 7 — Updated April 1, 2026
 ## Paste this file as your first message in every Claude Code session
 
 ---
@@ -13,7 +13,8 @@
 | v3 | March 30, 2026 | n8n deployed to DigitalOcean, exit intent, robots.txt, sitemap expanded |
 | v4 | March 30, 2026 | Twilio fully stripped from all 6 Python scripts, exit intent live, all 11 agents green |
 | v5 | March 31, 2026 | Added agent brainstorm, approval framework, social posting plan, version history system |
-| v6 | April 1, 2026 | Outscraper email enrichment wired into Lead Generator (primary) + Hunter fallback; email enrichment step on path-to-outreach marked ✅ |
+| v6 | April 1, 2026 | Outscraper email enrichment wired into Lead Generator (primary) + Hunter fallback |
+| v7 | April 1, 2026 | Lead discovery switched from Yelp to Outscraper Maps; primary_domain now populated so enrich_email() fires in production; full chain proven live |
 
 ---
 
@@ -184,7 +185,7 @@ This is the north star. Every build decision should move agents from "Today" tow
 | Social posting — Phase 2 | TikTok script generation, Trendell records | TikTok API requires video file, can't auto-post text |
 | Social posting — Phase 3 | Full TikTok auto-post with AI video | Requires Runway/HeyGen ($50-150/mo) — future |
 | LinkedIn | Lower priority than Instagram/TikTok | Not where Detroit local business owners spend time |
-| Apollo.io | Free tier only until 2-3 clients closed | Paid plan ($49/mo) not justified yet — Yelp handles lead discovery |
+| Apollo.io | Free tier only until 2-3 clients closed | Paid plan ($49/mo) not justified yet — Outscraper Maps handles lead discovery |
 | Instantly.ai | Waiting — no email list yet | Activate when Outscraper enrichment wired |
 | Lindy AI | Waiting — activate with first inbound leads | No email addresses to follow up yet |
 | HoneyBook | Build templates now — use on first close | 30 min setup, ready to send day 1 |
@@ -205,8 +206,8 @@ This is the north star. Every build decision should move agents from "Today" tow
 | Agent alerts | Telegram (@GenesisaisystemsBot) | ✅ All 11 agents wired |
 | Outbound email | Resend (info@genesisai.systems) | ✅ Working — DNS verify trendell@ pending |
 | CRM | HubSpot free | ✅ Receiving real data |
-| Lead discovery | Yelp Fusion API (free, 500/day) | ✅ 25 leads/day |
-| Lead emails | Outscraper Emails & Contacts | ✅ Proven 90% fill — replaces Hunter.io |
+| Lead discovery | Outscraper Maps API | ✅ 25 leads/day with primary_domain populated |
+| Lead emails | Outscraper Emails & Contacts | ✅ Proven 90% fill — fires in production now |
 | Content posting | Instagram Graph API | ❌ Not built yet |
 | Content posting | TikTok Content API | ❌ Not built yet — script gen only |
 | Proposals/contracts | HoneyBook | ⏳ Templates not built yet |
