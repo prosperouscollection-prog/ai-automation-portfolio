@@ -75,7 +75,6 @@ def run_outscraper_proof():
                 "query": query,
                 "limit": LIMIT_PER_QUERY,
                 "async": "false",
-                "fields": "name,full_address,phone,site,category,rating,reviews_count",
             },
             timeout=90,
         )
@@ -95,6 +94,12 @@ def run_outscraper_proof():
 
         print(f"  Records returned: {len(records)}")
         total_records_fetched += len(records)
+        if records:
+            first = records[0]
+            print(f"  RAW FIRST RECORD KEYS: {list(first.keys())}")
+            for k, v in first.items():
+                if any(x in k.lower() for x in ['site','web','url','domain','link']):
+                    print(f"  FIELD {k!r}: {v!r}")
 
         for biz in records[:LIMIT_PER_QUERY]:
             site_raw = biz.get("site", "")
