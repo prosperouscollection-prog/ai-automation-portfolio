@@ -209,3 +209,90 @@ if __name__ == "__main__":
     run_outscraper_proof()
     run_yelp_website_check()
     print("\nDONE")
+
+
+def run_emails_contacts_proof(domains: list):
+    """Test Outscraper Emails & Contacts endpoint against domains found in Maps proof."""
+    print("\n── OUTSCRAPER EMAILS & CONTACTS PROOF ──────────────────────────────────")
+
+    if not domains:
+        print("  No domains to test — skipping")
+        return
+
+    # Test first 5 domains to keep cost minimal
+    test_domains = domains[:5]
+    print(f"  Testing {len(test_domains)} domains: {test_domains}")
+
+    # Outscraper emails-and-contacts endpoint
+    # Accepts comma-separated list of domains/URLs
+    query = ",".join(test_domains)
+
+    resp = requests.get(
+        "https://api.app.outscraper.com/emails-and-contacts",
+        headers={"X-API-KEY": OUTSCRAPER_API_KEY},
+        params={
+            "query": query,
+            "async": "false",
+        },
+        timeout=90,
+    )
+
+    print(f"  HTTP {resp.status_code}")
+    if not resp.ok:
+        print(f"  ERROR: {resp.text[:400]}")
+        return
+
+    data = resp.json()
+    raw_data = data.get("data", [])
+
+    # Flatten response — may be list of lists or list of dicts
+    records = []
+    if raw_data and isinstance(raw_data[0], list):
+        records = raw_data[0]
+    elif raw_data and isinstance(raw_data[0], dict):
+        records = raw_data
+
+    print(f"  Records returned: {len(records)}")
+
+    if records:
+        print(f"\n  RAW FIRST RECORD KEYS: {list(records[0].keys())}")
+
+    emails_found = 0
+    contacts_found = 0
+
+    for i, rec in enumerate(records, 1):
+        domain   = rec.get("domain", rec.get("query", "unknown"))
+        emails   = rec.get("emails", []) or []
+        phones   = rec.get("phones", []) or []
+        contacts = rec.get("contacts", []) or []
+        socials  = rec.get("social_links", rec.get("socials", [])) or []
+
+        has_email = bool(emails)
+        if has_email:
+            emails_found += 1
+        if contacts:
+            contacts_found += 1
+
+        flag = "✅" if has_email else "❌"
+        print(f"\n  {i}. {flag} {domain}")
+        print(f"     emails:   {emails[:3]}")
+        print(f"     phones:   {phones[:2]}")
+        print(f"     contacts: {contacts[:2]}")
+        print(f"     socials:  {socials[:2]}")
+
+    fill_rate = emails_found / len(test_domains) * 100 if test_domains else 0
+
+    print(f"\n── EMAILS & CONTACTS FILL RATE ─────────────────────────────────────────")
+    print(f"  Domains with email: {emails_found}/{len(test_domains)} ({fill_rate:.0f}%)")
+
+    print(f"\n── HUNTER REPLACEMENT VERDICT ──────────────────────────────────────────")
+    if fill_rate >= 60:
+        print(f"  PASS — Outscraper Emails & Contacts replaces Hunter.io")
+        print(f"  Architecture: Outscraper Maps → Outscraper Emails → HubSpot")
+        print(f"  Hunter.io is no longer needed in V1")
+    elif fill_rate >= 30:
+        print(f"  PARTIAL — Keep Hunter as fallback for gaps")
+        print(f"  Architecture: Outscraper Maps → Outscraper Emails → Hunter fallback → HubSpot")
+    else:
+        print(f"  FAIL — Hunter.io stays as primary email enrichment")
+        print(f"  Architecture: Outscraper Maps → Hunter.io → HubSpot")
