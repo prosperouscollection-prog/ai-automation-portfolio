@@ -93,33 +93,43 @@ def collect_domains_from_maps() -> list[str]:
 # ── Step 2: Emails & Contacts Scraper ────────────────────────────────────────
 
 def test_emails_and_contacts(domains: list[str]) -> list[dict]:
-    """Test /emails-and-contacts on all domains."""
+    """Test /emails-and-contacts on all domains (one request per domain)."""
     print("── STEP 2: EMAILS & CONTACTS SCRAPER (/emails-and-contacts) ────────────")
     print(f"  Domains: {domains}")
 
-    query = ",".join(domains)
-    resp = requests.get(
-        "https://api.app.outscraper.com/emails-and-contacts",
-        headers={"X-API-KEY": OUTSCRAPER_API_KEY},
-        params={"query": query, "async": "false"},
-        timeout=120,
-    )
+    records = []
+    for domain in domains:
+        resp = requests.get(
+            "https://api.app.outscraper.com/emails-and-contacts",
+            headers={"X-API-KEY": OUTSCRAPER_API_KEY},
+            params={"query": domain, "async": "false"},
+            timeout=120,
+        )
 
-    print(f"  HTTP {resp.status_code}")
-    if not resp.ok:
-        print(f"  ERROR: {resp.text[:400]}")
-        return []
+        print(f"  {domain}: HTTP {resp.status_code}")
+        if not resp.ok:
+            print(f"    ERROR: {resp.text[:300]}")
+            records.append({"query": domain})
+            continue
 
-    data = resp.json()
-    raw = data.get("data", [])
-    records = raw[0] if raw and isinstance(raw[0], list) else raw
-    if not isinstance(records, list):
-        records = []
+        data = resp.json()
+        raw = data.get("data", [])
+        # Flatten: may be [[{...}]] or [{...}]
+        if raw and isinstance(raw[0], list):
+            recs = raw[0]
+        elif raw and isinstance(raw[0], dict):
+            recs = raw
+        else:
+            recs = []
 
-    print(f"  Records returned: {len(records)}")
+        if recs:
+            records.append(recs[0])
+        else:
+            records.append({"query": domain})
+
+    print(f"\n  Total records: {len(records)}")
     if records:
         print(f"  RAW FIRST RECORD KEYS: {sorted(records[0].keys())}")
-        # Dump full first record for field discovery
         print(f"  FULL FIRST RECORD:")
         print(json.dumps(records[0], indent=4, default=str)[:2000])
 
@@ -203,35 +213,45 @@ def test_emails_and_contacts(domains: list[str]) -> list[dict]:
 # ── Step 3: Contacts & Leads Enrichment ──────────────────────────────────────
 
 def test_contacts_and_leads(domains: list[str]) -> list[dict]:
-    """Test /contacts-and-leads on all domains."""
+    """Test /contacts-and-leads on all domains (one request per domain)."""
     print("\n── STEP 3: CONTACTS & LEADS ENRICHMENT (/contacts-and-leads) ────────────")
     print(f"  Domains: {domains}")
 
-    query = ",".join(domains)
-    resp = requests.get(
-        "https://api.app.outscraper.com/contacts-and-leads",
-        headers={"X-API-KEY": OUTSCRAPER_API_KEY},
-        params={
-            "query": query,
-            "async": "false",
-            "contacts_per_company": 3,
-            "emails_per_contact": 1,
-        },
-        timeout=180,
-    )
+    records = []
+    for domain in domains:
+        resp = requests.get(
+            "https://api.app.outscraper.com/contacts-and-leads",
+            headers={"X-API-KEY": OUTSCRAPER_API_KEY},
+            params={
+                "query": domain,
+                "async": "false",
+                "contacts_per_company": 3,
+                "emails_per_contact": 1,
+            },
+            timeout=180,
+        )
 
-    print(f"  HTTP {resp.status_code}")
-    if not resp.ok:
-        print(f"  ERROR: {resp.text[:400]}")
-        return []
+        print(f"  {domain}: HTTP {resp.status_code}")
+        if not resp.ok:
+            print(f"    ERROR: {resp.text[:300]}")
+            records.append({"query": domain})
+            continue
 
-    data = resp.json()
-    raw = data.get("data", [])
-    records = raw[0] if raw and isinstance(raw[0], list) else raw
-    if not isinstance(records, list):
-        records = []
+        data = resp.json()
+        raw = data.get("data", [])
+        if raw and isinstance(raw[0], list):
+            recs = raw[0]
+        elif raw and isinstance(raw[0], dict):
+            recs = raw
+        else:
+            recs = []
 
-    print(f"  Records returned: {len(records)}")
+        if recs:
+            records.append(recs[0])
+        else:
+            records.append({"query": domain})
+
+    print(f"\n  Total records: {len(records)}")
     if records:
         print(f"  RAW FIRST RECORD KEYS: {sorted(records[0].keys())}")
         print(f"  FULL FIRST RECORD:")
