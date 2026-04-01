@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Hunter.io email lookup — OPTIONAL support infrastructure for V1.
+"""Hunter.io email lookup — OPTIONAL FALLBACK for V1.
 
-STATUS: Not part of the locked V1 core stack. The V1 revenue path works
-without email lookup. Sales Agent can reach out via phone/Calendly for leads
-without email. Hunter.io adds email discovery if/when needed.
+STATUS: Demoted from planned primary to optional fallback (2026-03-31).
+Outscraper Emails & Contacts is now the proven primary enrichment layer
+(90% email fill rate on 10 Detroit domains). Hunter.io is only needed if
+Outscraper gaps become a problem at scale.
 
 Do not add Hunter.io to the V1 critical path. Activate only when:
-1. Lead volume is consistent
-2. Manual email sourcing becomes a bottleneck
-3. HUNTER_API_KEY is added to GitHub secrets
+1. Outscraper email fill rate drops below 60% for a niche
+2. A specific lead has no Outscraper email and is high-value
+3. HUNTER_API_KEY is already in GitHub secrets
 
 Free tier: 25 lookups/month. Paid: $34/mo for 500.
 

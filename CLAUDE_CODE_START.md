@@ -184,10 +184,11 @@ This is the north star. Every build decision should move agents from "Today" tow
 | Social posting — Phase 3 | Full TikTok auto-post with AI video | Requires Runway/HeyGen ($50-150/mo) — future |
 | LinkedIn | Lower priority than Instagram/TikTok | Not where Detroit local business owners spend time |
 | Apollo.io | Free tier only until 2-3 clients closed | Paid plan ($49/mo) not justified yet — Yelp handles lead discovery |
-| Instantly.ai | Waiting — no email list yet | Yelp leads have no emails. Activate when Hunter.io wired |
+| Instantly.ai | Waiting — no email list yet | Activate when Outscraper enrichment wired |
 | Lindy AI | Waiting — activate with first inbound leads | No email addresses to follow up yet |
 | HoneyBook | Build templates now — use on first close | 30 min setup, ready to send day 1 |
-| Hunter.io | Wire into Lead Generator — gets owner emails from domains | Free tier: 25/mo. Paid: $34/mo for 500 |
+| Outscraper Emails | Proven primary enrichment — 90% email fill rate | /emails-and-contacts endpoint, $3/1000 domains, 500 free/mo |
+| Hunter.io | Demoted to optional fallback — not needed in V1 core | Free tier: 25/mo. Only activate if Outscraper gaps become a problem |
 | Twilio | Fully removed — never use again | 866 toll-free can't SMS mobile phones |
 | Full Stack tier | Removed from site entirely | No Stripe link, overwhelming for cold visitors |
 | Approval flow | Telegram SEND/CONFIRM replies | Simplest mobile-first approval before any external action |
@@ -204,7 +205,7 @@ This is the north star. Every build decision should move agents from "Today" tow
 | Outbound email | Resend (info@genesisai.systems) | ✅ Working — DNS verify trendell@ pending |
 | CRM | HubSpot free | ✅ Receiving real data |
 | Lead discovery | Yelp Fusion API (free, 500/day) | ✅ 25 leads/day |
-| Lead emails | Hunter.io | ❌ Not wired yet |
+| Lead emails | Outscraper Emails & Contacts | ✅ Proven 90% fill — replaces Hunter.io |
 | Content posting | Instagram Graph API | ❌ Not built yet |
 | Content posting | TikTok Content API | ❌ Not built yet — script gen only |
 | Proposals/contracts | HoneyBook | ⏳ Templates not built yet |
@@ -273,14 +274,15 @@ Flag any that return hardcoded fallback strings. Fix by ensuring callClaude() is
 
 ### 🟡 THIS WEEK — Make Agents Actually Do Things
 
-**TASK 4 — Wire Hunter.io into Lead Generator**
-Lead Generator finds businesses via Yelp but gets no email addresses.
-Hunter.io free tier: 25 searches/month. Paid: $34/mo for 500.
-Wire: for each HOT lead, take primary_domain from Yelp → POST to Hunter domain search → get owner email → add to lead record before saving to Sheets + sending outreach draft.
-Add HUNTER_API_KEY to GitHub secrets.
+**TASK 4 — Wire Outscraper Emails & Contacts into Lead Generator**
+Lead Generator finds businesses via Outscraper Maps but gets no email addresses.
+Outscraper Emails & Contacts: 90% email fill rate proven on 10 Detroit domains (2026-03-31 proof).
+Also returns phones (100% hit rate), socials, and some contact names/titles.
+Wire: for each HOT lead, take domain from Maps → GET /emails-and-contacts → get owner email + phone → add to lead record before saving to Sheets + sending outreach draft.
+OUTSCRAPER_API_KEY already in GitHub secrets. Hunter.io is optional fallback only.
 
 **TASK 5 — Build Sales Agent outreach approval flow**
-When Lead Generator finds HOT leads with emails (from Hunter.io):
+When Lead Generator finds HOT leads with emails (from Outscraper Emails & Contacts):
 1. Sales Agent drafts personalized email per lead
 2. Sends Telegram to Trendell: "[Business name] — [email] — Draft: [first 100 chars of email]. Reply SEND to approve or SKIP."
 3. Telegram bot listens for reply
@@ -394,7 +396,7 @@ Keeps Playwright but runs on demand only, not as a scheduled job.
 Before Genesis AI sends its first automated outreach email to a real Detroit business:
 
 1. ✅ Lead Generator finds real HOT leads daily (done)
-2. ❌ Hunter.io wired → leads get owner emails automatically (Task 4)
+2. ❌ Outscraper Emails & Contacts wired → leads get owner emails automatically (Task 4, 90% proven)
 3. ❌ Sales Agent drafts personalized email per HOT lead (Task 5)
 4. ❌ Telegram approval flow — Trendell replies SEND (Task 5)
 5. ❌ Resend sends email from info@genesisai.systems (requires Task 2 DNS)
