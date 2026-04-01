@@ -33,6 +33,8 @@ class LeadGeneratorAgent:
         self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
         self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
+        self.outscraper_key = os.getenv("OUTSCRAPER_API_KEY", "").strip()
+        self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
 
     def run(self) -> None:
         day = datetime.now().weekday()
@@ -68,6 +70,12 @@ class LeadGeneratorAgent:
 
         scored = self.score_prospects(prospects)
         hot = [p for p in scored if p["score"] == "HOT"]
+
+        # --- Email enrichment for HOT leads with a known domain ---
+        for p in hot:
+            domain = p.get("primary_domain", "").strip()
+            if domain and not p.get("email"):
+                p["email"] = self.enrich_email(domain)
 
         self.generate_outreach(hot[:5], industry)  # must run before save_to_sheets
         self.save_to_sheets(scored, industry)
@@ -372,9 +380,11 @@ class LeadGeneratorAgent:
             "=" * 28,
         ]
         for i, p in enumerate(hot_prospects, 1):
+            email_line = f"\n   📧 {p['email']}" if p.get("email") else ""
             lines.append(
                 f"{i}. {p.get('name', 'Unknown')}\n"
-                f"   {p.get('phone', 'No phone listed')}\n"
+                f"   {p.get('phone', 'No phone listed')}"
+                f"{email_line}\n"
                 f"   → {p.get('recommended_product', 'Starter')}"
             )
         lines.append("\nOutreach messages ready.")
@@ -400,6 +410,65 @@ class LeadGeneratorAgent:
         else:
             print("⚠️  Telegram not configured — TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing")
             print(f"   HOT leads today:\n{message}")
+
+    def enrich_email(self, domain: str) -> str:
+        """Return first valid email for domain. Outscraper primary, Hunter fallback.
+
+        Logs result clearly. Never raises — returns '' on any failure so the
+        caller can continue processing the rest of the batch.
+        """
+        # 1. Outscraper /emails-and-contacts
+        if self.outscraper_key:
+            try:
+                resp = requests.get(
+                    "https://api.app.outscraper.com/emails-and-contacts",
+                    headers={"X-API-KEY": self.outscraper_key},
+                    params={"query": domain, "async": "false"},
+                    timeout=30,
+                )
+                if resp.ok:
+                    raw = resp.json().get("data", [])
+                    records = raw[0] if raw and isinstance(raw[0], list) else raw
+                    if records and isinstance(records, list):
+                        emails = records[0].get("emails", []) or []
+                        for entry in emails:
+                            val = entry.get("value", "") if isinstance(entry, dict) else entry
+                            if val and "@" in str(val):
+                                print(f"  📧 Outscraper → {domain}: {val}")
+                                return str(val)
+                    print(f"  ℹ️  Outscraper: no email for {domain}")
+                else:
+                    print(f"  ⚠️  Outscraper {resp.status_code} for {domain} — trying Hunter")
+            except Exception as exc:
+                print(f"  ⚠️  Outscraper exception for {domain}: {exc} — trying Hunter")
+        else:
+            print("  ℹ️  OUTSCRAPER_API_KEY not set — skipping Outscraper enrichment")
+
+        # 2. Hunter fallback
+        if self.hunter_key:
+            try:
+                resp = requests.get(
+                    "https://api.hunter.io/v2/domain-search",
+                    params={"domain": domain, "api_key": self.hunter_key, "limit": 5},
+                    timeout=15,
+                )
+                if resp.ok:
+                    emails = resp.json().get("data", {}).get("emails", [])
+                    if emails:
+                        val = emails[0].get("value", "")
+                        if val:
+                            print(f"  📧 Hunter fallback → {domain}: {val}")
+                            return val
+                    print(f"  ℹ️  Hunter: no email for {domain}")
+                else:
+                    print(f"  ⚠️  Hunter {resp.status_code} for {domain}")
+            except Exception as exc:
+                print(f"  ⚠️  Hunter exception for {domain}: {exc}")
+        else:
+            print("  ℹ️  HUNTER_API_KEY not set — Hunter fallback skipped")
+
+        print(f"  ❌ No email found for {domain}")
+        return ""
 
     def generate_outreach(self, prospects: list[dict], industry: str) -> list[dict]:
         templates = {
