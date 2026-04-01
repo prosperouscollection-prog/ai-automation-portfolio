@@ -2,6 +2,15 @@ name: Outscraper Proof
 
 on:
   workflow_dispatch:
+    inputs:
+      enrichment:
+        description: 'Run enrichment proof (emails/contacts) after Maps proof'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   outscraper-proof:
@@ -18,8 +27,14 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Run Outscraper proof
+      - name: Run Outscraper Maps proof
         env:
           OUTSCRAPER_API_KEY: ${{ secrets.OUTSCRAPER_API_KEY }}
           YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
         run: python -u v1-revenue-system/outscraper_proof.py
+
+      - name: Run enrichment proof
+        if: inputs.enrichment == 'true'
+        env:
+          OUTSCRAPER_API_KEY: ${{ secrets.OUTSCRAPER_API_KEY }}
+        run: python -u v1-revenue-system/outscraper_enrichment_proof.py

@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Demo Server (dev)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/.bin/nodemon", "server.js"],
+      "port": 8080,
+      "cwd": "demo-server"
+    },
+    {
+      "name": "Demo Server (prod)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 8080,
+      "cwd": "demo-server"
+    }
+  ]
+}
