@@ -1,0 +1,25 @@
+name: Outscraper Proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  outscraper-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Outscraper proof
+        env:
+          OUTSCRAPER_API_KEY: ${{ secrets.OUTSCRAPER_API_KEY }}
+          YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
+        run: python -u v1-revenue-system/outscraper_proof.py
