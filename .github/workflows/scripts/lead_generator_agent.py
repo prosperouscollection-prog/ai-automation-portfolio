@@ -291,8 +291,10 @@ class LeadGeneratorAgent:
             reviews = prospect.get("yelp_reviews", 0) or 0
             rating = prospect.get("yelp_rating", 0) or 0
             employees = prospect.get("estimated_num_employees", 0) or 0
-            # HOT: active business (reviews > 20) or right employee count
-            if reviews >= 20 or (2 <= employees <= 50):
+            # HOT: active business with any reviews (Maps) or right employee count
+            # Threshold lowered from 20→5 — Maps returns local service businesses
+            # with far fewer reviews than Yelp's popularity-sorted results
+            if reviews >= 5 or (2 <= employees <= 50):
                 prospect["score"] = "HOT"
                 prospect["reason"] = "Active local business — likely missing calls and leads"
                 prospect["recommended_product"] = "Starter Package — $500 setup, $150/mo"
