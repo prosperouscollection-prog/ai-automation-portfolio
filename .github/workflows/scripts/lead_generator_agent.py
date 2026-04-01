@@ -55,6 +55,11 @@ class LeadGeneratorAgent:
 
         scored = self.score_prospects(prospects)
         hot = [p for p in scored if p["score"] == "HOT"]
+        warm = [p for p in scored if p["score"] == "WARM"]
+        cold = [p for p in scored if p["score"] == "COLD"]
+        print(f"  Score distribution — HOT:{len(hot)} WARM:{len(warm)} COLD:{len(cold)}")
+        for p in scored[:5]:
+            print(f"  {p['score']:4} | reviews={p.get('yelp_reviews')!r:>6} | domain={p.get('primary_domain')!r} | {p['name'][:40]}")
 
         # --- Email enrichment for HOT leads with a known domain ---
         for p in hot:
@@ -124,6 +129,10 @@ class LeadGeneratorAgent:
             if not isinstance(records, list):
                 records = []
             print(f"✅ Outscraper Maps returned {len(records)} businesses")
+            if records:
+                sample = records[0]
+                print(f"  Sample record keys: {sorted(sample.keys())}")
+                print(f"  Sample reviews_count={sample.get('reviews_count')!r} rating={sample.get('rating')!r} name={sample.get('name')!r}")
             results = []
             for biz in records:
                 domain = self._normalize_domain(biz.get("website", ""))
