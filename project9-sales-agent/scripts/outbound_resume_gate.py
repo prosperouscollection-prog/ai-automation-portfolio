@@ -35,7 +35,7 @@ REQUIRED_STATE_FIELDS = (
     "source",
     "notes",
 )
-REPLAY_WINDOW = timedelta(hours=24)
+REPLAY_WINDOW = timedelta(hours=6)
 REPLAY_DETECTION_MODE = "correlation_and_time"
 
 

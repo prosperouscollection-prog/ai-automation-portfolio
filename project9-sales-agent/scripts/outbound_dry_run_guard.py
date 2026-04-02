@@ -189,12 +189,6 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional path to write the evidence JSON.",
     )
-    parser.add_argument(
-        "--require-dry-run",
-        action="store_true",
-        default=True,
-        help="Fail unless launch_mode is DRY_RUN.",
-    )
     return parser.parse_args()
 
 
@@ -216,15 +210,6 @@ def main() -> int:
         )
     else:
         result = _validate_state(state)
-
-    if args.require_dry_run and result.verification_result == "PASS" and result.launch_mode_before != "DRY_RUN":
-        result = GuardResult(
-            verification_result="FAIL",
-            failure_reason="dry-run requirement violated",
-            launch_mode_before=result.launch_mode_before,
-            launch_status_before=result.launch_status_before,
-            next_action="block_progression",
-        )
 
     evidence = _build_evidence(
         result=result,

@@ -122,6 +122,10 @@ DEFAULT_PROJECT9_LAUNCH_STATE_PATH = (
     REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state.json"
 )
 ALLOWED_OUTBOUND_LAUNCH_MODES = {"LIVE_ALLOWED"}
+LAUNCH_STATE_ARTIFACT_NAME = "outbound-launch-state-current"
+LAUNCH_STATE_RUNTIME_PATH = (
+    REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state_runtime.json"
+)
 
 
 @dataclass
@@ -166,6 +170,7 @@ class SalesAgent:
     # ------------------------------------------------------------------
 
     def run(self) -> None:
+        self.resolve_launch_state()
         leads = self.get_hot_leads_from_sheets()
         if not leads:
             print("ℹ️  No HOT leads with domain found in Sheets")
@@ -220,7 +225,19 @@ class SalesAgent:
 
             # Act on founder decision — full side effects before any UI response
             if status == ApprovalStatus.APPROVED:
-                self._assert_outbound_launch_allowed(lead.business)
+                try:
+                    self._assert_outbound_launch_allowed(lead.business)
+                except RuntimeError as exc:
+                    log_status = "blocked_launch_state"
+                    print(f"  ⛔ Send blocked for {lead.business}: {exc}")
+                    self._telegram_confirm(
+                        f"⛔ Send blocked for {lead.business}.\n\n"
+                        f"Reason: {exc}\n"
+                        f"Reply /leads to continue."
+                    )
+                    processed_count += 1
+                    continue
+
                 ok = resend_email(lead.email, subject, body, priority="MEDIUM")
                 log_status = "sent" if ok else "failed"
                 print(f"  {'✅' if ok else '⚠️ '} Resend {'sent' if ok else 'FAILED'}: {lead.business} ({lead.email})")
@@ -302,6 +319,74 @@ class SalesAgent:
             reason = f"outbound send blocked: launch_status must be READY, found {launch_status or 'missing'}"
             print(f"  ⛔ Blocking send for {business}: {reason} (state={self.launch_state_path})")
             raise RuntimeError(reason)
+
+    def resolve_launch_state(self) -> None:
+        """Prefer the latest durable launch-state artifact, with repo fallback."""
+        artifact_state = self._download_latest_launch_state_artifact()
+        if artifact_state is not None:
+            self.launch_state_path = artifact_state
+
+    def _download_latest_launch_state_artifact(self) -> Path | None:
+        """Resolve the latest durable Project 9 launch-state artifact if available."""
+        token = os.getenv("GITHUB_TOKEN", "").strip()
+        repository = os.getenv("GITHUB_REPOSITORY", "").strip()
+        api_url = os.getenv("GITHUB_API_URL", "https://api.github.com").rstrip("/")
+        if not token or not repository:
+            return None
+        try:
+            resp = requests.get(
+                f"{api_url}/repos/{repository}/actions/artifacts",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+                params={"per_page": 100},
+                timeout=30,
+            )
+            if not resp.ok:
+                print(f"⚠️  Launch state artifact lookup failed: {resp.status_code}")
+                return None
+            artifacts = [
+                artifact for artifact in resp.json().get("artifacts", [])
+                if artifact.get("name") == LAUNCH_STATE_ARTIFACT_NAME and not artifact.get("expired")
+            ]
+            if not artifacts:
+                print("ℹ️  No durable launch-state artifact found; using repo state file")
+                return None
+            artifact = max(artifacts, key=lambda item: item.get("created_at", ""))
+            archive_url = artifact.get("archive_download_url")
+            if not archive_url:
+                print("⚠️  Durable launch-state artifact missing archive URL")
+                return None
+            archive = requests.get(
+                archive_url,
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/vnd.github+json",
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+                timeout=30,
+            )
+            if not archive.ok:
+                print(f"⚠️  Durable launch-state artifact download failed: {archive.status_code}")
+                return None
+            import zipfile
+            from io import BytesIO
+
+            LAUNCH_STATE_RUNTIME_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(BytesIO(archive.content)) as zf:
+                members = zf.namelist()
+                candidate = next((name for name in members if name.endswith("outbound_launch_state.json")), None)
+                if candidate is None:
+                    print("⚠️  Durable launch-state artifact missing state JSON")
+                    return None
+                LAUNCH_STATE_RUNTIME_PATH.write_bytes(zf.read(candidate))
+            print(f"✅ Loaded durable launch-state artifact → {LAUNCH_STATE_RUNTIME_PATH}")
+            return LAUNCH_STATE_RUNTIME_PATH
+        except Exception as exc:
+            print(f"⚠️  Durable launch-state artifact resolution failed: {exc}")
+            return None
 
     def _telegram_confirm(self, text: str) -> None:
         """Send a follow-up Telegram message after an approval decision."""

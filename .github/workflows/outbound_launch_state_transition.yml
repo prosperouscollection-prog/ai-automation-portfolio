@@ -29,6 +29,12 @@ on:
         default: PAUSED
         options:
           - PAUSED
+          - LIVE_ALLOWED
+      live_allowed_evidence:
+        description: Path to the first-10 monitor evidence required for LIVE_ALLOWED.
+        required: false
+        type: string
+        default: ""
       transition_record:
         description: Path for the transition record JSON.
         required: false
@@ -50,6 +56,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   launch-state-transition:
@@ -59,14 +66,21 @@ jobs:
       OUTBOUND_LAUNCH_STATE_PATH: ${{ inputs.state_file }}
       OUTBOUND_DRY_RUN_EVIDENCE_PATH: ${{ inputs.dry_run_evidence }}
       OUTBOUND_RESUME_GUARD_EVIDENCE_PATH: ${{ inputs.resume_evidence }}
+      OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH: ${{ inputs.live_allowed_evidence }}
       OUTBOUND_TARGET_STATE: ${{ inputs.target_state }}
       OUTBOUND_TRANSITION_RECORD_PATH: ${{ inputs.transition_record }}
       OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
+      OUTBOUND_DRY_RUN_EVIDENCE_ARTIFACT_NAME: outbound-dry-run-guard-evidence-${{ inputs.correlation_id }}
+      OUTBOUND_RESUME_GUARD_EVIDENCE_ARTIFACT_NAME: outbound-resume-gate-evidence-${{ inputs.correlation_id }}
+      OUTBOUND_EVIDENCE_ARTIFACT_NAME: outbound-launch-state-transition-evidence-${{ inputs.correlation_id }}
+      OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME: outbound-launch-state-transition-telegram-alert-${{ inputs.correlation_id }}
       OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_launch_state_transition_stdout.log
       OUTBOUND_TELEGRAM_ALERT_CHANNEL: Telegram
       OUTBOUND_TELEGRAM_ALERT_FILE: project9-sales-agent/state/outbound_launch_state_transition_telegram_alert.json
+      OUTBOUND_STATE_ARTIFACT_NAME: outbound-launch-state-current
+      OUTBOUND_STATE_RUNTIME_FILE: project9-sales-agent/state/outbound_launch_state_runtime.json
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -75,6 +89,112 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Resolve Upstream Evidence
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import zipfile
+          from io import BytesIO
+          from pathlib import Path
+          from urllib import error, request
+
+          token = os.environ.get("GITHUB_TOKEN", "").strip()
+          api_url = os.environ.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
+          repository = os.environ.get("GITHUB_REPOSITORY", "").strip()
+          correlation_id = os.environ.get("OUTBOUND_CORRELATION_ID", "").strip()
+          if not token:
+              print("Missing GITHUB_TOKEN for artifact handoff", file=sys.stderr)
+              raise SystemExit(1)
+          if not repository:
+              print("Missing GITHUB_REPOSITORY for artifact handoff", file=sys.stderr)
+              raise SystemExit(1)
+          if not correlation_id:
+              print("Missing OUTBOUND_CORRELATION_ID for artifact handoff", file=sys.stderr)
+              raise SystemExit(1)
+
+          evidence_specs = [
+              (
+                  Path(os.environ["OUTBOUND_DRY_RUN_EVIDENCE_PATH"]),
+                  os.environ["OUTBOUND_DRY_RUN_EVIDENCE_ARTIFACT_NAME"],
+                  "outbound_dry_run_guard_evidence.json",
+              ),
+              (
+                  Path(os.environ["OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"]),
+                  os.environ["OUTBOUND_RESUME_GUARD_EVIDENCE_ARTIFACT_NAME"],
+                  "outbound_resume_gate_evidence.json",
+              ),
+          ]
+
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+
+          def api_json(url: str) -> dict:
+              req = request.Request(url, headers=headers)
+              with request.urlopen(req, timeout=30) as resp:
+                  return json.loads(resp.read().decode("utf-8"))
+
+          def api_bytes(url: str) -> bytes:
+              req = request.Request(url, headers=headers)
+              with request.urlopen(req, timeout=60) as resp:
+                  return resp.read()
+
+          artifacts = api_json(f"{api_url}/repos/{repository}/actions/artifacts?per_page=100").get("artifacts", [])
+
+          for output_path, artifact_name, evidence_basename in evidence_specs:
+              output_path.parent.mkdir(parents=True, exist_ok=True)
+              matches = [
+                  artifact for artifact in artifacts
+                  if artifact.get("name") == artifact_name and not artifact.get("expired")
+              ]
+              if not matches:
+                  raise SystemExit(
+                      f"Missing upstream evidence artifact: {artifact_name} "
+                      f"(correlation_id={correlation_id})"
+                  )
+
+              artifact = max(matches, key=lambda item: item.get("created_at", ""))
+              archive_url = artifact.get("archive_download_url")
+              if not archive_url:
+                  raise SystemExit(f"Artifact archive URL missing for {artifact_name}")
+
+              archive_bytes = api_bytes(archive_url)
+              with zipfile.ZipFile(BytesIO(archive_bytes)) as zf:
+                  members = zf.namelist()
+                  candidate_names = [name for name in members if name.endswith(evidence_basename)]
+                  if not candidate_names:
+                      candidate_names = [name for name in members if name.endswith(".json")]
+                  if not candidate_names:
+                      raise SystemExit(
+                          f"Downloaded artifact {artifact_name} did not contain a JSON evidence file"
+                      )
+
+                  member = candidate_names[0]
+                  output_path.write_bytes(zf.read(member))
+
+              print(
+                  json.dumps(
+                      {
+                          "artifact_name": artifact_name,
+                          "artifact_id": artifact.get("id"),
+                          "downloaded_to": str(output_path),
+                          "source_member": member,
+                      },
+                      indent=2,
+                      sort_keys=True,
+                  )
+              )
+          PY
 
       - name: Run Launch-State Transition
         id: transition
@@ -88,6 +208,7 @@ jobs:
             --dry-run-evidence "${OUTBOUND_DRY_RUN_EVIDENCE_PATH}"
             --resume-evidence "${OUTBOUND_RESUME_GUARD_EVIDENCE_PATH}"
             --target-state "${OUTBOUND_TARGET_STATE}"
+            --live-allowed-evidence "${OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH}"
             --transition-record "${OUTBOUND_TRANSITION_RECORD_PATH}"
             --correlation-id "${OUTBOUND_CORRELATION_ID}"
             --checked-by "${OUTBOUND_GUARD_ACTOR}"
@@ -95,6 +216,14 @@ jobs:
           )
 
           "${CMD[@]}" | tee "${OUTBOUND_STDOUT_LOG}"
+
+      - name: Upload Durable Launch State
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OUTBOUND_STATE_ARTIFACT_NAME }}
+          path: ${{ env.OUTBOUND_LAUNCH_STATE_PATH }}
+          if-no-files-found: error
 
       - name: Prepare Telegram Alert Payload
         if: failure()
@@ -221,7 +350,10 @@ jobs:
               f"- Correlation id: `{correlation_id}`",
               f"- Next action: `{next_action}`",
               f"- Evidence artifact: `{artifact_hint}`",
+              f"- Evidence artifact name: `{os.environ.get('OUTBOUND_EVIDENCE_ARTIFACT_NAME', 'unknown')}`",
+              f"- Durable state artifact: `{os.environ.get('OUTBOUND_STATE_ARTIFACT_NAME', 'unknown')}`",
               f"- Telegram alert payload: `{alert_hint}`",
+              f"- Telegram alert artifact name: `{os.environ.get('OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME', 'unknown')}`",
           ]
           if failure_reason:
               lines.append(f"- Failure reason: `{failure_reason}`")
@@ -234,7 +366,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: outbound-launch-state-transition-evidence
+          name: ${{ env.OUTBOUND_EVIDENCE_ARTIFACT_NAME }}
           path: |
             ${{ env.OUTBOUND_OUTPUT_FILE }}
             ${{ env.OUTBOUND_STDOUT_LOG }}
@@ -244,6 +376,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: outbound-launch-state-transition-telegram-alert
+          name: ${{ env.OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME }}
           path: ${{ env.OUTBOUND_TELEGRAM_ALERT_FILE }}
           if-no-files-found: error

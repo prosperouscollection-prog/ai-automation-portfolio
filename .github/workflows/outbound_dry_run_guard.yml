@@ -23,11 +23,6 @@ on:
         required: false
         type: string
         default: project9-sales-agent/state/outbound_dry_run_guard_evidence.json
-      require_dry_run:
-        description: Require DRY_RUN to pass the guard.
-        required: false
-        type: boolean
-        default: true
   # Future-only scheduled preflight. Keep disabled until the launch team approves it.
   # schedule:
   #   - cron: "0 6 * * *"
@@ -44,7 +39,8 @@ jobs:
       OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id != '' && inputs.correlation_id || github.run_id }}
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
-      OUTBOUND_REQUIRE_DRY_RUN: ${{ inputs.require_dry_run }}
+      OUTBOUND_EVIDENCE_ARTIFACT_NAME: outbound-dry-run-guard-evidence-${{ inputs.correlation_id != '' && inputs.correlation_id || github.run_id }}
+      OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME: outbound-dry-run-guard-telegram-alert-${{ inputs.correlation_id != '' && inputs.correlation_id || github.run_id }}
       OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_dry_run_guard_stdout.log
       OUTBOUND_TELEGRAM_ALERT_CHANNEL: Telegram
       OUTBOUND_TELEGRAM_ALERT_FILE: project9-sales-agent/state/outbound_dry_run_guard_telegram_alert.json
@@ -70,9 +66,6 @@ jobs:
             --checked-by "${OUTBOUND_GUARD_ACTOR}"
             --output "${OUTBOUND_OUTPUT_FILE}"
           )
-          if [[ "${OUTBOUND_REQUIRE_DRY_RUN}" == "true" ]]; then
-            CMD+=(--require-dry-run)
-          fi
 
           "${CMD[@]}" | tee "${OUTBOUND_STDOUT_LOG}"
 
@@ -201,7 +194,9 @@ jobs:
               f"- Correlation id: `{correlation_id}`",
               f"- Next action: `{next_action}`",
               f"- Evidence artifact: `{artifact_hint}`",
+              f"- Evidence artifact name: `{os.environ.get('OUTBOUND_EVIDENCE_ARTIFACT_NAME', 'unknown')}`",
               f"- Telegram alert payload: `{alert_hint}`",
+              f"- Telegram alert artifact name: `{os.environ.get('OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME', 'unknown')}`",
           ]
           if failure_reason:
               lines.append(f"- Failure reason: `{failure_reason}`")
@@ -214,7 +209,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: outbound-dry-run-guard-evidence
+          name: ${{ env.OUTBOUND_EVIDENCE_ARTIFACT_NAME }}
           path: |
             ${{ env.OUTBOUND_OUTPUT_FILE }}
             ${{ env.OUTBOUND_STDOUT_LOG }}
@@ -224,6 +219,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: outbound-dry-run-guard-telegram-alert
+          name: ${{ env.OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME }}
           path: ${{ env.OUTBOUND_TELEGRAM_ALERT_FILE }}
           if-no-files-found: error

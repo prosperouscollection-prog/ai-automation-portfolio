@@ -37,10 +37,11 @@ ALLOWED_SOURCE_STATES = {
 }
 ALLOWED_TARGET_STATES = {
     "PAUSED",
+    "LIVE_ALLOWED",
 }
 TRANSITION_MATRIX = {
     "DRY_RUN": {"PAUSED"},
-    "PAUSED": {"PAUSED"},
+    "PAUSED": {"PAUSED", "LIVE_ALLOWED"},
     "RESUME_PENDING": {"PAUSED"},
 }
 VALID_LAUNCH_STATUSES = {
@@ -50,7 +51,7 @@ VALID_LAUNCH_STATUSES = {
     "VERIFIED",
     "DRY_RUN_READY",
 }
-REPLAY_WINDOW = timedelta(hours=24)
+REPLAY_WINDOW = timedelta(hours=6)
 
 
 @dataclass(frozen=True)
@@ -209,7 +210,47 @@ def _validate_requested_target_state(target_state: str) -> str:
 def _expected_target_status(target_state: str) -> str:
     if target_state == "PAUSED":
         return "PAUSED"
+    if target_state == "LIVE_ALLOWED":
+        return "READY"
     raise ValueError(f"unsupported target state: {target_state}")
+
+
+def _validate_live_allowed_evidence(
+    *,
+    evidence_path: Path,
+    current_correlation_id: str,
+) -> dict[str, Any]:
+    payload, load_error = _load_json_file(evidence_path)
+    if load_error is not None:
+        raise ValueError(f"live-allowed evidence {load_error}")
+
+    hook_name = _normalize(payload.get("hook_name"))
+    if hook_name != "outbound_first_10_monitor":
+        raise ValueError(f"live-allowed evidence has unexpected hook_name: {hook_name}")
+
+    monitor_result = _normalize(payload.get("monitor_result"))
+    if monitor_result != "PASS":
+        raise ValueError(
+            f"live-allowed evidence monitor_result must be PASS, found {monitor_result}"
+        )
+
+    evidence_correlation_id = _normalize(payload.get("correlation_id"))
+    if evidence_correlation_id != current_correlation_id:
+        raise ValueError(
+            f"live-allowed evidence correlation mismatch: expected {current_correlation_id}, found {evidence_correlation_id}"
+        )
+
+    checked_at = _parse_iso_timestamp(payload.get("checked_at"))
+    if not _is_fresh(checked_at):
+        raise ValueError("live-allowed evidence is stale or missing checked_at")
+
+    next_action = _normalize(payload.get("next_action"))
+    if next_action not in {"allow_live_allowed", "handoff_to_live_allowed"}:
+        raise ValueError(
+            f"live-allowed evidence next_action must hand off to LIVE_ALLOWED, found {next_action}"
+        )
+
+    return payload
 
 
 def _validate_evidence_artifact(
@@ -263,6 +304,13 @@ def _build_updated_state(
     state_file_path: Path,
 ) -> dict[str, Any]:
     target_status = _expected_target_status(target_state)
+    if target_state == "LIVE_ALLOWED":
+        notes = "Transitioned from PAUSED to LIVE_ALLOWED after first-10 monitor PASS."
+    else:
+        notes = (
+            f"Transitioned from {current_state.get('launch_mode')} to {target_state} "
+            f"after upstream evidence PASS."
+        )
     return {
         "launch_mode": target_state,
         "launch_status": target_status,
@@ -270,10 +318,7 @@ def _build_updated_state(
         "verified_at": _utc_now_iso(),
         "correlation_id": correlation_id,
         "source": str(state_file_path),
-        "notes": (
-            f"Transitioned from {current_state.get('launch_mode')} to {target_state} "
-            f"after upstream evidence PASS."
-        ),
+        "notes": notes,
     }
 
 
@@ -306,6 +351,9 @@ def _build_evidence(
         "launch_mode_after": result.launch_mode_after,
         "launch_status_after": result.launch_status_after,
         "transition_write_strategy": DEFAULT_WRITE_STRATEGY,
+        "live_allowed_evidence": str(
+            os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH", "")
+        ) or None,
         "alert_channel_placeholder": ALERT_CHANNEL_PLACEHOLDER
         if result.transition_result == "FAIL"
         else None,
@@ -348,6 +396,11 @@ def parse_args() -> argparse.Namespace:
         help="Path to the transition record JSON.",
     )
     parser.add_argument(
+        "--live-allowed-evidence",
+        default=os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH"),
+        help="Path to the first-10 monitor evidence required for LIVE_ALLOWED.",
+    )
+    parser.add_argument(
         "--correlation-id",
         default=os.environ.get("OUTBOUND_CORRELATION_ID"),
         help="Launch correlation id.",
@@ -371,6 +424,7 @@ def main() -> int:
     transition_record_path = Path(args.transition_record)
     dry_run_evidence_path = Path(args.dry_run_evidence) if args.dry_run_evidence else None
     resume_evidence_path = Path(args.resume_evidence) if args.resume_evidence else None
+    live_allowed_evidence_path = Path(args.live_allowed_evidence) if args.live_allowed_evidence else None
     output_path = Path(args.output) if args.output else None
     checked_by = _normalize(args.checked_by) or "python"
     requested_target_state = _normalize(args.target_state) or DEFAULT_TARGET_STATE
@@ -400,6 +454,16 @@ def main() -> int:
                 f"unsupported transition: {source_state_before} -> {requested_target_state}"
             )
 
+        if transition_record_path.exists():
+            existing_transition, record_error = _load_json_file(transition_record_path)
+            if record_error is None:
+                existing_transition_correlation = _normalize(existing_transition.get("correlation_id"))
+                existing_transition_result = _normalize(existing_transition.get("transition_result"))
+                if existing_transition_correlation == correlation_id:
+                    raise ValueError(
+                        f"duplicate transition request: correlation id already consumed ({existing_transition_result or 'unknown'})"
+                    )
+
         if dry_run_evidence_path is None:
             raise ValueError("missing dry-run evidence path")
         if resume_evidence_path is None:
@@ -421,6 +485,14 @@ def main() -> int:
             current_correlation_id=correlation_id,
             expected_next_action="advance_to_later_launch_steps",
         )
+
+        if requested_target_state == "LIVE_ALLOWED":
+            if live_allowed_evidence_path is None:
+                raise ValueError("missing live-allowed evidence path")
+            _validate_live_allowed_evidence(
+                evidence_path=live_allowed_evidence_path,
+                current_correlation_id=correlation_id,
+            )
 
         dry_checked_at = _parse_iso_timestamp(dry_run_evidence.get("checked_at"))
         resume_checked_at = _parse_iso_timestamp(resume_evidence.get("checked_at"))
