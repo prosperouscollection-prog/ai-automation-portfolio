@@ -19,6 +19,7 @@ import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 DETROIT = ZoneInfo("America/Detroit")
@@ -116,6 +117,12 @@ DEFAULT_OPENERS = [
     "Open with a question about whether they have anyone covering inquiries outside of business hours.",
 ]
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_PROJECT9_LAUNCH_STATE_PATH = (
+    REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state.json"
+)
+ALLOWED_OUTBOUND_LAUNCH_MODES = {"LIVE_ALLOWED"}
+
 
 @dataclass
 class Lead:
@@ -145,6 +152,12 @@ class SalesAgent:
         self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
         self.run_id = os.getenv("GITHUB_RUN_ID", f"local-{int(time.time())}")
+        self.launch_state_path = Path(
+            os.getenv(
+                "PROJECT9_OUTBOUND_LAUNCH_STATE_PATH",
+                str(DEFAULT_PROJECT9_LAUNCH_STATE_PATH),
+            )
+        )
         self._sheets_service = None
         self._flow = ApprovalFlow()
 
@@ -207,6 +220,7 @@ class SalesAgent:
 
             # Act on founder decision — full side effects before any UI response
             if status == ApprovalStatus.APPROVED:
+                self._assert_outbound_launch_allowed(lead.business)
                 ok = resend_email(lead.email, subject, body, priority="MEDIUM")
                 log_status = "sent" if ok else "failed"
                 print(f"  {'✅' if ok else '⚠️ '} Resend {'sent' if ok else 'FAILED'}: {lead.business} ({lead.email})")
@@ -254,6 +268,40 @@ class SalesAgent:
     # ------------------------------------------------------------------
     # TELEGRAM CONFIRMATION
     # ------------------------------------------------------------------
+
+    def _assert_outbound_launch_allowed(self, business: str) -> None:
+        """Fail closed unless Project 9 launch state explicitly allows send."""
+        try:
+            payload = json.loads(self.launch_state_path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            reason = f"outbound launch state unreadable: {exc.strerror or exc.__class__.__name__}"
+            print(f"  ⛔ Blocking send for {business}: {reason}")
+            raise RuntimeError(reason) from exc
+        except json.JSONDecodeError as exc:
+            reason = f"outbound launch state malformed: {exc.msg}"
+            print(f"  ⛔ Blocking send for {business}: {reason}")
+            raise RuntimeError(reason) from exc
+
+        if not isinstance(payload, dict):
+            reason = "outbound launch state malformed: root JSON value must be an object"
+            print(f"  ⛔ Blocking send for {business}: {reason}")
+            raise RuntimeError(reason)
+
+        launch_mode = str(payload.get("launch_mode", "")).strip()
+        launch_status = str(payload.get("launch_status", "")).strip()
+        if launch_mode not in ALLOWED_OUTBOUND_LAUNCH_MODES:
+            reason = (
+                "outbound send blocked: launch_mode must be LIVE_ALLOWED, "
+                f"found {launch_mode or 'missing'}"
+            )
+            print(f"  ⛔ Blocking send for {business}: {reason} "
+                  f"(status={launch_status or 'missing'}, state={self.launch_state_path})")
+            raise RuntimeError(reason)
+
+        if launch_status != "READY":
+            reason = f"outbound send blocked: launch_status must be READY, found {launch_status or 'missing'}"
+            print(f"  ⛔ Blocking send for {business}: {reason} (state={self.launch_state_path})")
+            raise RuntimeError(reason)
 
     def _telegram_confirm(self, text: str) -> None:
         """Send a follow-up Telegram message after an approval decision."""

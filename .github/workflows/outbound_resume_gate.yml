@@ -9,10 +9,10 @@ on:
         type: string
         default: RESUME AUTO
       requested_by:
-        description: Founder identity label.
+        description: Display-only founder label. Authorization uses the GitHub actor.
         required: false
         type: string
-        default: Trendell Fordham
+        default: ""
       correlation_id:
         description: Launch correlation id shared across the control chain.
         required: true
@@ -50,7 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OUTBOUND_RESUME_REQUEST: ${{ inputs.resume_request }}
-      OUTBOUND_REQUESTED_BY: ${{ inputs.requested_by }}
+      OUTBOUND_REQUESTED_BY: ${{ github.actor }}
+      OUTBOUND_APPROVED_GITHUB_ACTOR: ${{ github.repository_owner }}
       OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
       OUTBOUND_LAUNCH_STATE_PATH: ${{ inputs.state_file }}
       OUTBOUND_RESUME_RECORD_PATH: ${{ inputs.resume_record }}

@@ -17,7 +17,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 DEFAULT_STATE_FILE = REPO_ROOT / "state" / "outbound_launch_state.json"
 DEFAULT_TRANSITION_RECORD = REPO_ROOT / "state" / "outbound_launch_state_transition.json"
-DEFAULT_TARGET_STATE = "RESUME_PENDING"
+DEFAULT_TARGET_STATE = "PAUSED"
 DEFAULT_WRITE_STRATEGY = "atomic_replace"
 HOOK_NAME = "outbound_launch_state_transition"
 ALERT_CHANNEL_PLACEHOLDER = "Telegram"
@@ -36,12 +36,11 @@ ALLOWED_SOURCE_STATES = {
     "RESUME_PENDING",
 }
 ALLOWED_TARGET_STATES = {
-    "RESUME_PENDING",
     "PAUSED",
 }
 TRANSITION_MATRIX = {
-    "DRY_RUN": {"RESUME_PENDING"},
-    "PAUSED": {"RESUME_PENDING"},
+    "DRY_RUN": {"PAUSED"},
+    "PAUSED": {"PAUSED"},
     "RESUME_PENDING": {"PAUSED"},
 }
 VALID_LAUNCH_STATUSES = {
@@ -204,15 +203,10 @@ def _validate_requested_target_state(target_state: str) -> str:
     if target_state not in ALLOWED_TARGET_STATES:
         raise ValueError(f"target state not allowed by this controller: {target_state}")
 
-    if target_state == "LIVE_ALLOWED":
-        raise ValueError("LIVE_ALLOWED is reserved for a later controlled step")
-
     return target_state
 
 
 def _expected_target_status(target_state: str) -> str:
-    if target_state == "RESUME_PENDING":
-        return "READY"
     if target_state == "PAUSED":
         return "PAUSED"
     raise ValueError(f"unsupported target state: {target_state}")
@@ -406,9 +400,6 @@ def main() -> int:
                 f"unsupported transition: {source_state_before} -> {requested_target_state}"
             )
 
-        if requested_target_state == "LIVE_ALLOWED":
-            raise ValueError("LIVE_ALLOWED is reserved for a later controlled step")
-
         if dry_run_evidence_path is None:
             raise ValueError("missing dry-run evidence path")
         if resume_evidence_path is None:
@@ -462,11 +453,7 @@ def main() -> int:
             target_status_written=updated_state["launch_status"],
             launch_mode_after=updated_state["launch_mode"],
             launch_status_after=updated_state["launch_status"],
-            next_action=(
-                "advance_to_later_launch_steps"
-                if requested_target_state == "RESUME_PENDING"
-                else "await_next_controlled_step"
-            ),
+            next_action="hold_for_first_10_monitor",
         )
 
         evidence = _build_evidence(

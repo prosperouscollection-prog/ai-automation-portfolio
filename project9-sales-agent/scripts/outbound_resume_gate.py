@@ -21,10 +21,7 @@ DEFAULT_ENTRY_POINT = "workflow_dispatch"
 HOOK_NAME = "outbound_resume_gate"
 ALERT_CHANNEL_PLACEHOLDER = "Telegram"
 APPROVED_RESUME_REQUEST = "RESUME AUTO"
-APPROVED_FOUNDER_IDENTITIES = {
-    "Trendell Fordham",
-    "Trendell Fordham <info@genesisai.systems>",
-}
+DEFAULT_APPROVED_GITHUB_ACTOR = os.environ.get("GITHUB_REPOSITORY_OWNER", "")
 ELIGIBLE_LAUNCH_STATES = {
     "DRY_RUN",
     "PAUSED",
@@ -119,9 +116,14 @@ def _validate_launch_state(state: dict[str, Any]) -> tuple[str | None, str | Non
     return launch_mode, launch_status, correlation_id
 
 
-def _validate_founder_identity(requested_by: str) -> None:
-    if requested_by not in APPROVED_FOUNDER_IDENTITIES:
-        raise ValueError(f"unauthorized founder identity: {requested_by}")
+def _validate_founder_identity(*, requested_by: str, approved_github_actor: str) -> None:
+    if not approved_github_actor:
+        raise ValueError("missing approved GitHub founder identity")
+
+    if requested_by != approved_github_actor:
+        raise ValueError(
+            f"unauthorized GitHub identity: {requested_by}; expected {approved_github_actor}"
+        )
 
 
 def _validate_resume_request_text(resume_request: str) -> None:
@@ -166,6 +168,7 @@ def _build_evidence(
     correlation_id: str,
     resume_request: str,
     requested_by: str,
+    approved_github_actor: str,
     checked_by: str,
     resume_record_path: Path,
     entry_point: str,
@@ -175,6 +178,7 @@ def _build_evidence(
         "correlation_id": correlation_id,
         "request_text": resume_request,
         "requested_by": requested_by,
+        "approved_github_actor": approved_github_actor,
         "authorization_result": result.authorization_result,
         "failure_reason": result.failure_reason,
         "launch_mode_before": result.launch_mode_before,
@@ -217,7 +221,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--requested-by",
         default=os.environ.get("OUTBOUND_REQUESTED_BY"),
-        help="Founder identity label.",
+        help="GitHub actor login for the resume request.",
+    )
+    parser.add_argument(
+        "--approved-github-actor",
+        default=os.environ.get("OUTBOUND_APPROVED_GITHUB_ACTOR", DEFAULT_APPROVED_GITHUB_ACTOR),
+        help="Approved GitHub founder login.",
     )
     parser.add_argument(
         "--correlation-id",
@@ -259,6 +268,7 @@ def main() -> int:
     output_path = Path(args.output) if args.output else None
     resume_request = _normalize(args.resume_request)
     requested_by = _normalize(args.requested_by)
+    approved_github_actor = _normalize(args.approved_github_actor)
     correlation_id = _normalize(args.correlation_id)
     entry_point = _normalize(args.entry_point) or DEFAULT_ENTRY_POINT
     checked_by = _normalize(args.checked_by) or "python"
@@ -267,13 +277,16 @@ def main() -> int:
         if resume_request is None:
             raise ValueError("missing resume request")
         if requested_by is None:
-            raise ValueError("missing founder identity")
+            raise ValueError("missing GitHub actor identity")
         if correlation_id is None:
             raise ValueError("missing correlation id")
 
         _validate_entry_point(entry_point)
         _validate_resume_request_text(resume_request)
-        _validate_founder_identity(requested_by)
+        _validate_founder_identity(
+            requested_by=requested_by,
+            approved_github_actor=approved_github_actor or DEFAULT_APPROVED_GITHUB_ACTOR,
+        )
 
         state, load_error = _load_json_file(state_path)
         if load_error is not None:
@@ -312,6 +325,7 @@ def main() -> int:
             correlation_id=correlation_id,
             resume_request=resume_request,
             requested_by=requested_by,
+            approved_github_actor=approved_github_actor or DEFAULT_APPROVED_GITHUB_ACTOR,
             checked_by=checked_by,
             resume_record_path=resume_record_path,
             entry_point=entry_point,
@@ -355,6 +369,7 @@ def main() -> int:
             correlation_id=correlation_id or "unknown",
             resume_request=resume_request or APPROVED_RESUME_REQUEST,
             requested_by=requested_by or "unknown",
+            approved_github_actor=approved_github_actor or DEFAULT_APPROVED_GITHUB_ACTOR,
             checked_by=checked_by,
             resume_record_path=resume_record_path,
             entry_point=entry_point,

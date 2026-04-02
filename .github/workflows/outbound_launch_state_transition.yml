@@ -26,9 +26,8 @@ on:
         description: Requested next launch state.
         required: false
         type: choice
-        default: RESUME_PENDING
+        default: PAUSED
         options:
-          - RESUME_PENDING
           - PAUSED
       transition_record:
         description: Path for the transition record JSON.
