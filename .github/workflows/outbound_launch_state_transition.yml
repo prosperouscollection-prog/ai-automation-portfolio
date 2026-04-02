@@ -77,6 +77,7 @@ jobs:
       OUTBOUND_EVIDENCE_ARTIFACT_NAME: outbound-launch-state-transition-evidence-${{ inputs.correlation_id }}
       OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME: outbound-launch-state-transition-telegram-alert-${{ inputs.correlation_id }}
       OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_launch_state_transition_stdout.log
+      OUTBOUND_RESOLVE_LOG: project9-sales-agent/state/outbound_launch_state_transition_resolve.log
       OUTBOUND_TELEGRAM_ALERT_CHANNEL: Telegram
       OUTBOUND_TELEGRAM_ALERT_FILE: project9-sales-agent/state/outbound_launch_state_transition_telegram_alert.json
       OUTBOUND_STATE_ARTIFACT_NAME: outbound-launch-state-current
@@ -97,13 +98,14 @@ jobs:
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python3 - <<'PY'
+          python3 - <<'PY' | tee "${OUTBOUND_RESOLVE_LOG}"
           import json
           import os
           import sys
           import zipfile
           from io import BytesIO
           from pathlib import Path
+          import subprocess
           from urllib import error, request
 
           token = os.environ.get("GITHUB_TOKEN", "").strip()
@@ -145,9 +147,19 @@ jobs:
                   return json.loads(resp.read().decode("utf-8"))
 
           def api_bytes(url: str) -> bytes:
-              req = request.Request(url, headers=headers)
-              with request.urlopen(req, timeout=60) as resp:
-                  return resp.read()
+              cmd = [
+                  "curl",
+                  "-fsSL",
+                  "-H",
+                  f"Authorization: Bearer {token}",
+                  "-H",
+                  "Accept: application/vnd.github+json",
+                  "-H",
+                  "X-GitHub-Api-Version: 2022-11-28",
+                  url,
+              ]
+              completed = subprocess.run(cmd, check=True, capture_output=True)
+              return completed.stdout
 
           artifacts = api_json(f"{api_url}/repos/{repository}/actions/artifacts?per_page=100").get("artifacts", [])
 
@@ -224,6 +236,61 @@ jobs:
           name: ${{ env.OUTBOUND_STATE_ARTIFACT_NAME }}
           path: ${{ env.OUTBOUND_LAUNCH_STATE_PATH }}
           if-no-files-found: error
+
+      - name: Capture Transition Failure Evidence
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          output_path = Path(os.environ["OUTBOUND_OUTPUT_FILE"])
+          resolve_log = Path(os.environ["OUTBOUND_RESOLVE_LOG"])
+          stdout_log = Path(os.environ["OUTBOUND_STDOUT_LOG"])
+          evidence = {}
+          failure_reason = "transition failed before structured evidence was written"
+
+          for candidate in [output_path, stdout_log, resolve_log]:
+              if candidate.exists():
+                  text = candidate.read_text(encoding="utf-8", errors="replace")
+                  match = re.search(r"(Missing upstream evidence artifact:[^\\n]+|HTTP Error \\d{3}:[^\\n]+|Process completed with exit code 1\\.)", text)
+                  if match:
+                      failure_reason = match.group(1)
+                      break
+                  if "Traceback" in text:
+                      tail = text.strip().splitlines()[-1]
+                      failure_reason = tail[-240:]
+                      break
+
+          evidence = {
+              "hook_name": "outbound_launch_state_transition",
+              "correlation_id": os.environ.get("OUTBOUND_CORRELATION_ID", "unknown"),
+              "source_state_before": None,
+              "source_status_before": None,
+              "target_state_requested": os.environ.get("OUTBOUND_TARGET_STATE", "UNKNOWN"),
+              "target_status_written": None,
+              "transition_result": "FAIL",
+              "failure_reason": failure_reason,
+              "dry_run_guard_evidence": os.environ.get("OUTBOUND_DRY_RUN_EVIDENCE_PATH"),
+              "resume_gate_evidence": os.environ.get("OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"),
+              "state_file_path": os.environ.get("OUTBOUND_LAUNCH_STATE_PATH"),
+              "transition_record_path": os.environ.get("OUTBOUND_TRANSITION_RECORD_PATH"),
+              "checked_at": "",
+              "checked_by": os.environ.get("OUTBOUND_GUARD_ACTOR", "unknown"),
+              "next_action": "block_progression",
+              "launch_mode_after": None,
+              "launch_status_after": None,
+              "transition_write_strategy": "atomic_replace",
+              "live_allowed_evidence": os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH") or None,
+              "alert_channel_placeholder": "Telegram",
+          }
+          output_path.parent.mkdir(parents=True, exist_ok=True)
+          output_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          print(json.dumps(evidence, indent=2, sort_keys=True))
+          PY
 
       - name: Prepare Telegram Alert Payload
         if: failure()
