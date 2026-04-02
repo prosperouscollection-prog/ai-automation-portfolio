@@ -139,6 +139,7 @@ jobs:
               lines.append(f"- Failure reason: `{failure_reason}`")
           lines.append(f"- Stdout log: `{stdout_log.as_posix()}`")
           summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print(summary_path.read_text(encoding="utf-8"), end="")
           PY
 
       - name: Upload Transition Evidence
