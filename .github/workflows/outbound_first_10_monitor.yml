@@ -357,6 +357,26 @@ jobs:
           }
           output_path.parent.mkdir(parents=True, exist_ok=True)
           output_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+          runtime_path = Path(os.environ["OUTBOUND_STATE_RUNTIME_FILE"])
+          runtime_path.parent.mkdir(parents=True, exist_ok=True)
+          paused_state = {
+              "launch_mode": "PAUSED",
+              "launch_status": "PAUSED",
+              "verified_by": os.environ.get("OUTBOUND_GUARD_ACTOR", "unknown"),
+              "verified_at": evidence["checked_at"],
+              "correlation_id": evidence["launch_correlation_id"],
+              "source": os.environ.get("OUTBOUND_LAUNCH_STATE_PATH", "unknown"),
+              "notes": f"Paused by first-10 monitor after failure: {failure_reason}",
+              "pause_reason": failure_reason,
+              "last_safe_send_number": evidence.get("last_safe_send_number", 0),
+          }
+          runtime_path.write_text(json.dumps(paused_state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          github_env = os.environ.get("GITHUB_ENV")
+          if github_env:
+              with open(github_env, "a", encoding="utf-8") as handle:
+                  handle.write(f"OUTBOUND_LAUNCH_STATE_PATH={runtime_path}\n")
+
           print(json.dumps(evidence, indent=2, sort_keys=True))
           PY
 
