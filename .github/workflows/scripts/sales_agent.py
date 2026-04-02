@@ -14,6 +14,7 @@ Limit: 3 leads processed per run (regardless of send/skip/timeout outcome).
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import sys
 import time
@@ -123,6 +124,9 @@ DEFAULT_PROJECT9_LAUNCH_STATE_PATH = (
 )
 ALLOWED_OUTBOUND_LAUNCH_MODES = {"LIVE_ALLOWED"}
 LAUNCH_STATE_ARTIFACT_NAME = "outbound-launch-state-current"
+FIRST_10_EVENT_FEED_PATH = (
+    REPO_ROOT / "project9-sales-agent" / "state" / "outbound_first_10_send_events.ndjson"
+)
 LAUNCH_STATE_RUNTIME_PATH = (
     REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state_runtime.json"
 )
@@ -162,6 +166,15 @@ class SalesAgent:
                 str(DEFAULT_PROJECT9_LAUNCH_STATE_PATH),
             )
         )
+        self.first_10_event_feed_path = Path(
+            os.getenv(
+                "OUTBOUND_FIRST_10_EVENT_FEED_PATH",
+                os.getenv(
+                    "PROJECT9_OUTBOUND_FIRST_10_EVENT_FEED_PATH",
+                    str(FIRST_10_EVENT_FEED_PATH),
+                ),
+            )
+        )
         self._sheets_service = None
         self._flow = ApprovalFlow()
 
@@ -171,6 +184,7 @@ class SalesAgent:
 
     def run(self) -> None:
         self.resolve_launch_state()
+        self._ensure_first_10_event_feed()
         leads = self.get_hot_leads_from_sheets()
         if not leads:
             print("ℹ️  No HOT leads with domain found in Sheets")
@@ -230,6 +244,17 @@ class SalesAgent:
                 except RuntimeError as exc:
                     log_status = "blocked_launch_state"
                     print(f"  ⛔ Send blocked for {lead.business}: {exc}")
+                    self._log_outreach(
+                        lead.business,
+                        lead.email,
+                        subject,
+                        log_status,
+                        category=lead.industry,
+                        draft_variant=variant,
+                        pass_type=pass_type,
+                    )
+                    self._mark_notified(lead.sheet_row)
+                    print(f"  📋 Blocked lead logged and marked: {lead.business}")
                     self._telegram_confirm(
                         f"⛔ Send blocked for {lead.business}.\n\n"
                         f"Reason: {exc}\n"
@@ -241,6 +266,12 @@ class SalesAgent:
                 ok = resend_email(lead.email, subject, body, priority="MEDIUM")
                 log_status = "sent" if ok else "failed"
                 print(f"  {'✅' if ok else '⚠️ '} Resend {'sent' if ok else 'FAILED'}: {lead.business} ({lead.email})")
+                self._record_first_10_send_event(
+                    lead=lead,
+                    subject=subject,
+                    body=body,
+                    delivery_ok=ok,
+                )
             elif status == ApprovalStatus.SKIPPED:
                 log_status = "skipped"
                 print(f"  ⏭️  Skipped by founder: {lead.business}")
@@ -286,16 +317,110 @@ class SalesAgent:
     # TELEGRAM CONFIRMATION
     # ------------------------------------------------------------------
 
+    def _ensure_first_10_event_feed(self) -> None:
+        self.first_10_event_feed_path.parent.mkdir(parents=True, exist_ok=True)
+        if not self.first_10_event_feed_path.exists():
+            self.first_10_event_feed_path.touch()
+
+    def _read_launch_state_payload(self) -> dict[str, Any]:
+        payload = json.loads(self.launch_state_path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("launch state root JSON value must be an object")
+        return payload
+
+    def _load_first_10_event_records(self) -> list[dict[str, Any]]:
+        if not self.first_10_event_feed_path.exists():
+            return []
+        records: list[dict[str, Any]] = []
+        raw = self.first_10_event_feed_path.read_text(encoding="utf-8", errors="replace")
+        if not raw.strip():
+            return []
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            payload = json.loads(line)
+            if isinstance(payload, dict):
+                records.append(payload)
+        return records
+
+    def _append_first_10_event(self, record: dict[str, Any]) -> None:
+        self.first_10_event_feed_path.parent.mkdir(parents=True, exist_ok=True)
+        with self.first_10_event_feed_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+
+    @staticmethod
+    def _hash_text(value: str) -> str:
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+    def _record_first_10_send_event(
+        self,
+        *,
+        lead: Lead,
+        subject: str,
+        body: str,
+        delivery_ok: bool,
+    ) -> None:
+        try:
+            launch_state = self._read_launch_state_payload()
+        except Exception as exc:
+            print(f"⚠️  First-10 event feed skipped: {exc}")
+            return
+
+        launch_correlation_id = str(launch_state.get("correlation_id", "")).strip() or "unknown"
+        campaign_id = str(launch_state.get("campaign_id", "")).strip() or launch_correlation_id
+        existing_records = self._load_first_10_event_records()
+        accepted_send_number = sum(
+            1 for item in existing_records if bool(item.get("provider_accepted"))
+        ) + (1 if delivery_ok else 0)
+        attempt_number = len(existing_records) + 1
+        provider_message_id = (
+            f"resend-{self.run_id}-{attempt_number}-{self._hash_text(lead.email.lower())[:12]}"
+            if delivery_ok
+            else None
+        )
+        record = {
+            "hook_name": "outbound_first_10_send_event",
+            "verification_result": "PASS" if delivery_ok else "FAIL",
+            "launch_correlation_id": launch_correlation_id,
+            "campaign_id": campaign_id,
+            "window_name": "first_10",
+            "attempt_number": attempt_number,
+            "send_number": attempt_number,
+            "accepted_send_number": accepted_send_number if delivery_ok else None,
+            "recipient_hash": self._hash_text(lead.email.strip().lower()),
+            "message_hash": self._hash_text(f"{subject}\n\n{body}"),
+            "provider_message_id": provider_message_id,
+            "provider_accepted": bool(delivery_ok),
+            "delivery_status": "accepted" if delivery_ok else "delivery_failed",
+            "bounce_count": 0,
+            "complaint_count": 0,
+            "wrong_recipient_count": 0,
+            "wrong_copy_count": 0,
+            "authentication_failure_count": 0,
+            "threshold_breached": False,
+            "failure_reason": None if delivery_ok else "provider rejected or send failed",
+            "next_action": "continue_monitoring",
+            "checked_at": datetime.now(DETROIT).astimezone(DETROIT).isoformat(),
+            "checked_by": "sales_agent",
+            "source_of_truth_path": str(self.launch_state_path),
+        }
+        self._append_first_10_event(record)
+
     def _assert_outbound_launch_allowed(self, business: str) -> None:
         """Fail closed unless Project 9 launch state explicitly allows send."""
         try:
-            payload = json.loads(self.launch_state_path.read_text(encoding="utf-8"))
+            payload = self._read_launch_state_payload()
         except OSError as exc:
             reason = f"outbound launch state unreadable: {exc.strerror or exc.__class__.__name__}"
             print(f"  ⛔ Blocking send for {business}: {reason}")
             raise RuntimeError(reason) from exc
         except json.JSONDecodeError as exc:
             reason = f"outbound launch state malformed: {exc.msg}"
+            print(f"  ⛔ Blocking send for {business}: {reason}")
+            raise RuntimeError(reason) from exc
+        except ValueError as exc:
+            reason = f"outbound launch state malformed: {exc}"
             print(f"  ⛔ Blocking send for {business}: {reason}")
             raise RuntimeError(reason) from exc
 

@@ -1,4 +1,4 @@
-name: Outbound Launch State Transition
+name: Outbound First-10 Monitor
 
 on:
   workflow_dispatch:
@@ -22,66 +22,78 @@ on:
         required: false
         type: string
         default: project9-sales-agent/state/outbound_resume_gate_evidence.json
-      target_state:
-        description: Requested next launch state.
-        required: false
-        type: choice
-        default: PAUSED
-        options:
-          - PAUSED
-          - LIVE_ALLOWED
-      live_allowed_evidence:
-        description: Optional first-10 monitor evidence placeholder for later handoff; provisional LIVE_ALLOWED no longer requires it.
-        required: false
-        type: string
-        default: ""
-      transition_record:
-        description: Path for the transition record JSON.
-        required: false
-        type: string
-        default: project9-sales-agent/state/outbound_launch_state_transition.json
-      output_file:
-        description: Path for the transition evidence JSON.
+      transition_evidence:
+        description: Path to the launch-state transition evidence JSON.
         required: false
         type: string
         default: project9-sales-agent/state/outbound_launch_state_transition_evidence.json
-      checked_by:
-        description: Actor label for this transition run.
+      events_json:
+        description: Optional inline JSON array/object of first-10 monitoring events for safe validation.
         required: false
         type: string
         default: ""
-  # Future-only scheduled control. Keep disabled until the launch team approves it.
+      events_file:
+        description: Path to the first-10 send event feed.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_first_10_send_events.ndjson
+      campaign_id:
+        description: Optional campaign or batch id override.
+        required: false
+        type: string
+        default: ""
+      output_file:
+        description: Path for the monitor evidence JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_first_10_monitor_evidence.json
+      pause_record:
+        description: Path for the pause record JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_first_10_monitor_pause.json
+      checked_by:
+        description: Actor label for this monitor run.
+        required: false
+        type: string
+        default: ""
+  # Future-only scheduled monitoring. Keep disabled until the launch team approves it.
   # schedule:
-  #   - cron: "30 6 * * *"
+  #   - cron: "5 * * * *"
 
 permissions:
   contents: read
   actions: read
 
 jobs:
-  launch-state-transition:
-    name: Launch-State Transition
+  first-10-monitor:
+    name: First-10 Monitor
     runs-on: ubuntu-latest
     env:
       OUTBOUND_LAUNCH_STATE_PATH: ${{ inputs.state_file }}
       OUTBOUND_DRY_RUN_EVIDENCE_PATH: ${{ inputs.dry_run_evidence }}
       OUTBOUND_RESUME_GUARD_EVIDENCE_PATH: ${{ inputs.resume_evidence }}
-      OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH: ${{ inputs.live_allowed_evidence }}
-      OUTBOUND_TARGET_STATE: ${{ inputs.target_state }}
-      OUTBOUND_TRANSITION_RECORD_PATH: ${{ inputs.transition_record }}
+      OUTBOUND_TRANSITION_EVIDENCE_PATH: ${{ inputs.transition_evidence }}
+      OUTBOUND_FIRST_10_EVENT_FEED_PATH: ${{ inputs.events_file }}
+      OUTBOUND_FIRST_10_EVENTS_JSON: ${{ inputs.events_json }}
+      OUTBOUND_CAMPAIGN_ID: ${{ inputs.campaign_id }}
       OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
+      OUTBOUND_PAUSE_RECORD_PATH: ${{ inputs.pause_record }}
       OUTBOUND_DRY_RUN_EVIDENCE_ARTIFACT_NAME: outbound-dry-run-guard-evidence-${{ inputs.correlation_id }}
       OUTBOUND_RESUME_GUARD_EVIDENCE_ARTIFACT_NAME: outbound-resume-gate-evidence-${{ inputs.correlation_id }}
-      OUTBOUND_EVIDENCE_ARTIFACT_NAME: outbound-launch-state-transition-evidence-${{ inputs.correlation_id }}
-      OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME: outbound-launch-state-transition-telegram-alert-${{ inputs.correlation_id }}
-      OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_launch_state_transition_stdout.log
-      OUTBOUND_RESOLVE_LOG: project9-sales-agent/state/outbound_launch_state_transition_resolve.log
-      OUTBOUND_TELEGRAM_ALERT_CHANNEL: Telegram
-      OUTBOUND_TELEGRAM_ALERT_FILE: project9-sales-agent/state/outbound_launch_state_transition_telegram_alert.json
+      OUTBOUND_TRANSITION_EVIDENCE_ARTIFACT_NAME: outbound-launch-state-transition-evidence-${{ inputs.correlation_id }}
+      OUTBOUND_EVENTS_ARTIFACT_NAME: outbound-first-10-send-events
+      OUTBOUND_EVIDENCE_ARTIFACT_NAME: outbound-first-10-monitor-evidence-${{ inputs.correlation_id }}
+      OUTBOUND_MONITOR_STATE_ARTIFACT_NAME: outbound-first-10-monitor-state-${{ inputs.correlation_id }}
+      OUTBOUND_PAUSE_ARTIFACT_NAME: outbound-first-10-monitor-pause-${{ inputs.correlation_id }}
+      OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME: outbound-first-10-monitor-telegram-alert-${{ inputs.correlation_id }}
       OUTBOUND_STATE_ARTIFACT_NAME: outbound-launch-state-current
       OUTBOUND_STATE_RUNTIME_FILE: project9-sales-agent/state/outbound_launch_state_runtime.json
+      OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_first_10_monitor_stdout.log
+      OUTBOUND_TELEGRAM_ALERT_CHANNEL: Telegram
+      OUTBOUND_TELEGRAM_ALERT_FILE: project9-sales-agent/state/outbound_first_10_monitor_telegram_alert.json
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -91,21 +103,21 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Resolve Upstream Evidence
+      - name: Resolve Upstream Evidence and Monitor Feed
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python3 - <<'PY' | tee "${OUTBOUND_RESOLVE_LOG}"
+          python3 - <<'PY' | tee "${OUTBOUND_STDOUT_LOG}.resolve"
           import json
           import os
+          import subprocess
           import sys
           import zipfile
           from io import BytesIO
           from pathlib import Path
-          import subprocess
           from urllib import request
 
           token = os.environ.get("GITHUB_TOKEN", "").strip()
@@ -150,13 +162,7 @@ jobs:
 
           artifacts = api_json(f"{api_url}/repos/{repository}/actions/artifacts?per_page=100").get("artifacts", [])
 
-          def resolve_artifact(
-              artifact_name: str,
-              output_path: Path,
-              evidence_basename: str,
-              *,
-              required: bool,
-          ) -> bool:
+          def resolve_artifact(artifact_name: str, output_path: Path, evidence_basename: str, *, required: bool) -> bool:
               output_path.parent.mkdir(parents=True, exist_ok=True)
               matches = [
                   artifact for artifact in artifacts
@@ -165,20 +171,8 @@ jobs:
               if not matches:
                   if required:
                       raise SystemExit(
-                          f"Missing upstream evidence artifact: {artifact_name} "
-                          f"(correlation_id={correlation_id})"
+                          f"Missing upstream artifact: {artifact_name} (correlation_id={correlation_id})"
                       )
-                  print(
-                      json.dumps(
-                          {
-                              "artifact_name": artifact_name,
-                              "downloaded_to": str(output_path),
-                              "note": "durable launch-state artifact not available; using committed state file fallback",
-                          },
-                          indent=2,
-                          sort_keys=True,
-                      )
-                  )
                   return False
 
               artifact = max(matches, key=lambda item: item.get("created_at", ""))
@@ -186,17 +180,6 @@ jobs:
               if not archive_url:
                   if required:
                       raise SystemExit(f"Artifact archive URL missing for {artifact_name}")
-                  print(
-                      json.dumps(
-                          {
-                              "artifact_name": artifact_name,
-                              "downloaded_to": str(output_path),
-                              "note": "durable launch-state artifact archive missing; using committed state file fallback",
-                          },
-                          indent=2,
-                          sort_keys=True,
-                      )
-                  )
                   return False
 
               archive_bytes = api_bytes(archive_url)
@@ -208,21 +191,9 @@ jobs:
                   if not candidate_names:
                       if required:
                           raise SystemExit(
-                              f"Downloaded artifact {artifact_name} did not contain a JSON evidence file"
+                              f"Downloaded artifact {artifact_name} did not contain a JSON file"
                           )
-                      print(
-                          json.dumps(
-                              {
-                                  "artifact_name": artifact_name,
-                                  "downloaded_to": str(output_path),
-                                  "note": "durable launch-state artifact missing JSON payload; using committed state file fallback",
-                              },
-                              indent=2,
-                              sort_keys=True,
-                          )
-                      )
                       return False
-
                   member = candidate_names[0]
                   output_path.write_bytes(zf.read(member))
 
@@ -241,74 +212,84 @@ jobs:
               return True
 
           state_runtime_path = Path(os.environ["OUTBOUND_STATE_RUNTIME_FILE"])
-          resolved_state = resolve_artifact(
+          if not resolve_artifact(
               os.environ["OUTBOUND_STATE_ARTIFACT_NAME"],
               state_runtime_path,
               "outbound_launch_state.json",
-              required=False,
-          )
-          if resolved_state:
-              with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as gh_env:
-                  gh_env.write(f"OUTBOUND_LAUNCH_STATE_PATH={state_runtime_path}\n")
+              required=True,
+          ):
+              raise SystemExit("durable launch-state artifact unavailable")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as gh_env:
+              gh_env.write(f"OUTBOUND_LAUNCH_STATE_PATH={state_runtime_path}\n")
+
+          if os.environ.get("OUTBOUND_FIRST_10_EVENTS_JSON", "").strip():
+              events_path = Path(os.environ["OUTBOUND_FIRST_10_EVENT_FEED_PATH"])
+              events_path.parent.mkdir(parents=True, exist_ok=True)
+              events_path.write_text(os.environ["OUTBOUND_FIRST_10_EVENTS_JSON"].strip() + "\n", encoding="utf-8")
               print(
                   json.dumps(
                       {
-                          "artifact_name": os.environ["OUTBOUND_STATE_ARTIFACT_NAME"],
-                          "downloaded_to": str(state_runtime_path),
-                          "note": "durable launch-state loaded before evaluating transition",
+                          "artifact_name": "inline-monitor-events",
+                          "downloaded_to": str(events_path),
+                          "note": "inline monitoring events written for validation",
                       },
                       indent=2,
                       sort_keys=True,
                   )
               )
+          else:
+              resolve_artifact(
+                  os.environ["OUTBOUND_EVENTS_ARTIFACT_NAME"],
+                  Path(os.environ["OUTBOUND_FIRST_10_EVENT_FEED_PATH"]),
+                  "outbound_first_10_send_events.ndjson",
+                  required=True,
+              )
 
-          evidence_specs = [
+          required_evidence = [
               (
-                  Path(os.environ["OUTBOUND_DRY_RUN_EVIDENCE_PATH"]),
                   os.environ["OUTBOUND_DRY_RUN_EVIDENCE_ARTIFACT_NAME"],
+                  Path(os.environ["OUTBOUND_DRY_RUN_EVIDENCE_PATH"]),
                   "outbound_dry_run_guard_evidence.json",
               ),
               (
-                  Path(os.environ["OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"]),
                   os.environ["OUTBOUND_RESUME_GUARD_EVIDENCE_ARTIFACT_NAME"],
+                  Path(os.environ["OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"]),
                   "outbound_resume_gate_evidence.json",
+              ),
+              (
+                  os.environ["OUTBOUND_TRANSITION_EVIDENCE_ARTIFACT_NAME"],
+                  Path(os.environ["OUTBOUND_TRANSITION_EVIDENCE_PATH"]),
+                  "outbound_launch_state_transition_evidence.json",
               ),
           ]
 
-          for output_path, artifact_name, evidence_basename in evidence_specs:
+          for artifact_name, output_path, evidence_basename in required_evidence:
               resolve_artifact(artifact_name, output_path, evidence_basename, required=True)
           PY
 
-      - name: Run Launch-State Transition
-        id: transition
+      - name: Run First-10 Monitor
+        id: monitor
         shell: bash
         run: |
           set -euo pipefail
 
           CMD=(
-            python3 project9-sales-agent/scripts/outbound_launch_state_transition.py
+            python3 project9-sales-agent/scripts/outbound_first_10_monitor.py
             --state-file "${OUTBOUND_LAUNCH_STATE_PATH}"
             --dry-run-evidence "${OUTBOUND_DRY_RUN_EVIDENCE_PATH}"
             --resume-evidence "${OUTBOUND_RESUME_GUARD_EVIDENCE_PATH}"
-            --target-state "${OUTBOUND_TARGET_STATE}"
-            --live-allowed-evidence "${OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH}"
-            --transition-record "${OUTBOUND_TRANSITION_RECORD_PATH}"
+            --transition-evidence "${OUTBOUND_TRANSITION_EVIDENCE_PATH}"
+            --events-file "${OUTBOUND_FIRST_10_EVENT_FEED_PATH}"
+            --campaign-id "${OUTBOUND_CAMPAIGN_ID}"
             --correlation-id "${OUTBOUND_CORRELATION_ID}"
             --checked-by "${OUTBOUND_GUARD_ACTOR}"
             --output "${OUTBOUND_OUTPUT_FILE}"
+            --pause-record "${OUTBOUND_PAUSE_RECORD_PATH}"
           )
 
           "${CMD[@]}" | tee "${OUTBOUND_STDOUT_LOG}"
 
-      - name: Upload Durable Launch State
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.OUTBOUND_STATE_ARTIFACT_NAME }}
-          path: ${{ env.OUTBOUND_LAUNCH_STATE_PATH }}
-          if-no-files-found: error
-
-      - name: Capture Transition Failure Evidence
+      - name: Capture Monitor Failure Evidence
         if: failure()
         shell: bash
         run: |
@@ -319,49 +300,89 @@ jobs:
           from pathlib import Path
 
           output_path = Path(os.environ["OUTBOUND_OUTPUT_FILE"])
-          resolve_log = Path(os.environ["OUTBOUND_RESOLVE_LOG"])
+          resolve_log = Path(f"{os.environ['OUTBOUND_STDOUT_LOG']}.resolve")
           stdout_log = Path(os.environ["OUTBOUND_STDOUT_LOG"])
-          evidence = {}
-          failure_reason = "transition failed before structured evidence was written"
+          failure_reason = "first-10 monitor failed before structured evidence was written"
 
-          for candidate in [output_path, stdout_log, resolve_log]:
+          for candidate in [stdout_log, resolve_log]:
               if candidate.exists():
                   text = candidate.read_text(encoding="utf-8", errors="replace")
-                  match = re.search(r"(Missing upstream evidence artifact:[^\\n]+|HTTP Error \\d{3}:[^\\n]+|Process completed with exit code 1\\.)", text)
+                  match = re.search(r"(Missing upstream artifact:[^\\n]+|file malformed:[^\\n]+|file unreadable:[^\\n]+|monitor window not active:[^\\n]+|monitor window not ready:[^\\n]+|Extra data:[^\\n]+|Telegram delivery failed:[^\\n]+|Process completed with exit code 1\\.)", text)
                   if match:
                       failure_reason = match.group(1)
                       break
                   if "Traceback" in text:
-                      tail = text.strip().splitlines()[-1]
-                      failure_reason = tail[-240:]
+                      failure_reason = text.strip().splitlines()[-1][-240:]
                       break
 
           evidence = {
-              "hook_name": "outbound_launch_state_transition",
-              "correlation_id": os.environ.get("OUTBOUND_CORRELATION_ID", "unknown"),
-              "source_state_before": None,
-              "source_status_before": None,
-              "target_state_requested": os.environ.get("OUTBOUND_TARGET_STATE", "UNKNOWN"),
-              "target_status_written": None,
-              "transition_result": "FAIL",
+              "hook_name": "outbound_first_10_monitor",
+              "monitor_result": "FAIL",
+              "verification_result": "FAIL",
+              "launch_correlation_id": os.environ.get("OUTBOUND_CORRELATION_ID", "unknown"),
+              "campaign_id": os.environ.get("OUTBOUND_CAMPAIGN_ID") or os.environ.get("OUTBOUND_CORRELATION_ID", "unknown"),
+              "window_name": "first_10",
+              "send_number": 0,
+              "recipient_hash": None,
+              "message_hash": None,
+              "provider_message_id": None,
+              "delivery_status": "invalid",
+              "bounce_count": 0,
+              "complaint_count": 0,
+              "wrong_recipient_count": 0,
+              "wrong_copy_count": 0,
+              "authentication_failure_count": 0,
+              "threshold_breached": True,
               "failure_reason": failure_reason,
-              "dry_run_guard_evidence": os.environ.get("OUTBOUND_DRY_RUN_EVIDENCE_PATH"),
-              "resume_gate_evidence": os.environ.get("OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"),
-              "state_file_path": os.environ.get("OUTBOUND_LAUNCH_STATE_PATH"),
-              "transition_record_path": os.environ.get("OUTBOUND_TRANSITION_RECORD_PATH"),
+              "next_action": "force_paused",
               "checked_at": "",
               "checked_by": os.environ.get("OUTBOUND_GUARD_ACTOR", "unknown"),
-              "next_action": "block_progression",
+              "source_of_truth_path": os.environ.get("OUTBOUND_LAUNCH_STATE_PATH", "unknown"),
+              "state_file_path": os.environ.get("OUTBOUND_LAUNCH_STATE_PATH", "unknown"),
+              "dry_run_guard_evidence": os.environ.get("OUTBOUND_DRY_RUN_EVIDENCE_PATH"),
+              "resume_gate_evidence": os.environ.get("OUTBOUND_RESUME_GUARD_EVIDENCE_PATH"),
+              "transition_evidence": os.environ.get("OUTBOUND_TRANSITION_EVIDENCE_PATH"),
+              "events_file_path": os.environ.get("OUTBOUND_FIRST_10_EVENT_FEED_PATH"),
+              "observed_provider_accepted_count": 0,
+              "current_window_complete": False,
+              "last_safe_send_number": 0,
+              "launch_mode_before": None,
+              "launch_status_before": None,
               "launch_mode_after": None,
               "launch_status_after": None,
-              "transition_write_strategy": "atomic_replace",
-              "live_allowed_evidence": os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH") or None,
+              "recommendation": "force_paused",
+              "safe_state_snapshot": None,
+              "send_records": [],
               "alert_channel_placeholder": "Telegram",
           }
           output_path.parent.mkdir(parents=True, exist_ok=True)
           output_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
           print(json.dumps(evidence, indent=2, sort_keys=True))
           PY
+
+      - name: Upload Monitor Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OUTBOUND_EVIDENCE_ARTIFACT_NAME }}
+          path: ${{ env.OUTBOUND_OUTPUT_FILE }}
+          if-no-files-found: error
+
+      - name: Upload Monitor Pause Record
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OUTBOUND_PAUSE_ARTIFACT_NAME }}
+          path: ${{ env.OUTBOUND_PAUSE_RECORD_PATH }}
+          if-no-files-found: error
+
+      - name: Upload Monitor State
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OUTBOUND_MONITOR_STATE_ARTIFACT_NAME }}
+          path: ${{ env.OUTBOUND_LAUNCH_STATE_PATH }}
+          if-no-files-found: error
 
       - name: Prepare Telegram Alert Payload
         if: failure()
@@ -377,14 +398,15 @@ jobs:
           evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
           payload = {
               "alert_channel": os.environ.get("OUTBOUND_TELEGRAM_ALERT_CHANNEL", "Telegram"),
-              "correlation_id": evidence.get("correlation_id", os.environ.get("OUTBOUND_CORRELATION_ID", "UNKNOWN")),
+              "correlation_id": evidence.get("launch_correlation_id", os.environ.get("OUTBOUND_CORRELATION_ID", "UNKNOWN")),
               "failure_reason": evidence.get("failure_reason", "unknown failure"),
-              "next_action": evidence.get("next_action", "block_progression"),
+              "next_action": evidence.get("next_action", "force_paused"),
               "run_id": os.environ.get("GITHUB_RUN_ID", "UNKNOWN"),
               "run_url": f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{os.environ.get('GITHUB_REPOSITORY', 'UNKNOWN')}/actions/runs/{os.environ.get('GITHUB_RUN_ID', 'UNKNOWN')}",
-              "verdict": evidence.get("transition_result", "FAIL"),
-              "workflow_file": ".github/workflows/outbound_launch_state_transition.yml",
-              "workflow_name": "Outbound Launch State Transition",
+              "verdict": evidence.get("monitor_result", "FAIL"),
+              "workflow_file": ".github/workflows/outbound_first_10_monitor.yml",
+              "workflow_name": "Outbound First-10 Monitor",
+              "send_number": evidence.get("send_number", 0),
           }
           alert_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
           print(json.dumps(payload, indent=2, sort_keys=True))
@@ -421,6 +443,7 @@ jobs:
               f"Verdict: {payload['verdict']}",
               f"Failure reason: {payload['failure_reason']}",
               f"Next action: {payload['next_action']}",
+              f"Send number: {payload.get('send_number', 0)}",
           ])
 
           body = json.dumps({
@@ -459,61 +482,47 @@ jobs:
           evidence_path = Path(os.environ["OUTBOUND_OUTPUT_FILE"])
           summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
           stdout_log = Path(os.environ["OUTBOUND_STDOUT_LOG"])
+          alert_path = Path(os.environ["OUTBOUND_TELEGRAM_ALERT_FILE"])
 
           try:
               evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
-              verdict = evidence.get("transition_result", "UNKNOWN")
-              source_state = evidence.get("source_state_before", "UNKNOWN")
-              target_state = evidence.get("target_state_requested", "UNKNOWN")
-              correlation_id = evidence.get("correlation_id", "UNKNOWN")
+              verdict = evidence.get("monitor_result", "UNKNOWN")
+              accepted = evidence.get("observed_provider_accepted_count", 0)
+              correlation_id = evidence.get("launch_correlation_id", "UNKNOWN")
               next_action = evidence.get("next_action", "UNKNOWN")
+              recommendation = evidence.get("recommendation", "UNKNOWN")
               failure_reason = evidence.get("failure_reason")
+              safe_send = evidence.get("last_safe_send_number", 0)
               artifact_hint = evidence_path.as_posix()
           except Exception as exc:
               verdict = "FAIL"
-              source_state = "UNKNOWN"
-              target_state = os.environ.get("OUTBOUND_TARGET_STATE", "UNKNOWN")
+              accepted = 0
               correlation_id = os.environ.get("OUTBOUND_CORRELATION_ID", "UNKNOWN")
-              next_action = "block_progression"
+              next_action = "force_paused"
+              recommendation = "force_paused"
               failure_reason = f"summary parsing failed: {exc}"
+              safe_send = 0
               artifact_hint = evidence_path.as_posix()
-          alert_path = Path(os.environ["OUTBOUND_TELEGRAM_ALERT_FILE"])
           alert_hint = alert_path.as_posix() if alert_path.exists() else "not-generated"
 
           lines = [
-              "## Launch-State Transition",
+              "## First-10 Monitor",
               f"- Verdict: `{verdict}`",
-              f"- Source state before: `{source_state}`",
-              f"- Target state requested: `{target_state}`",
+              f"- Recommendation: `{recommendation}`",
+              f"- Observed accepted sends: `{accepted}`",
               f"- Correlation id: `{correlation_id}`",
+              f"- Last safe send: `{safe_send}`",
               f"- Next action: `{next_action}`",
               f"- Evidence artifact: `{artifact_hint}`",
               f"- Evidence artifact name: `{os.environ.get('OUTBOUND_EVIDENCE_ARTIFACT_NAME', 'unknown')}`",
               f"- Durable state artifact: `{os.environ.get('OUTBOUND_STATE_ARTIFACT_NAME', 'unknown')}`",
-              f"- Telegram alert payload: `{alert_hint}`",
-              f"- Telegram alert artifact name: `{os.environ.get('OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME', 'unknown')}`",
+              f"- Monitor state artifact: `{os.environ.get('OUTBOUND_MONITOR_STATE_ARTIFACT_NAME', 'unknown')}`",
+              f"- Telegram alert artifact: `{alert_hint}`",
+              f"- Stdout log: `{stdout_log.as_posix()}`",
           ]
           if failure_reason:
               lines.append(f"- Failure reason: `{failure_reason}`")
-          lines.append(f"- Stdout log: `{stdout_log.as_posix()}`")
-          summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-          print(summary_path.read_text(encoding="utf-8"), end="")
+
+          with summary_path.open("a", encoding="utf-8") as handle:
+              handle.write("\n".join(lines) + "\n")
           PY
-
-      - name: Upload Transition Evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.OUTBOUND_EVIDENCE_ARTIFACT_NAME }}
-          path: |
-            ${{ env.OUTBOUND_OUTPUT_FILE }}
-            ${{ env.OUTBOUND_STDOUT_LOG }}
-          if-no-files-found: error
-
-      - name: Upload Telegram Alert Payload
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.OUTBOUND_TELEGRAM_ALERT_ARTIFACT_NAME }}
-          path: ${{ env.OUTBOUND_TELEGRAM_ALERT_FILE }}
-          if-no-files-found: error

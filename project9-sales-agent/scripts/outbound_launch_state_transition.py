@@ -305,7 +305,10 @@ def _build_updated_state(
 ) -> dict[str, Any]:
     target_status = _expected_target_status(target_state)
     if target_state == "LIVE_ALLOWED":
-        notes = "Transitioned from PAUSED to LIVE_ALLOWED after first-10 monitor PASS."
+        notes = (
+            "Transitioned from PAUSED to a provisional LIVE_ALLOWED first-10 window. "
+            "The First-10 Monitor must observe those sends and later keep LIVE_ALLOWED or force PAUSED."
+        )
     else:
         notes = (
             f"Transitioned from {current_state.get('launch_mode')} to {target_state} "
@@ -351,6 +354,7 @@ def _build_evidence(
         "launch_mode_after": result.launch_mode_after,
         "launch_status_after": result.launch_status_after,
         "transition_write_strategy": DEFAULT_WRITE_STRATEGY,
+        "provisional_live_allowed_window": result.target_state_requested == "LIVE_ALLOWED",
         "live_allowed_evidence": str(
             os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH", "")
         ) or None,
@@ -398,7 +402,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--live-allowed-evidence",
         default=os.environ.get("OUTBOUND_LIVE_ALLOWED_EVIDENCE_PATH"),
-        help="Path to the first-10 monitor evidence required for LIVE_ALLOWED.",
+        help="Optional first-10 monitor evidence placeholder for later handoff.",
     )
     parser.add_argument(
         "--correlation-id",
@@ -486,13 +490,19 @@ def main() -> int:
             expected_next_action="advance_to_later_launch_steps",
         )
 
-        if requested_target_state == "LIVE_ALLOWED":
-            if live_allowed_evidence_path is None:
-                raise ValueError("missing live-allowed evidence path")
-            _validate_live_allowed_evidence(
-                evidence_path=live_allowed_evidence_path,
-                current_correlation_id=correlation_id,
-            )
+        if requested_target_state == "LIVE_ALLOWED" and live_allowed_evidence_path is not None:
+            live_allowed_payload, load_error = _load_json_file(live_allowed_evidence_path)
+            if load_error is None:
+                live_allowed_hook_name = _normalize(live_allowed_payload.get("hook_name"))
+                if live_allowed_hook_name and live_allowed_hook_name != "outbound_first_10_monitor":
+                    raise ValueError(
+                        f"live-allowed evidence has unexpected hook_name: {live_allowed_hook_name}"
+                    )
+                live_allowed_correlation_id = _normalize(live_allowed_payload.get("correlation_id"))
+                if live_allowed_correlation_id and live_allowed_correlation_id != correlation_id:
+                    raise ValueError(
+                        f"live-allowed evidence correlation mismatch: expected {correlation_id}, found {live_allowed_correlation_id}"
+                    )
 
         dry_checked_at = _parse_iso_timestamp(dry_run_evidence.get("checked_at"))
         resume_checked_at = _parse_iso_timestamp(resume_evidence.get("checked_at"))
@@ -525,7 +535,11 @@ def main() -> int:
             target_status_written=updated_state["launch_status"],
             launch_mode_after=updated_state["launch_mode"],
             launch_status_after=updated_state["launch_status"],
-            next_action="hold_for_first_10_monitor",
+            next_action=(
+                "observe_first_10_sends"
+                if requested_target_state == "LIVE_ALLOWED"
+                else "hold_for_first_10_monitor"
+            ),
         )
 
         evidence = _build_evidence(

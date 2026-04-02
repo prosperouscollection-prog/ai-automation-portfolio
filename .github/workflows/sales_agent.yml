@@ -30,10 +30,18 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_API_URL: ${{ github.api_url }}
+          OUTBOUND_FIRST_10_EVENT_FEED_PATH: project9-sales-agent/state/outbound_first_10_send_events.ndjson
         run: |
           pip install requests python-dotenv resend google-auth google-api-python-client anthropic -q
           cd .github/workflows/scripts
           python3 sales_agent.py
+      - name: Upload First-10 Send Feed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outbound-first-10-send-events
+          path: project9-sales-agent/state/outbound_first_10_send_events.ndjson
+          if-no-files-found: error
       - name: Telegram alert on failure
         if: failure()
         env:
