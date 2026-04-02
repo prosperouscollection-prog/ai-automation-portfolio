@@ -65,7 +65,7 @@ jobs:
       OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
-      OUTBOUND_STDOUT_LOG: ${{ runner.temp }}/outbound_launch_state_transition_stdout.log
+      OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_launch_state_transition_stdout.log
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

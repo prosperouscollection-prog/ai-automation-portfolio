@@ -45,7 +45,7 @@ jobs:
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
       OUTBOUND_REQUIRE_DRY_RUN: ${{ inputs.require_dry_run }}
-      OUTBOUND_STDOUT_LOG: ${{ runner.temp }}/outbound_dry_run_guard_stdout.log
+      OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_dry_run_guard_stdout.log
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

@@ -57,7 +57,7 @@ jobs:
       OUTBOUND_RESUME_ENTRY_POINT: workflow_dispatch
       OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
       OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
-      OUTBOUND_STDOUT_LOG: ${{ runner.temp }}/outbound_resume_gate_stdout.log
+      OUTBOUND_STDOUT_LOG: project9-sales-agent/state/outbound_resume_gate_stdout.log
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
