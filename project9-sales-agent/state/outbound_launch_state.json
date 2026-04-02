@@ -1,0 +1,9 @@
+{
+  "launch_mode": "DRY_RUN",
+  "launch_status": "READY",
+  "verified_by": "local-validation",
+  "verified_at": "2026-04-02T00:00:00Z",
+  "correlation_id": "local-dry-run-validation",
+  "source": "project9-sales-agent/state/outbound_launch_state.json",
+  "notes": "Sample state for local validation only."
+}
