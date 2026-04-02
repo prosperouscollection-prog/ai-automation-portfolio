@@ -1,0 +1,144 @@
+name: Outbound Resume Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      resume_request:
+        description: Founder resume request text.
+        required: false
+        type: string
+        default: RESUME AUTO
+      requested_by:
+        description: Founder identity label.
+        required: false
+        type: string
+        default: Trendell Fordham
+      correlation_id:
+        description: Launch correlation id shared across the control chain.
+        required: true
+        type: string
+      state_file:
+        description: Path to the current launch-state JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_launch_state.json
+      resume_record:
+        description: Path for the resume authorization record JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_resume_authorization.json
+      output_file:
+        description: Path for the resume-gate evidence JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_resume_gate_evidence.json
+      checked_by:
+        description: Actor label for this verification run.
+        required: false
+        type: string
+        default: ""
+  # Future-only scheduled revalidation. Keep disabled until the launch team approves it.
+  # schedule:
+  #   - cron: "15 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  resume-gate:
+    name: Resume Gate
+    runs-on: ubuntu-latest
+    env:
+      OUTBOUND_RESUME_REQUEST: ${{ inputs.resume_request }}
+      OUTBOUND_REQUESTED_BY: ${{ inputs.requested_by }}
+      OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
+      OUTBOUND_LAUNCH_STATE_PATH: ${{ inputs.state_file }}
+      OUTBOUND_RESUME_RECORD_PATH: ${{ inputs.resume_record }}
+      OUTBOUND_RESUME_ENTRY_POINT: workflow_dispatch
+      OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
+      OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
+      OUTBOUND_STDOUT_LOG: ${{ runner.temp }}/outbound_resume_gate_stdout.log
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Resume Gate
+        id: resume_gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CMD=(
+            python3 project9-sales-agent/scripts/outbound_resume_gate.py
+            --resume-request "${OUTBOUND_RESUME_REQUEST}"
+            --requested-by "${OUTBOUND_REQUESTED_BY}"
+            --correlation-id "${OUTBOUND_CORRELATION_ID}"
+            --state-file "${OUTBOUND_LAUNCH_STATE_PATH}"
+            --resume-record "${OUTBOUND_RESUME_RECORD_PATH}"
+            --entry-point "${OUTBOUND_RESUME_ENTRY_POINT}"
+            --checked-by "${OUTBOUND_GUARD_ACTOR}"
+            --output "${OUTBOUND_OUTPUT_FILE}"
+          )
+
+          "${CMD[@]}" | tee "${OUTBOUND_STDOUT_LOG}"
+
+      - name: Write Step Summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          evidence_path = Path(os.environ["OUTBOUND_OUTPUT_FILE"])
+          summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          stdout_log = Path(os.environ["OUTBOUND_STDOUT_LOG"])
+
+          try:
+              evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+              verdict = evidence.get("authorization_result", "UNKNOWN")
+              request_text = evidence.get("request_text", "UNKNOWN")
+              requested_by = evidence.get("requested_by", "UNKNOWN")
+              correlation_id = evidence.get("correlation_id", "UNKNOWN")
+              next_action = evidence.get("next_action", "UNKNOWN")
+              failure_reason = evidence.get("failure_reason")
+              artifact_hint = evidence_path.as_posix()
+          except Exception as exc:
+              verdict = "FAIL"
+              request_text = "UNKNOWN"
+              requested_by = "UNKNOWN"
+              correlation_id = os.environ.get("OUTBOUND_CORRELATION_ID", "UNKNOWN")
+              next_action = "block_progression"
+              failure_reason = f"summary parsing failed: {exc}"
+              artifact_hint = evidence_path.as_posix()
+
+          lines = [
+              "## Resume Gate",
+              f"- Verdict: `{verdict}`",
+              f"- Request text: `{request_text}`",
+              f"- Requested by: `{requested_by}`",
+              f"- Correlation id: `{correlation_id}`",
+              f"- Next action: `{next_action}`",
+              f"- Evidence artifact: `{artifact_hint}`",
+          ]
+          if failure_reason:
+              lines.append(f"- Failure reason: `{failure_reason}`")
+          lines.append(f"- Stdout log: `{stdout_log.as_posix()}`")
+          summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload Resume Gate Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outbound-resume-gate-evidence
+          path: |
+            ${{ env.OUTBOUND_OUTPUT_FILE }}
+            ${{ env.OUTBOUND_STDOUT_LOG }}
+          if-no-files-found: error

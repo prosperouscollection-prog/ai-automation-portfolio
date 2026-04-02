@@ -1,0 +1,152 @@
+name: Outbound Launch State Transition
+
+on:
+  workflow_dispatch:
+    inputs:
+      correlation_id:
+        description: Launch correlation id shared across the control chain.
+        required: true
+        type: string
+      state_file:
+        description: Path to the current launch-state JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_launch_state.json
+      dry_run_evidence:
+        description: Path to the dry-run guard evidence JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_dry_run_guard_evidence.json
+      resume_evidence:
+        description: Path to the resume gate evidence JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_resume_gate_evidence.json
+      target_state:
+        description: Requested next launch state.
+        required: false
+        type: choice
+        default: RESUME_PENDING
+        options:
+          - RESUME_PENDING
+          - PAUSED
+      transition_record:
+        description: Path for the transition record JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_launch_state_transition.json
+      output_file:
+        description: Path for the transition evidence JSON.
+        required: false
+        type: string
+        default: project9-sales-agent/state/outbound_launch_state_transition_evidence.json
+      checked_by:
+        description: Actor label for this transition run.
+        required: false
+        type: string
+        default: ""
+  # Future-only scheduled control. Keep disabled until the launch team approves it.
+  # schedule:
+  #   - cron: "30 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  launch-state-transition:
+    name: Launch-State Transition
+    runs-on: ubuntu-latest
+    env:
+      OUTBOUND_LAUNCH_STATE_PATH: ${{ inputs.state_file }}
+      OUTBOUND_DRY_RUN_EVIDENCE_PATH: ${{ inputs.dry_run_evidence }}
+      OUTBOUND_RESUME_GUARD_EVIDENCE_PATH: ${{ inputs.resume_evidence }}
+      OUTBOUND_TARGET_STATE: ${{ inputs.target_state }}
+      OUTBOUND_TRANSITION_RECORD_PATH: ${{ inputs.transition_record }}
+      OUTBOUND_CORRELATION_ID: ${{ inputs.correlation_id }}
+      OUTBOUND_GUARD_ACTOR: ${{ inputs.checked_by != '' && inputs.checked_by || github.actor }}
+      OUTBOUND_OUTPUT_FILE: ${{ inputs.output_file }}
+      OUTBOUND_STDOUT_LOG: ${{ runner.temp }}/outbound_launch_state_transition_stdout.log
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Launch-State Transition
+        id: transition
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CMD=(
+            python3 project9-sales-agent/scripts/outbound_launch_state_transition.py
+            --state-file "${OUTBOUND_LAUNCH_STATE_PATH}"
+            --dry-run-evidence "${OUTBOUND_DRY_RUN_EVIDENCE_PATH}"
+            --resume-evidence "${OUTBOUND_RESUME_GUARD_EVIDENCE_PATH}"
+            --target-state "${OUTBOUND_TARGET_STATE}"
+            --transition-record "${OUTBOUND_TRANSITION_RECORD_PATH}"
+            --correlation-id "${OUTBOUND_CORRELATION_ID}"
+            --checked-by "${OUTBOUND_GUARD_ACTOR}"
+            --output "${OUTBOUND_OUTPUT_FILE}"
+          )
+
+          "${CMD[@]}" | tee "${OUTBOUND_STDOUT_LOG}"
+
+      - name: Write Step Summary
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          evidence_path = Path(os.environ["OUTBOUND_OUTPUT_FILE"])
+          summary_path = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          stdout_log = Path(os.environ["OUTBOUND_STDOUT_LOG"])
+
+          try:
+              evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+              verdict = evidence.get("transition_result", "UNKNOWN")
+              source_state = evidence.get("source_state_before", "UNKNOWN")
+              target_state = evidence.get("target_state_requested", "UNKNOWN")
+              correlation_id = evidence.get("correlation_id", "UNKNOWN")
+              next_action = evidence.get("next_action", "UNKNOWN")
+              failure_reason = evidence.get("failure_reason")
+              artifact_hint = evidence_path.as_posix()
+          except Exception as exc:
+              verdict = "FAIL"
+              source_state = "UNKNOWN"
+              target_state = os.environ.get("OUTBOUND_TARGET_STATE", "UNKNOWN")
+              correlation_id = os.environ.get("OUTBOUND_CORRELATION_ID", "UNKNOWN")
+              next_action = "block_progression"
+              failure_reason = f"summary parsing failed: {exc}"
+              artifact_hint = evidence_path.as_posix()
+
+          lines = [
+              "## Launch-State Transition",
+              f"- Verdict: `{verdict}`",
+              f"- Source state before: `{source_state}`",
+              f"- Target state requested: `{target_state}`",
+              f"- Correlation id: `{correlation_id}`",
+              f"- Next action: `{next_action}`",
+              f"- Evidence artifact: `{artifact_hint}`",
+          ]
+          if failure_reason:
+              lines.append(f"- Failure reason: `{failure_reason}`")
+          lines.append(f"- Stdout log: `{stdout_log.as_posix()}`")
+          summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+
+      - name: Upload Transition Evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: outbound-launch-state-transition-evidence
+          path: |
+            ${{ env.OUTBOUND_OUTPUT_FILE }}
+            ${{ env.OUTBOUND_STDOUT_LOG }}
+          if-no-files-found: error
