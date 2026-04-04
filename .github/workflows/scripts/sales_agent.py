@@ -242,7 +242,7 @@ class SalesAgent:
                 preview=f"Subject: {subject}\n\n{body[:280]}",
             )
             self._attach_approval_buttons(req.message_id)
-            status = self._wait_for_callback(req.message_id, timeout_seconds=60)
+            status = self._wait_for_callback(req.message_id, timeout_seconds=600)
 
             # Act on founder decision — full side effects before any UI response
             if status == ApprovalStatus.APPROVED:
