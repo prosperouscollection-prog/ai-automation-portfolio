@@ -8,16 +8,14 @@ reason: —
 
 ## LOOP STATE
 current_milestone: P16
-current_run_id: 23987234915
+current_run_id: 23990078311
 artifact_refs:
   - outbound-first-10-send-events (run 23987234915)
-loop_cycle: 1
+loop_cycle: 2
 open_risks:
   - digest_not_produced: _write_morning_digest not confirmed executed in run 23987234915
-last_reviewer_action: CONTINUE
-next_codex_task: |
-  Open .github/workflows/scripts/sales_agent.py and paste every
-  try/except block inside the run() function exactly as written.
+last_reviewer_action: PENDING
+next_codex_task: awaiting reviewer
 
 ## LOCKED DOCTRINE REMINDERS
 - live send: PAUSED
