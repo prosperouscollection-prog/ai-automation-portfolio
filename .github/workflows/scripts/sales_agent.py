@@ -17,6 +17,7 @@ import json
 import hashlib
 import os
 import sys
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -32,6 +33,7 @@ load_dotenv()
 
 # Shared notification helpers
 from notify import telegram_notify, resend_email
+from lead_generator_agent import CHAIN_EXCLUSION_KEYWORDS
 
 # Outreach approval gate
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "v1-revenue-system"))
@@ -198,6 +200,11 @@ class SalesAgent:
             if processed_count >= 3:
                 print("ℹ️  Reached 3-lead limit for this run")
                 break
+
+            lead_name = (lead.business or "").lower()
+            if any(kw in lead_name for kw in CHAIN_EXCLUSION_KEYWORDS) or re.search(r"\b(?:inc|llc|corp|holdings|enterprises)\b", lead_name):
+                print(f"  🚫 Chain filter blocked at send time: {lead.business}")
+                continue
 
             # Deduplication: skip if already in Outreach Log
             if self._already_outreached(lead.business):
