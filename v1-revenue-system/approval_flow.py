@@ -98,6 +98,7 @@ class ApprovalFlow:
 
     def send_telegram(self, text: str, reply_markup: Optional[dict] = None) -> Optional[int]:
         """Send a Telegram message. Returns message_id on success."""
+        print(f"  🔍 Telegram send_telegram() called — token={'SET' if os.getenv('TELEGRAM_BOT_TOKEN') else 'MISSING'} chat={'SET' if os.getenv('TELEGRAM_CHAT_ID') else 'MISSING'}")
         if not self.bot_token or not self.chat_id:
             print("⚠️  Telegram not configured — approval flow disabled")
             return None
@@ -115,10 +116,10 @@ class ApprovalFlow:
             resp = requests.post(url, json=payload, timeout=10)
             if resp.ok:
                 return resp.json().get("result", {}).get("message_id")
-            print(f"❌ Telegram send failed: {resp.status_code}")
+            print(f"  ⚠️  Telegram sendMessage failed: {resp.status_code} {resp.text}")
             return None
         except Exception as e:
-            print(f"❌ Telegram exception: {e}")
+            print(f"  ⚠️  Telegram sendMessage exception: {e}")
             return None
 
     def get_recent_replies(self, since_message_id: int) -> list[dict]:
