@@ -33,6 +33,13 @@ jobs:
           name: outbound-first-10-send-events
           path: project9-sales-agent/state/outbound_first_10_send_events.ndjson
           if-no-files-found: error
+      - name: Upload Founder Morning Digest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: founder-morning-digest
+          path: project9-sales-agent/state/founder_morning_digest_*.md
+          if-no-files-found: error
       - name: Telegram alert on failure
         if: failure()
         env:

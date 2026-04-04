@@ -95,6 +95,20 @@ FAILSAFE_HEADERS = [
     "log_write_result",
 ]
 
+DIGEST_FILENAME_PREFIX = "founder_morning_digest_"
+DIGEST_PRIORITY_ORDER = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+DIGEST_ANOMALY_LABELS = {
+    "fail_safe_used": "fail-safe used",
+    "summary_integrity_mismatch": "summary_integrity mismatch",
+    "callback_ambiguity": "callback ambiguity",
+    "queue_corruption_detected": "queue corruption detected",
+    "founder_stop_blocked_run": "founder stop blocked run",
+    "CAP_BREACH_BLOCKED": "CAP_BREACH_BLOCKED",
+    "log_persistence_failure": "log persistence failure",
+    "timeout_unresolved": "timeout unresolved count > 0",
+    "total_errors": "total_errors > 0",
+}
+
 # Sheets column indices (0-based) written by Lead Generator
 # A=date B=industry C=name D=primary_domain E=phone F=address
 # G=employees H=yelp_rating I=yelp_reviews J=score K=reason
@@ -227,6 +241,7 @@ class SalesAgent:
                 ),
             )
         )
+        self.morning_digest_path = PROJECT9_STATE_DIR / f"{DIGEST_FILENAME_PREFIX}{self.run_id}.md"
         self._sheets_service = None
         self._flow = ApprovalFlow()
 
@@ -236,8 +251,11 @@ class SalesAgent:
 
     def run(self) -> None:
         summary = self._new_run_summary()
+        digest_entries: list[dict[str, Any]] = []
+        anomaly_categories: set[str] = set()
         self._ensure_first_10_event_feed()
         if self._founder_stop_active():
+            anomaly_categories.add("founder_stop_blocked_run")
             timestamp = datetime.now(DETROIT).isoformat()
             reason = self._founder_stop_reason()
             print(
@@ -254,6 +272,7 @@ class SalesAgent:
             summary["no_send_integrity"] = "VERIFIED" if not self.no_send_invoked else "BREACH"
             summary["workflow_duration_seconds"] = round(time.time() - self.started_at, 1)
             summary.pop("leads_touched", None)
+            self._finalize_run_outputs(summary, digest_entries, anomaly_categories)
             self._emit_run_summary(summary)
             return
 
@@ -271,6 +290,7 @@ class SalesAgent:
             summary["no_send_integrity"] = "VERIFIED" if not self.no_send_invoked else "BREACH"
             summary["workflow_duration_seconds"] = round(time.time() - self.started_at, 1)
             summary.pop("leads_touched", None)
+            self._finalize_run_outputs(summary, digest_entries, anomaly_categories)
             self._emit_run_summary(summary)
             return
 
@@ -298,6 +318,8 @@ class SalesAgent:
                         "fail_safe_usage_status",
                         summary["fail_safe_usage_status"],
                     )
+                    if result.get("anomaly_category"):
+                        anomaly_categories.add(str(result["anomaly_category"]))
                     if result.get("selected"):
                         summary["leads_touched"] += 1
                         terminal_state = result["terminal_state"]
@@ -318,6 +340,8 @@ class SalesAgent:
                     "fail_safe_usage_status",
                     summary["fail_safe_usage_status"],
                 )
+                if result.get("anomaly_category"):
+                    anomaly_categories.add(str(result["anomaly_category"]))
                 if result.get("selected"):
                     summary["leads_touched"] += 1
                     terminal_state = result["terminal_state"]
@@ -329,6 +353,14 @@ class SalesAgent:
                     }.get(terminal_state)
                     if summary_key is not None:
                         summary[summary_key] += 1
+                    if terminal_state == "QUEUED_FOR_REVIEW":
+                        digest_entries.append(
+                            self._build_digest_entry(
+                                lead=lead,
+                                result=result,
+                                sequence=len(digest_entries) + 1,
+                            )
+                        )
                 else:
                     if result.get("filter_summary_key"):
                         summary["total_leads_evaluated_for_this_run"] += 1
@@ -369,6 +401,19 @@ class SalesAgent:
         if summary["cap_status"] == "UNDER_CAP" and summary["leads_touched"] >= CAP_LIMIT:
             summary["cap_status"] = "AT_CAP"
         summary.pop("leads_touched", None)
+        if summary["fail_safe_usage_status"] == "USED":
+            anomaly_categories.add("fail_safe_used")
+        if summary["summary_integrity"] == "SUMMARY_INTEGRITY_FAIL":
+            anomaly_categories.add("summary_integrity_mismatch")
+        if summary["total_timeout_unresolved"] > 0:
+            anomaly_categories.add("timeout_unresolved")
+        if summary["total_errors"] > 0:
+            anomaly_categories.add("total_errors")
+        if summary["cap_status"] == "CAP_BREACH_BLOCKED":
+            anomaly_categories.add("CAP_BREACH_BLOCKED")
+        if summary["log_write_status"] == "PERSISTENCE_FAILURE":
+            anomaly_categories.add("log_persistence_failure")
+        self._finalize_run_outputs(summary, digest_entries, anomaly_categories)
         self._emit_run_summary(summary)
 
     # ------------------------------------------------------------------
@@ -604,6 +649,173 @@ class SalesAgent:
     def _serialize_payload(self, payload: dict[str, Any]) -> str:
         return json.dumps(payload, sort_keys=True, ensure_ascii=False)
 
+    def _preview_recommended_draft(self, recommended_draft: str) -> list[str]:
+        if not recommended_draft:
+            return []
+        try:
+            payload = json.loads(recommended_draft)
+        except Exception:
+            snippet = [line.strip() for line in recommended_draft.splitlines() if line.strip()]
+            return snippet[:2] if snippet else [recommended_draft[:160]]
+
+        preview_lines: list[str] = []
+        subject = str(payload.get("subject", "")).strip()
+        body = str(payload.get("body", "")).strip()
+        if subject:
+            preview_lines.append(f"Subject: {subject}")
+        body_lines = [line.strip() for line in body.splitlines() if line.strip()]
+        for line in body_lines:
+            preview_lines.append(f"Body: {line}")
+            if len(preview_lines) >= 2:
+                break
+        return preview_lines[:2]
+
+    def _build_digest_entry(
+        self,
+        *,
+        lead: Lead,
+        result: dict[str, Any],
+        sequence: int,
+    ) -> dict[str, Any]:
+        return {
+            "sequence": sequence,
+            "business_name": lead.business,
+            "priority": result.get("priority", ""),
+            "reason_selected": result.get("reason_selected", ""),
+            "owner_email": lead.email,
+            "recommended_draft_preview": self._preview_recommended_draft(
+                str(result.get("recommended_draft", ""))
+            ),
+            "lead_id": result.get("lead_id", lead.lead_id),
+            "terminal_state": result.get("terminal_state", ""),
+        }
+
+    def _prune_old_digest_files(self) -> None:
+        self.morning_digest_path.parent.mkdir(parents=True, exist_ok=True)
+        for path in self.morning_digest_path.parent.glob(f"{DIGEST_FILENAME_PREFIX}*.md"):
+            if path == self.morning_digest_path:
+                continue
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+
+    def _digest_anomaly_labels(self, anomaly_categories: set[str]) -> list[str]:
+        labels = [DIGEST_ANOMALY_LABELS.get(item, item) for item in anomaly_categories]
+        order = {value: index for index, value in enumerate(DIGEST_ANOMALY_LABELS.values())}
+        return sorted(labels, key=lambda item: order.get(item, 999))
+
+    def _build_morning_digest(
+        self,
+        summary: dict[str, Any],
+        digest_entries: list[dict[str, Any]],
+        anomaly_categories: set[str],
+    ) -> str:
+        ordered_entries = sorted(
+            digest_entries,
+            key=lambda item: (
+                DIGEST_PRIORITY_ORDER.get(str(item.get("priority", "")).upper(), 99),
+                int(item.get("sequence", 0)),
+            ),
+        )
+        anomaly_labels = self._digest_anomaly_labels(anomaly_categories)
+        lines = [
+            "# Founder Morning Digest",
+            "",
+            "## Top Line",
+            f"- run_id: {summary.get('run_id', self.run_id)}",
+            f"- workflow_duration_seconds: {summary.get('workflow_duration_seconds', 0.0)}",
+            f"- cap_status: {summary.get('cap_status', 'UNDER_CAP')}",
+            f"- total_queued: {summary.get('total_queued', 0)}",
+            f"- anomaly_count: {len(anomaly_labels)}",
+            f"- fail_safe_usage_status: {summary.get('fail_safe_usage_status', 'NOT_USED')}",
+            f"- no_send_integrity: {summary.get('no_send_integrity', 'VERIFIED')}",
+            f"- summary_integrity: {summary.get('summary_integrity', 'VERIFIED')}",
+            "",
+            "## Immediate Decisions",
+        ]
+        if ordered_entries:
+            current_priority = None
+            for entry in ordered_entries:
+                priority = str(entry.get("priority", "")).upper() or "LOW"
+                if priority != current_priority:
+                    lines.extend(["", f"### {priority}"])
+                    current_priority = priority
+                lines.extend(
+                    [
+                        f"- business_name: {entry.get('business_name', '')}",
+                        f"  - priority: {priority}",
+                        f"  - reason_selected: {entry.get('reason_selected', '')}",
+                        f"  - owner_email: {entry.get('owner_email', '')}",
+                        f"  - lead_id: {entry.get('lead_id', '')}",
+                        f"  - terminal_state: {entry.get('terminal_state', '')}",
+                        "  - recommended_draft_preview:",
+                    ]
+                )
+                preview = entry.get("recommended_draft_preview", [])
+                if preview:
+                    lines.extend([f"    - {line}" for line in preview])
+                else:
+                    lines.append("    - none")
+        else:
+            lines.append("- none queued")
+
+        lines.extend(
+            [
+                "",
+                "## Filtered Summary",
+                f"- total_filtered_out_chain: {summary.get('total_filtered_out_chain', 0)}",
+                f"- total_filtered_out_corporate: {summary.get('total_filtered_out_corporate', 0)}",
+                f"- total_filtered_out_duplicate: {summary.get('total_filtered_out_duplicate', 0)}",
+                f"- total_filtered_out_incomplete: {summary.get('total_filtered_out_incomplete', 0)}",
+                "",
+                "## Anomalies",
+            ]
+        )
+        if anomaly_labels:
+            lines.extend(f"- {label}" for label in anomaly_labels)
+        else:
+            lines.append("- anomalies: none")
+
+        lines.extend(
+            [
+                "",
+                "## Human-Locked Reminders",
+                "- live send still paused",
+                "- founder approval required for every queued lead",
+                "- no gate changes occurred in this run",
+            ]
+        )
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _write_morning_digest(
+        self,
+        summary: dict[str, Any],
+        digest_entries: list[dict[str, Any]],
+        anomaly_categories: set[str],
+    ) -> Path:
+        self._prune_old_digest_files()
+        digest_text = self._build_morning_digest(summary, digest_entries, anomaly_categories)
+        self.morning_digest_path.write_text(digest_text, encoding="utf-8")
+        print(f"✅ Founder morning digest written → {self.morning_digest_path}")
+        print(
+            "📦 Founder morning digest metrics: "
+            f"run_id={summary.get('run_id', self.run_id)} "
+            f"queued_leads={len(digest_entries)} "
+            f"anomaly_count={len(anomaly_categories)} "
+            f"no_send_integrity={summary.get('no_send_integrity', 'VERIFIED')} "
+            f"summary_integrity={summary.get('summary_integrity', 'VERIFIED')}"
+        )
+        return self.morning_digest_path
+
+    def _finalize_run_outputs(
+        self,
+        summary: dict[str, Any],
+        digest_entries: list[dict[str, Any]],
+        anomaly_categories: set[str],
+    ) -> None:
+        self._write_morning_digest(summary, digest_entries, anomaly_categories)
+
     def _sheet_write_with_retry(self, worksheet_name: str, row: list[str]) -> None:
         delays = (2, 4, 8)
         last_exc: Exception | None = None
@@ -758,6 +970,7 @@ class SalesAgent:
                 "queue_status": "PERSISTENCE_FAILURE",
                 "log_write_status": "PERSISTENCE_FAILURE",
                 "fail_safe_usage_status": summary.get("fail_safe_usage_status", "NOT_USED"),
+                "anomaly_category": "queue_corruption_detected",
                 "halt_run": True,
                 "halt_reason": "QUEUE_CORRUPTION_DETECTED",
             }
@@ -774,6 +987,7 @@ class SalesAgent:
             return {
                 "selected": False,
                 "terminal_state": "CAP_BREACH_BLOCKED",
+                "anomaly_category": "CAP_BREACH_BLOCKED",
                 "halt_run": True,
                 "halt_reason": "CAP_BREACH_BLOCKED",
                 "lead_id": lead_id,
@@ -791,6 +1005,7 @@ class SalesAgent:
             return {
                 "selected": False,
                 "terminal_state": "CAP_BREACH_BLOCKED",
+                "anomaly_category": "CAP_BREACH_BLOCKED",
                 "halt_run": True,
                 "halt_reason": "CAP_BREACH_BLOCKED",
                 "lead_id": lead_id,
@@ -852,6 +1067,36 @@ class SalesAgent:
             confirmation = f"⚠️ Error logged for {lead.business}: {exc}"
             if "QUEUE_CORRUPTION_DETECTED" in str(exc):
                 raise
+            anomaly_category = "callback_ambiguity" if "unresolved callback ambiguity" in str(exc) else None
+            if "LOG_PERSISTENCE_FAILURE" in str(exc):
+                anomaly_category = "log_persistence_failure"
+            if "CAP_BREACH_BLOCKED" in str(exc):
+                anomaly_category = "CAP_BREACH_BLOCKED"
+            if anomaly_category:
+                current_log_status = summary.get("log_write_status", "ALL_WRITTEN")
+                current_fail_safe_status = summary.get("fail_safe_usage_status", "NOT_USED")
+                if anomaly_category == "log_persistence_failure":
+                    current_log_status = "PERSISTENCE_FAILURE"
+                self._telegram_confirm(confirmation)
+                return {
+                    "selected": True,
+                    "terminal_state": terminal_state,
+                    "queue_result": queue_result,
+                    "priority": priority,
+                    "reason_selected": reason_selected,
+                    "queue_status": current_log_status,
+                    "log_write_status": current_log_status,
+                    "fail_safe_usage_status": current_fail_safe_status,
+                    "lead_id": lead_id,
+                    "recommended_draft": recommended_draft,
+                    "anomaly_category": anomaly_category,
+                    "halt_run": True,
+                    "halt_reason": (
+                        "LOG_PERSISTENCE_FAILURE"
+                        if anomaly_category == "log_persistence_failure"
+                        else ("CAP_BREACH_BLOCKED" if anomaly_category == "CAP_BREACH_BLOCKED" else "CALLBACK_AMBIGUITY")
+                    ),
+                }
         lead_ids_this_run[lead_id] = terminal_state
         queued_at = datetime.now(DETROIT).isoformat()
         timestamp = queued_at
@@ -981,6 +1226,8 @@ class SalesAgent:
             "queue_status": queue_status,
             "log_write_status": log_status,
             "fail_safe_usage_status": summary.get("fail_safe_usage_status", "NOT_USED"),
+            "lead_id": lead_id,
+            "recommended_draft": recommended_draft,
         }
 
     def _emit_run_summary(self, summary: dict[str, Any]) -> None:
