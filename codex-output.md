@@ -1,21 +1,38 @@
-STEP 1 RESULT
-[state: LEAD CONFIRMED]
-[lead details if confirmed — business name only, no PII]
-The Detroit Shoppe
+WORKFLOW_DISPATCH REMOVAL
+[state: REMOVED]
+2bd0b57
 
-STEP 2 RESULT
-[state: FOUNDER STOP WAS INACTIVE]
+RUN LOG EXCERPT
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3991198Z 📨 Approval requested: 9196de96 (outreach → Shops On Top)
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3992021Z   🔍 _wait_for_callback() started — timeout=600s message_id=545
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3992693Z   🔍 poll loop tick — elapsed=0.0s
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3993229Z   🔍 process_updates() — updates=1
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3993860Z   🔍 cq_chat='***' vs chat='***' match=True
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3994670Z   📋 Founder review queue: Shops On Top → QUEUED_FOR_REVIEW (run_id=20260404_164527)
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3995475Z   📤 queue action complete: QUEUED_FOR_REVIEW
+sales-pipeline	Run sales pipeline	2026-04-04T20:46:09.3996728Z   🔍 Telegram send_telegram() called — token=SET chat=SET
 
-STEP 3 RESULT
-[state: WORKFLOW_DISPATCH ADDED]
-[commit hash]
-50b093e
+RUN SUMMARY
+{
+  "cap_status": "AT_CAP",
+  "fail_safe_usage_status": "NOT_USED",
+  "log_write_status": "WRITTEN",
+  "no_send_integrity": "VERIFIED",
+  "run_id": "20260404_164527",
+  "summary_integrity": "VERIFIED",
+  "total_candidates_seen": 34,
+  "total_errors": 0,
+  "total_filtered_out_chain": 1,
+  "total_filtered_out_corporate": 0,
+  "total_filtered_out_duplicate": 0,
+  "total_filtered_out_incomplete": 3,
+  "total_leads_evaluated_for_this_run": 7,
+  "total_queued": 3,
+  "total_skipped": 0,
+  "total_timeout_unresolved": 0,
+  "workflow_duration_seconds": 42.1
+}
+[state: GATE CLOSES]
 
-FOUNDER INSTRUCTIONS
-1. Open GitHub in `prosperouscollection-prog/ai-automation-portfolio`.
-2. Go to `Actions` and select `Sales Agent — Genesis AI Systems`.
-3. Click `Run workflow`, keep branch `main`, and start the manual run.
-4. Watch Telegram for the approval prompt from the Sales Agent.
-5. Reply `QUEUE` to queue the lead for founder review, or `SKIP` to pass it.
-6. After the reply, the workflow will record the terminal state, write the queue/log evidence, and emit the run summary without sending any outreach.
-7. After the run completes, remove `workflow_dispatch` from `sales_agent.yml` and capture the final log lines plus raw JSON summary.
+QUEUE ROW
+NOT PRESENT IN THIS RUN: The Detroit Shoppe did not appear in the completed run log or queue tab for run_id=20260404_164527.
