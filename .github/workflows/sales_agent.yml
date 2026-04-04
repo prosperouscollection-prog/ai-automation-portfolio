@@ -1,6 +1,5 @@
 name: Sales Agent — Genesis AI Systems
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 */6 * * *'
 
