@@ -560,7 +560,7 @@ class SalesAgent:
     def _wait_for_callback(
         self,
         message_id: int | None,
-        timeout_seconds: int = 600,
+        timeout_seconds: int = 60,
         poll_interval: int = 15,
     ) -> ApprovalStatus:
         """Poll getUpdates for SEND/SKIP as either callback_query or text reply.
