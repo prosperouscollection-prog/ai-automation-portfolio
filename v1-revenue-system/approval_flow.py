@@ -7,12 +7,12 @@ Not every external action requires approval. Routine automated handoffs
 without approval gates.
 
 HIGH-RISK CONTROL POINTS THAT REQUIRE APPROVAL:
-  - Outreach emails to leads (SEND/SKIP)
+  - Outreach review queue decisions (QUEUE/SKIP)
   - Deployment start after intake complete (DEPLOY/HOLD)
 
 AUTOMATED — NO APPROVAL REQUIRED:
   - Lead Generator finding leads
-  - Proposal send (auto-triggered after founder marks demo done)
+  - Proposal handoff (auto-triggered after founder marks demo done)
   - Payment → intake form trigger (Stripe webhook → n8n, fully automated)
   - Intake completion → HubSpot update (HoneyBook webhook → n8n)
   - QA runs (triggered by Deploy Agent, results reported via Telegram)
@@ -52,7 +52,7 @@ class ApprovalStatus(Enum):
 
 
 class ActionType(Enum):
-    OUTREACH = "outreach"   # Outreach email to a lead — requires SEND/SKIP
+    OUTREACH = "outreach"   # Outreach review queue — requires QUEUE/SKIP
     DEPLOY = "deploy"       # Client deployment start — requires DEPLOY/HOLD
 
 
@@ -81,7 +81,7 @@ class ApprovalFlow:
 
     # Reply keywords per action type
     APPROVE_KEYWORDS = {
-        ActionType.OUTREACH: ["send", "yes", "approve"],
+        ActionType.OUTREACH: ["queue", "yes", "approve"],
         ActionType.DEPLOY: ["deploy", "yes", "go"],
     }
     SKIP_KEYWORDS = ["skip", "no", "pass", "hold", "later"]
@@ -187,7 +187,7 @@ class ApprovalFlow:
         if preview:
             msg += f"\n<b>Preview:</b>\n<i>{preview[:300]}</i>\n"
         msg += (
-            f"\n<b>Reply {approve_word} to approve or SKIP to pass.</b>\n"
+            f"\n<b>Reply {approve_word} to queue for review or SKIP to pass.</b>\n"
             f"<code>ID: {request_id}</code>"
         )
 
@@ -271,7 +271,7 @@ class ApprovalFlow:
     def resolve_by_name(self, target_name: str, approve: bool) -> Optional[ApprovalRequest]:
         """Resolve a pending request by target name (for Telegram command handler).
 
-        Used by /send [name] and /skip [name] commands.
+        Used by /queue [name] and /skip [name] commands.
         """
         target_lower = target_name.lower()
         for req in self.pending.values():
@@ -304,7 +304,7 @@ def get_flow() -> ApprovalFlow:
 
 
 def request_outreach_approval(name: str, email: str, draft: str) -> ApprovalRequest:
-    """Request founder approval before sending outreach email to a lead."""
+    """Request founder approval before queuing outreach review for a lead."""
     return get_flow().request_approval(
         action_type=ActionType.OUTREACH,
         target_name=name,

@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """Sales Agent — Genesis AI Systems.
 
-Reads HOT leads from Google Sheets (Leads tab), uses owner_email from col P
-if Lead Generator already enriched it, falls back to Outscraper + Hunter only
-if col P is empty. Drafts personalized outreach via Claude Haiku using
-controlled variation (5 patterns per industry). Sends Telegram SEND/SKIP
-approval prompt. Delivers via Resend on approval. Logs to Outreach Log tab.
+Queued no-send autonomy mode.
 
-Approval gate: Trendell must reply SEND within 10 minutes. No email sends without it.
-Limit: 3 leads processed per run (regardless of send/skip/timeout outcome).
+Reads eligible HOT leads from Google Sheets, drafts personalized outreach via
+Claude Haiku using controlled variation, and sends a founder review prompt to
+Telegram. No email delivery is allowed in this workflow. Valid leads are queued
+for founder review, logged, and capped at 3 per run.
 """
 
 from __future__ import annotations
@@ -22,6 +20,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 from zoneinfo import ZoneInfo
 
 DETROIT = ZoneInfo("America/Detroit")
@@ -32,7 +31,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Shared notification helpers
-from notify import telegram_notify, resend_email
+from notify import telegram_notify
 from lead_generator_agent import CHAIN_EXCLUSION_KEYWORDS
 
 # Outreach approval gate
@@ -52,6 +51,49 @@ HUBSPOT_INDUSTRY_MAP = {
     "real_estate": "REAL_ESTATE",
     "retail": "RETAIL",
 }
+
+QUEUE_TAB_NAME = "Founder Review Queue"
+OUTREACH_LOG_TAB_NAME = "Outreach Log"
+FAILSAFE_TAB_NAME = "FAILSAFE_LOG"
+CAP_LIMIT = 3
+WORKFLOW_MODE = "QUEUED_NO_SEND_AUTONOMY"
+
+QUEUE_HEADERS = [
+    "run_id",
+    "queued_at",
+    "lead_id",
+    "business_name",
+    "owner_email",
+    "priority",
+    "reason_selected",
+    "recommended_draft",
+    "variant_metadata",
+    "pass_metadata",
+    "terminal_state",
+]
+
+OUTREACH_LOG_HEADERS = [
+    "run_id",
+    "timestamp",
+    "lead_id",
+    "business_name",
+    "filter_result",
+    "priority",
+    "queue_result",
+    "terminal_state",
+    "log_write_result",
+    "idempotency_key",
+]
+
+FAILSAFE_HEADERS = [
+    "run_id",
+    "timestamp",
+    "lead_id",
+    "business_name",
+    "failure_reason",
+    "serialized_payload",
+    "log_write_result",
+]
 
 # Sheets column indices (0-based) written by Lead Generator
 # A=date B=industry C=name D=primary_domain E=phone F=address
@@ -121,6 +163,8 @@ DEFAULT_OPENERS = [
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+PROJECT9_STATE_DIR = REPO_ROOT / "project9-sales-agent" / "state"
+DEFAULT_FOUNDERS_STOP_PATH = PROJECT9_STATE_DIR / "founder_stop.json"
 DEFAULT_PROJECT9_LAUNCH_STATE_PATH = (
     REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state.json"
 )
@@ -144,29 +188,35 @@ class Lead:
     score: str
     yelp_rating: str
     sheet_row: int
-    email: str = ""          # populated from col P if available, then by enrichment
-    email_source: str = ""   # "sheets" or "enrichment"
+    email: str = ""          # populated from col P if available
+    email_source: str = ""   # "sheets" when provided by the Lead Generator
+    lead_id: str = ""
 
 
 class SalesAgent:
-    """Reads HOT leads from Sheets, enriches email if needed, drafts via
-    Claude with variation, sends Telegram approval, delivers via Resend,
-    logs every outcome to Outreach Log tab. Max 3 leads per run."""
+    """Reads HOT leads from Sheets, drafts via Claude with variation, sends a
+    founder review prompt, and writes queue/log evidence. No live send path."""
 
     def __init__(self) -> None:
         self.hubspot_token = os.getenv("HUBSPOT_ACCESS_TOKEN", "").strip()
         self.sheet_id = os.getenv("GOOGLE_SHEET_ID", "").strip()
         self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
-        self.resend_key = os.getenv("RESEND_API_KEY", "").strip()
-        self.outscraper_key = os.getenv("OUTSCRAPER_API_KEY", "").strip()
-        self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", "").strip()
-        self.run_id = os.getenv("GITHUB_RUN_ID", f"local-{int(time.time())}")
+        self.run_id = os.getenv(
+            "PROJECT9_SALES_AGENT_RUN_ID",
+            datetime.now(DETROIT).strftime("%Y%m%d_%H%M%S"),
+        )
+        self.started_at = time.time()
+        self.no_send_invoked = False
+        self.workflow_mode = WORKFLOW_MODE
         self.launch_state_path = Path(
             os.getenv(
                 "PROJECT9_OUTBOUND_LAUNCH_STATE_PATH",
                 str(DEFAULT_PROJECT9_LAUNCH_STATE_PATH),
             )
+        )
+        self.founder_stop_path = Path(
+            os.getenv("PROJECT9_FOUNDER_STOP_PATH", str(DEFAULT_FOUNDERS_STOP_PATH))
         )
         self.first_10_event_feed_path = Path(
             os.getenv(
@@ -185,140 +235,141 @@ class SalesAgent:
     # ------------------------------------------------------------------
 
     def run(self) -> None:
-        self.resolve_launch_state()
+        summary = self._new_run_summary()
         self._ensure_first_10_event_feed()
-        leads = self.get_hot_leads_from_sheets()
-        if not leads:
-            print("ℹ️  No HOT leads with domain found in Sheets")
-            telegram_notify("Sales Agent", "No HOT leads with domain to process today.", "INFO")
+        if self._founder_stop_active():
+            timestamp = datetime.now(DETROIT).isoformat()
+            reason = self._founder_stop_reason()
+            print(
+                f"RUN_BLOCKED_BY_FOUNDER_STOP timestamp={timestamp} "
+                f"run_id={self.run_id} reason={reason}"
+            )
+            telegram_notify(
+                "Sales Agent blocked by founder stop",
+                f"RUN_BLOCKED_BY_FOUNDER_STOP\nrun_id={self.run_id}\ntimestamp={timestamp}\nreason={reason}",
+                "CRITICAL",
+            )
+            summary["cap_status"] = "UNDER_CAP"
+            summary["summary_integrity"] = "VERIFIED"
+            summary["no_send_integrity"] = "VERIFIED" if not self.no_send_invoked else "BREACH"
+            summary["workflow_duration_seconds"] = round(time.time() - self.started_at, 1)
+            summary.pop("leads_touched", None)
+            self._emit_run_summary(summary)
             return
 
-        print(f"📋 Found {len(leads)} HOT leads with domain — processing up to 3")
-        processed_count = 0  # counts every lead that enters the approval flow
-
-        for lead in leads:
-            if processed_count >= 3:
-                print("ℹ️  Reached 3-lead limit for this run")
-                break
-
-            lead_name = (lead.business or "").lower()
-            if any(kw in lead_name for kw in CHAIN_EXCLUSION_KEYWORDS) or re.search(r"\b(?:inc|llc|corp|holdings|enterprises)\b", lead_name):
-                print(f"  🚫 Chain filter blocked at send time: {lead.business}")
-                continue
-
-            # Deduplication: skip if already in Outreach Log
-            if self._already_outreached(lead.business):
-                print(f"  ⏭️  {lead.business} already in Outreach Log — skipping")
-                continue
-
-            # Use owner_email from Sheets (col P) if Lead Generator enriched it.
-            # Fall back to re-enrichment only if col P is empty.
-            if lead.email:
-                print(f"  ✉️  Using owner_email from Sheets for {lead.business}: {lead.email}")
-                lead.email_source = "sheets"
-            elif lead.domain:
-                lead.email = self._enrich_email(lead.domain)
-                lead.email_source = "enrichment"
-
-            if not lead.email:
-                print(f"  ℹ️  No email for {lead.business} — skipping")
-                continue
-
-            # Select draft variant (1–5) deterministically per business name
-            variant = (hash(lead.business) % 5) + 1
-
-            # Draft personalized email via Claude Haiku
-            try:
-                subject, body, pass_type = self._draft_email(lead, variant)
-            except Exception as exc:
-                print(f"  ⚠️  Draft failed for {lead.business}: {exc} — skipping")
-                continue
-
-            # Send Telegram approval prompt + attach inline buttons, then wait
-            req = self._flow.request_approval(
-                action_type=ActionType.OUTREACH,
-                target_name=lead.business,
-                target_email=lead.email,
-                preview=f"Subject: {subject}\n\n{body[:280]}",
+        leads = self.get_hot_leads_from_sheets()
+        summary["total_candidates_seen"] = len(leads)
+        if not leads:
+            print("ℹ️  No HOT leads with domain found in Sheets")
+            telegram_notify(
+                "Sales Agent",
+                f"No HOT leads with domain to process today.\nrun_id={self.run_id}",
+                "INFO",
             )
-            self._attach_approval_buttons(req.message_id)
-            status = self._wait_for_callback(req.message_id, timeout_seconds=600)
+            summary["cap_status"] = "UNDER_CAP"
+            summary["summary_integrity"] = "VERIFIED"
+            summary["no_send_integrity"] = "VERIFIED" if not self.no_send_invoked else "BREACH"
+            summary["workflow_duration_seconds"] = round(time.time() - self.started_at, 1)
+            summary.pop("leads_touched", None)
+            self._emit_run_summary(summary)
+            return
 
-            # Act on founder decision — full side effects before any UI response
-            if status == ApprovalStatus.APPROVED:
-                try:
-                    self._assert_outbound_launch_allowed(lead.business)
-                except RuntimeError as exc:
-                    log_status = "blocked_launch_state"
-                    print(f"  ⛔ Send blocked for {lead.business}: {exc}")
-                    self._log_outreach(
-                        lead.business,
-                        lead.email,
-                        subject,
-                        log_status,
-                        category=lead.industry,
-                        draft_variant=variant,
-                        pass_type=pass_type,
-                    )
-                    self._mark_notified(lead.sheet_row)
-                    print(f"  📋 Blocked lead logged and marked: {lead.business}")
-                    self._telegram_confirm(
-                        f"⛔ Send blocked for {lead.business}.\n\n"
-                        f"Reason: {exc}\n"
-                        f"Reply /leads to continue."
-                    )
-                    processed_count += 1
-                    continue
+        print(f"📋 Found {len(leads)} HOT leads with domain — processing up to {CAP_LIMIT}")
 
-                ok = resend_email(lead.email, subject, body, priority="MEDIUM")
-                log_status = "sent" if ok else "failed"
-                print(f"  {'✅' if ok else '⚠️ '} Resend {'sent' if ok else 'FAILED'}: {lead.business} ({lead.email})")
-                self._record_first_10_send_event(
-                    lead=lead,
-                    subject=subject,
-                    body=body,
-                    delivery_ok=ok,
+        queue_index = self._load_queue_index()
+        lead_ids_this_run: dict[str, str] = {}
+        try:
+            for lead in leads:
+                if summary["leads_touched"] >= CAP_LIMIT:
+                    summary["cap_status"] = "AT_CAP"
+                    print(f"ℹ️  Reached {CAP_LIMIT}-lead limit for this run")
+                    break
+
+                result = self._process_candidate(
+                    lead,
+                    summary=summary,
+                    queue_index=queue_index,
+                    lead_ids_this_run=lead_ids_this_run,
                 )
-            elif status == ApprovalStatus.SKIPPED:
-                log_status = "skipped"
-                print(f"  ⏭️  Skipped by founder: {lead.business}")
-            else:
-                log_status = "timeout"
-                print(f"  ⏰ No response in 10 minutes: {lead.business}")
 
-            # Side effects first: log row + notified flag
-            self._log_outreach(
-                lead.business, lead.email, subject, log_status,
-                category=lead.industry, draft_variant=variant, pass_type=pass_type,
-            )
-            self._mark_notified(lead.sheet_row)
-            print(f"  📤 approval action complete: {log_status}")
-
-            # Telegram confirmation only after all side effects finish
-            if status == ApprovalStatus.APPROVED:
-                if log_status == "sent":
-                    self._telegram_confirm(
-                        f"✅ Email sent to {lead.business} ({lead.email}).\n\n"
-                        f"Reply /leads for today's pipeline or /pipeline for deal status."
+                if result.get("halt_run"):
+                    summary["log_write_status"] = result.get("log_write_status", summary["log_write_status"])
+                    summary["fail_safe_usage_status"] = result.get(
+                        "fail_safe_usage_status",
+                        summary["fail_safe_usage_status"],
                     )
+                    if result.get("selected"):
+                        summary["leads_touched"] += 1
+                        terminal_state = result["terminal_state"]
+                        summary_key = {
+                            "QUEUED_FOR_REVIEW": "total_queued",
+                            "SKIPPED": "total_skipped",
+                            "TIMEOUT_UNRESOLVED": "total_timeout_unresolved",
+                            "ERROR_RETRY_LOGGED": "total_errors",
+                        }.get(terminal_state)
+                        if summary_key is not None:
+                            summary[summary_key] += 1
+                    if result.get("halt_reason") == "CAP_BREACH_BLOCKED":
+                        summary["cap_status"] = "CAP_BREACH_BLOCKED"
+                    break
+
+                summary["log_write_status"] = result.get("log_write_status", summary["log_write_status"])
+                summary["fail_safe_usage_status"] = result.get(
+                    "fail_safe_usage_status",
+                    summary["fail_safe_usage_status"],
+                )
+                if result.get("selected"):
+                    summary["leads_touched"] += 1
+                    terminal_state = result["terminal_state"]
+                    summary_key = {
+                        "QUEUED_FOR_REVIEW": "total_queued",
+                        "SKIPPED": "total_skipped",
+                        "TIMEOUT_UNRESOLVED": "total_timeout_unresolved",
+                        "ERROR_RETRY_LOGGED": "total_errors",
+                    }.get(terminal_state)
+                    if summary_key is not None:
+                        summary[summary_key] += 1
                 else:
-                    self._telegram_confirm(
-                        f"⚠️ Email FAILED for {lead.business}. Resend error. "
-                        f"Reply /leads to continue."
-                    )
-            elif status == ApprovalStatus.SKIPPED:
-                self._telegram_confirm(
-                    f"⏭️ Skipped {lead.business}. No email sent.\n\n"
-                    f"Reply /leads for today's pipeline or /pipeline for deal status."
-                )
-            else:
-                self._telegram_confirm(
-                    f"⏰ No response for {lead.business} after 10 minutes. Email not sent, logged as timeout."
-                )
+                    if result.get("filter_summary_key"):
+                        summary["total_leads_evaluated_for_this_run"] += 1
+                    summary_key = result.get("filter_summary_key")
+                    if summary_key is not None:
+                        summary[summary_key] += 1
 
-            processed_count += 1  # increment for every lead that completed the flow
+                if result.get("terminal_state") == "CAP_BREACH_BLOCKED":
+                    summary["cap_status"] = "CAP_BREACH_BLOCKED"
+                    break
 
-        print(f"✅ Sales Agent complete — {processed_count} lead(s) processed this run")
+        except RuntimeError as exc:
+            summary["cap_status"] = "CAP_BREACH_BLOCKED" if "CAP_BREACH_BLOCKED" in str(exc) else summary["cap_status"]
+            print(f"⛔ {exc}")
+            telegram_notify(
+                "Sales Agent halted",
+                f"{exc}\nrun_id={self.run_id}",
+                "CRITICAL",
+            )
+
+        total_terminal_states_assigned = (
+            summary["total_queued"]
+            + summary["total_filtered_out_chain"]
+            + summary["total_filtered_out_corporate"]
+            + summary["total_filtered_out_duplicate"]
+            + summary["total_filtered_out_incomplete"]
+            + summary["total_skipped"]
+            + summary["total_timeout_unresolved"]
+            + summary["total_errors"]
+        )
+        summary["summary_integrity"] = (
+            "VERIFIED"
+            if total_terminal_states_assigned == summary["total_leads_evaluated_for_this_run"]
+            else "SUMMARY_INTEGRITY_FAIL"
+        )
+        summary["no_send_integrity"] = "VERIFIED" if not self.no_send_invoked else "BREACH"
+        summary["workflow_duration_seconds"] = round(time.time() - self.started_at, 1)
+        if summary["cap_status"] == "UNDER_CAP" and summary["leads_touched"] >= CAP_LIMIT:
+            summary["cap_status"] = "AT_CAP"
+        summary.pop("leads_touched", None)
+        self._emit_run_summary(summary)
 
     # ------------------------------------------------------------------
     # TELEGRAM CONFIRMATION
@@ -360,6 +411,582 @@ class SalesAgent:
     def _hash_text(value: str) -> str:
         return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
+    def _new_run_summary(self) -> dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "leads_touched": 0,
+            "total_candidates_seen": 0,
+            "total_leads_evaluated_for_this_run": 0,
+            "total_filtered_out_chain": 0,
+            "total_filtered_out_corporate": 0,
+            "total_filtered_out_duplicate": 0,
+            "total_filtered_out_incomplete": 0,
+            "total_queued": 0,
+            "total_skipped": 0,
+            "total_timeout_unresolved": 0,
+            "total_errors": 0,
+            "cap_status": "UNDER_CAP",
+            "log_write_status": "ALL_WRITTEN",
+            "fail_safe_usage_status": "NOT_USED",
+            "no_send_integrity": "VERIFIED",
+            "summary_integrity": "VERIFIED",
+            "workflow_duration_seconds": 0.0,
+        }
+
+    def _load_founder_stop_payload(self) -> dict[str, Any] | None:
+        env_flag = os.getenv("PROJECT9_FOUNDER_STOP_ACTIVE", "").strip().lower()
+        if env_flag in {"1", "true", "yes", "on"}:
+            return {
+                "stop_active": True,
+                "reason": os.getenv("PROJECT9_FOUNDER_STOP_REASON", "founder stop active"),
+                "source": "environment",
+            }
+        if not self.founder_stop_path.exists():
+            return None
+        try:
+            payload = json.loads(self.founder_stop_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {
+                "stop_active": True,
+                "reason": f"invalid founder stop file: {exc}",
+                "source": str(self.founder_stop_path),
+            }
+        if isinstance(payload, dict) and bool(payload.get("stop_active")):
+            return payload
+        return None
+
+    def _founder_stop_active(self) -> bool:
+        return self._load_founder_stop_payload() is not None
+
+    def _founder_stop_reason(self) -> str:
+        payload = self._load_founder_stop_payload() or {}
+        reason = str(payload.get("reason", "")).strip()
+        return reason or "founder stop active"
+
+    def _get_sheets_service(self):
+        if self._sheets_service is not None:
+            return self._sheets_service
+        if not self.sheet_id or not self.service_account_json:
+            raise RuntimeError("Sheets not configured")
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+
+        creds = service_account.Credentials.from_service_account_info(
+            json.loads(self.service_account_json),
+            scopes=["https://www.googleapis.com/auth/spreadsheets"],
+        )
+        self._sheets_service = build("sheets", "v4", credentials=creds)
+        return self._sheets_service
+
+    def _worksheet_exists(self, worksheet_name: str) -> bool:
+        service = self._get_sheets_service()
+        meta = service.spreadsheets().get(spreadsheetId=self.sheet_id).execute()
+        for sheet in meta.get("sheets", []):
+            props = sheet.get("properties", {})
+            if props.get("title") == worksheet_name:
+                return True
+        return False
+
+    def _ensure_worksheet(self, worksheet_name: str, headers: list[str]) -> None:
+        service = self._get_sheets_service()
+        if self._worksheet_exists(worksheet_name):
+            return
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=self.sheet_id,
+            body={
+                "requests": [
+                    {
+                        "addSheet": {
+                            "properties": {
+                                "title": worksheet_name,
+                                "gridProperties": {
+                                    "rowCount": 1000,
+                                    "columnCount": max(20, len(headers) + 2),
+                                },
+                            }
+                        }
+                    }
+                ]
+            },
+        ).execute()
+        service.spreadsheets().values().update(
+            spreadsheetId=self.sheet_id,
+            range=f"{worksheet_name}!A1",
+            valueInputOption="RAW",
+            body={"values": [headers]},
+        ).execute()
+
+    def _append_row(self, worksheet_name: str, row: list[str]) -> None:
+        service = self._get_sheets_service()
+        service.spreadsheets().values().append(
+            spreadsheetId=self.sheet_id,
+            range=f"{worksheet_name}!A1",
+            valueInputOption="RAW",
+            insertDataOption="INSERT_ROWS",
+            body={"values": [row]},
+        ).execute()
+
+    def _read_rows(self, worksheet_name: str, range_spec: str) -> list[list[str]]:
+        service = self._get_sheets_service()
+        result = service.spreadsheets().values().get(
+            spreadsheetId=self.sheet_id,
+            range=range_spec,
+        ).execute()
+        return result.get("values", [])
+
+    def _load_queue_index(self) -> set[str]:
+        if not self.sheet_id:
+            return set()
+        try:
+            rows = self._read_rows(QUEUE_TAB_NAME, f"{QUEUE_TAB_NAME}!C2:C")
+        except Exception:
+            return set()
+        return {str(row[0]).strip() for row in rows if row and str(row[0]).strip()}
+
+    def _outreach_log_has_key(self, idempotency_key: str) -> bool:
+        if not self.sheet_id:
+            return False
+        try:
+            rows = self._read_rows(OUTREACH_LOG_TAB_NAME, f"{OUTREACH_LOG_TAB_NAME}!J2:J")
+        except Exception:
+            return False
+        return any(row and str(row[0]).strip() == idempotency_key for row in rows)
+
+    def _build_lead_id(self, lead: Lead) -> str:
+        source = "|".join(
+            [
+                (lead.business or "").strip().lower(),
+                (lead.domain or "").strip().lower(),
+                (lead.email or "").strip().lower(),
+                (lead.phone or "").strip(),
+            ]
+        )
+        return f"lead-{self._hash_text(source)[:12]}"
+
+    def _is_chain_filtered(self, lead_name: str) -> bool:
+        return bool(
+            any(kw in lead_name for kw in CHAIN_EXCLUSION_KEYWORDS)
+            or re.search(r"\b(?:inc|llc|corp|holdings|enterprises)\b", lead_name)
+        )
+
+    def _is_corporate_filtered(self, lead_name: str) -> bool:
+        return bool(re.search(r"\b(?:inc|llc|corp|holdings|enterprises)\b", lead_name))
+
+    def _is_non_smb_filtered(self, lead: Lead) -> bool:
+        lead_name = (lead.business or "").lower()
+        return bool(
+            re.search(r"\b(?:corporate|headquarters|franchise|enterprise|national|regional)\b", lead_name)
+        )
+
+    def _is_incomplete(self, lead: Lead) -> bool:
+        return not all(
+            [
+                (lead.business or "").strip(),
+                (lead.email or "").strip(),
+                (lead.phone or "").strip(),
+            ]
+        )
+
+    def _assign_priority(self, lead: Lead) -> str:
+        industry = (lead.industry or "").strip().lower()
+        if industry in {"restaurant", "dental", "hvac"}:
+            return "HIGH"
+        if industry in {"salon", "real_estate"}:
+            return "MEDIUM"
+        return "LOW"
+
+    def _build_reason_selected(self, lead: Lead, priority: str, pass_type: str) -> str:
+        return (
+            f"{lead.business} passed suppression filters and is ready for founder review "
+            f"(priority={priority}, pass={pass_type})"
+        )
+
+    def _serialize_payload(self, payload: dict[str, Any]) -> str:
+        return json.dumps(payload, sort_keys=True, ensure_ascii=False)
+
+    def _sheet_write_with_retry(self, worksheet_name: str, row: list[str]) -> None:
+        delays = (2, 4, 8)
+        last_exc: Exception | None = None
+        for attempt, delay in enumerate(delays, start=1):
+            try:
+                self._append_row(worksheet_name, row)
+                return
+            except Exception as exc:
+                last_exc = exc
+                print(f"  ⚠️  {worksheet_name} write failed (attempt {attempt}/3): {exc}")
+                if attempt < len(delays):
+                    time.sleep(delay)
+        raise RuntimeError(f"{worksheet_name} write failed after 3 attempts: {last_exc}")
+
+    def _alert_with_payload(self, subject: str, payload: dict[str, Any], priority: str = "CRITICAL") -> bool:
+        text = self._serialize_payload(payload)
+        return telegram_notify(subject, text, priority)
+
+    def _persist_with_failsafe(
+        self,
+        *,
+        worksheet_name: str,
+        headers: list[str],
+        row: list[str],
+        failsafe_payload: dict[str, Any],
+        summary: dict[str, Any],
+    ) -> str:
+        self._ensure_worksheet(worksheet_name, headers)
+        try:
+            self._sheet_write_with_retry(worksheet_name, row)
+            return "WRITTEN"
+        except Exception as primary_exc:
+            print(f"  ⚠️  {worksheet_name} primary write failed: {primary_exc}")
+            if worksheet_name == FAILSAFE_TAB_NAME:
+                if self._alert_with_payload(
+                    f"{worksheet_name} unreachable",
+                    failsafe_payload,
+                    "CRITICAL",
+                ):
+                    summary["fail_safe_usage_status"] = "USED"
+                    return "FAILSAFE_USED"
+                summary["fail_safe_usage_status"] = "FAILED"
+                summary["log_write_status"] = "PERSISTENCE_FAILURE"
+                raise RuntimeError("LOG_PERSISTENCE_FAILURE") from primary_exc
+
+            failsafe_row = [
+                str(failsafe_payload.get("run_id", self.run_id)),
+                str(failsafe_payload.get("timestamp", datetime.now(DETROIT).isoformat())),
+                str(failsafe_payload.get("lead_id", "")),
+                str(failsafe_payload.get("business_name", "")),
+                str(failsafe_payload.get("failure_reason", "")),
+                self._serialize_payload(failsafe_payload),
+                "FAILSAFE_WRITTEN",
+            ]
+            failsafe_status = self._persist_with_failsafe(
+                worksheet_name=FAILSAFE_TAB_NAME,
+                headers=FAILSAFE_HEADERS,
+                row=failsafe_row,
+                failsafe_payload=failsafe_payload,
+                summary=summary,
+            )
+            if failsafe_status in {"WRITTEN", "FAILSAFE_USED"}:
+                summary["fail_safe_usage_status"] = "USED"
+                return "FAILSAFE_USED"
+
+            if self._alert_with_payload(
+                f"{worksheet_name} fail-safe fallback",
+                failsafe_payload,
+                "CRITICAL",
+            ):
+                summary["fail_safe_usage_status"] = "USED"
+                return "FAILSAFE_USED"
+
+            summary["fail_safe_usage_status"] = "FAILED"
+            summary["log_write_status"] = "PERSISTENCE_FAILURE"
+            raise RuntimeError("LOG_PERSISTENCE_FAILURE") from primary_exc
+
+    def _queue_entry_exists(self, lead_id: str) -> list[tuple[str, str]]:
+        if not self.sheet_id:
+            return []
+        try:
+            rows = self._read_rows(QUEUE_TAB_NAME, f"{QUEUE_TAB_NAME}!C2:K")
+        except Exception:
+            return []
+        existing: list[tuple[str, str]] = []
+        for row in rows:
+            if len(row) < 9:
+                continue
+            if str(row[0]).strip() == lead_id:
+                existing.append((str(row[1]).strip(), str(row[8]).strip()))
+        return existing
+
+    def _process_candidate(
+        self,
+        lead: Lead,
+        *,
+        summary: dict[str, Any],
+        queue_index: set[str],
+        lead_ids_this_run: dict[str, str],
+    ) -> dict[str, Any]:
+        lead_name = (lead.business or "").strip().lower()
+        lead_id = self._build_lead_id(lead)
+        lead.lead_id = lead_id
+
+        if self._is_incomplete(lead):
+            return {
+                "selected": False,
+                "filter_summary_key": "total_filtered_out_incomplete",
+                "terminal_state": "FILTERED_OUT_INCOMPLETE",
+                "lead_id": lead_id,
+            }
+        if self._is_chain_filtered(lead_name):
+            return {
+                "selected": False,
+                "filter_summary_key": "total_filtered_out_chain",
+                "terminal_state": "FILTERED_OUT_CHAIN",
+                "lead_id": lead_id,
+            }
+        if self._is_corporate_filtered(lead_name) or self._is_non_smb_filtered(lead):
+            return {
+                "selected": False,
+                "filter_summary_key": "total_filtered_out_corporate",
+                "terminal_state": "FILTERED_OUT_CORPORATE",
+                "lead_id": lead_id,
+            }
+        if lead_id in queue_index:
+            return {
+                "selected": False,
+                "filter_summary_key": "total_filtered_out_duplicate",
+                "terminal_state": "FILTERED_OUT_DUPLICATE",
+                "lead_id": lead_id,
+            }
+
+        if lead_id in lead_ids_this_run and lead_ids_this_run[lead_id] != "QUEUED_FOR_REVIEW":
+            print(
+                f"⛔ QUEUE_CORRUPTION_DETECTED lead_id={lead_id} "
+                f"run_id={self.run_id} previous_state={lead_ids_this_run[lead_id]}"
+            )
+            telegram_notify(
+                "Sales Agent queue corruption",
+                f"QUEUE_CORRUPTION_DETECTED\nrun_id={self.run_id}\nlead_id={lead_id}\nbusiness={lead.business}",
+                "CRITICAL",
+            )
+            summary["total_leads_evaluated_for_this_run"] += 1
+            lead_ids_this_run[lead_id] = "ERROR_RETRY_LOGGED"
+            return {
+                "selected": True,
+                "terminal_state": "ERROR_RETRY_LOGGED",
+                "queue_result": "ERROR_RETRY_LOGGED",
+                "priority": self._assign_priority(lead),
+                "reason_selected": self._build_reason_selected(lead, self._assign_priority(lead), "first_pass"),
+                "queue_status": "PERSISTENCE_FAILURE",
+                "log_write_status": "PERSISTENCE_FAILURE",
+                "fail_safe_usage_status": summary.get("fail_safe_usage_status", "NOT_USED"),
+                "halt_run": True,
+                "halt_reason": "QUEUE_CORRUPTION_DETECTED",
+            }
+
+        if len(lead_ids_this_run) >= CAP_LIMIT:
+            print(
+                f"⛔ CAP_BREACH_BLOCKED run_id={self.run_id} lead_id={lead_id} business={lead.business}"
+            )
+            telegram_notify(
+                "Sales Agent cap breach blocked",
+                f"CAP_BREACH_BLOCKED\nrun_id={self.run_id}\nlead_id={lead_id}\nbusiness={lead.business}",
+                "CRITICAL",
+            )
+            return {
+                "selected": False,
+                "terminal_state": "CAP_BREACH_BLOCKED",
+                "halt_run": True,
+                "halt_reason": "CAP_BREACH_BLOCKED",
+                "lead_id": lead_id,
+            }
+
+        if summary["leads_touched"] >= CAP_LIMIT:
+            print(
+                f"⛔ CAP_BREACH_BLOCKED run_id={self.run_id} lead_id={lead_id} business={lead.business}"
+            )
+            telegram_notify(
+                "Sales Agent cap breach blocked",
+                f"CAP_BREACH_BLOCKED\nrun_id={self.run_id}\nlead_id={lead_id}\nbusiness={lead.business}",
+                "CRITICAL",
+            )
+            return {
+                "selected": False,
+                "terminal_state": "CAP_BREACH_BLOCKED",
+                "halt_run": True,
+                "halt_reason": "CAP_BREACH_BLOCKED",
+                "lead_id": lead_id,
+            }
+
+        summary["total_leads_evaluated_for_this_run"] += 1
+
+        queue_index.add(lead_id)
+        lead_ids_this_run[lead_id] = "PROCESSING"
+        variant = (hash(lead.business) % 5) + 1
+        priority = self._assign_priority(lead)
+        try:
+            subject, body, pass_type = self._draft_email(lead, variant)
+            recommended_draft = self._serialize_payload(
+                {
+                    "subject": subject,
+                    "body": body,
+                    "variant": variant,
+                    "pass_type": pass_type,
+                }
+            )
+            reason_selected = self._build_reason_selected(lead, priority, pass_type)
+            request = self._flow.request_approval(
+                action_type=ActionType.OUTREACH,
+                target_name=lead.business,
+                target_email=lead.email,
+                preview=f"Subject: {subject}\n\n{body[:280]}",
+            )
+            if not request.message_id:
+                raise RuntimeError("approval prompt missing message_id")
+            self._attach_approval_buttons(request.message_id)
+            status = self._wait_for_callback(request.message_id, timeout_seconds=600)
+            if status == ApprovalStatus.APPROVED:
+                terminal_state = "QUEUED_FOR_REVIEW"
+                queue_result = "QUEUED_FOR_REVIEW"
+                confirmation = f"🗂️ Queued for review: {lead.business}. No email was sent."
+            elif status == ApprovalStatus.SKIPPED:
+                terminal_state = "SKIPPED"
+                queue_result = "SKIPPED"
+                confirmation = f"⏭️ Skipped by founder: {lead.business}. No email was sent."
+            elif status == ApprovalStatus.EXPIRED:
+                terminal_state = "TIMEOUT_UNRESOLVED"
+                queue_result = "TIMEOUT_UNRESOLVED"
+                confirmation = f"⏰ No response for {lead.business}; marked TIMEOUT_UNRESOLVED."
+            else:
+                raise RuntimeError(f"unresolved callback ambiguity: {status}")
+        except Exception as exc:
+            terminal_state = "ERROR_RETRY_LOGGED"
+            queue_result = "ERROR_RETRY_LOGGED"
+            reason_selected = reason_selected if "reason_selected" in locals() else self._build_reason_selected(lead, priority, "first_pass")
+            recommended_draft = recommended_draft if "recommended_draft" in locals() else self._serialize_payload(
+                {
+                    "subject": f"Quick question about {lead.business}",
+                    "body": f"Draft unavailable: {exc}",
+                    "variant": variant,
+                    "pass_type": "first_pass",
+                }
+            )
+            confirmation = f"⚠️ Error logged for {lead.business}: {exc}"
+            if "QUEUE_CORRUPTION_DETECTED" in str(exc):
+                raise
+        lead_ids_this_run[lead_id] = terminal_state
+        queued_at = datetime.now(DETROIT).isoformat()
+        timestamp = queued_at
+        variant_metadata = self._serialize_payload(
+            {
+                "variant": variant,
+                "industry": lead.industry,
+                "lead_id": lead_id,
+            }
+        )
+        pass_metadata = self._serialize_payload(
+            {
+                "pass_type": locals().get("pass_type", "first_pass"),
+                "lead_id": lead_id,
+            }
+        )
+        queue_row = [
+            self.run_id,
+            queued_at,
+            lead_id,
+            lead.business,
+            lead.email,
+            priority,
+            reason_selected,
+            recommended_draft,
+            variant_metadata,
+            pass_metadata,
+            terminal_state,
+        ]
+        log_row = [
+            self.run_id,
+            timestamp,
+            lead_id,
+            lead.business,
+            "PASSED_SUPPRESSION_FILTERS",
+            priority,
+            queue_result,
+            terminal_state,
+            "WRITTEN",
+            f"{lead_id}{self.run_id}{terminal_state}",
+        ]
+        try:
+            queue_status = self._persist_with_failsafe(
+                worksheet_name=QUEUE_TAB_NAME,
+                headers=QUEUE_HEADERS,
+                row=queue_row,
+                failsafe_payload={
+                    "run_id": self.run_id,
+                    "timestamp": timestamp,
+                    "lead_id": lead_id,
+                    "business_name": lead.business,
+                    "failure_reason": f"queue persistence failed for terminal_state={terminal_state}",
+                    "serialized_payload": self._serialize_payload(
+                        {
+                            "queue_row": queue_row,
+                            "terminal_state": terminal_state,
+                            "reason_selected": reason_selected,
+                        }
+                    ),
+                },
+                summary=summary,
+            )
+            log_idempotency_key = f"{lead_id}{self.run_id}{terminal_state}"
+            if self._outreach_log_has_key(log_idempotency_key):
+                print(
+                    f"  DUPLICATE_WRITE_BLOCKED lead_id={lead_id} run_id={self.run_id} "
+                    f"terminal_state={terminal_state}"
+                )
+                log_status = "DUPLICATE_WRITE_BLOCKED"
+            else:
+                log_status = self._persist_with_failsafe(
+                    worksheet_name=OUTREACH_LOG_TAB_NAME,
+                    headers=OUTREACH_LOG_HEADERS,
+                    row=log_row,
+                    failsafe_payload={
+                        "run_id": self.run_id,
+                        "timestamp": timestamp,
+                        "lead_id": lead_id,
+                        "business_name": lead.business,
+                        "failure_reason": f"outreach log persistence failed for terminal_state={terminal_state}",
+                        "serialized_payload": self._serialize_payload(
+                            {
+                                "log_row": log_row,
+                                "terminal_state": terminal_state,
+                                "queue_result": queue_result,
+                            }
+                        ),
+                    },
+                    summary=summary,
+                )
+        except RuntimeError as exc:
+            terminal_state = "ERROR_RETRY_LOGGED"
+            queue_result = "ERROR_RETRY_LOGGED"
+            queue_status = "PERSISTENCE_FAILURE"
+            log_status = "PERSISTENCE_FAILURE"
+            confirmation = f"⚠️ Error logged for {lead.business}: {exc}"
+            lead_ids_this_run[lead_id] = terminal_state
+            self._telegram_confirm(confirmation)
+            return {
+                "selected": True,
+                "terminal_state": terminal_state,
+                "queue_result": queue_result,
+                "priority": priority,
+                "reason_selected": reason_selected,
+                "queue_status": queue_status,
+                "log_write_status": log_status,
+                "fail_safe_usage_status": summary.get("fail_safe_usage_status", "NOT_USED"),
+                "halt_run": True,
+                "halt_reason": "LOG_PERSISTENCE_FAILURE",
+            }
+
+        if queue_status == "FAILSAFE_USED" or log_status == "FAILSAFE_USED":
+            summary["log_write_status"] = "FAILSAFE_USED"
+            summary["fail_safe_usage_status"] = "USED"
+        elif queue_status == "WRITTEN" and log_status == "WRITTEN":
+            summary["log_write_status"] = "ALL_WRITTEN"
+        self._mark_notified(lead.sheet_row)
+        print(f"  📋 Founder review queue: {lead.business} → {terminal_state} (run_id={self.run_id})")
+        print(f"  📤 queue action complete: {queue_result}")
+        self._telegram_confirm(confirmation)
+        return {
+            "selected": True,
+            "terminal_state": terminal_state,
+            "queue_result": queue_result,
+            "priority": priority,
+            "reason_selected": reason_selected,
+            "queue_status": queue_status,
+            "log_write_status": log_status,
+            "fail_safe_usage_status": summary.get("fail_safe_usage_status", "NOT_USED"),
+        }
+
+    def _emit_run_summary(self, summary: dict[str, Any]) -> None:
+        print("RUN SUMMARY:")
+        print(json.dumps(summary, indent=2, sort_keys=True))
+
     def _record_first_10_send_event(
         self,
         *,
@@ -382,7 +1009,7 @@ class SalesAgent:
         ) + (1 if delivery_ok else 0)
         attempt_number = len(existing_records) + 1
         provider_message_id = (
-            f"resend-{self.run_id}-{attempt_number}-{self._hash_text(lead.email.lower())[:12]}"
+            f"queue-{self.run_id}-{attempt_number}-{self._hash_text(lead.email.lower())[:12]}"
             if delivery_ok
             else None
         )
@@ -535,7 +1162,7 @@ class SalesAgent:
             pass
 
     def _attach_approval_buttons(self, message_id: int | None) -> None:
-        """Edit the approval message to add inline SEND / SKIP buttons.
+        """Edit the approval message to add inline QUEUE / SKIP buttons.
 
         This lets the founder tap a button instead of typing a reply.
         The callback_query from the button is what _wait_for_callback detects.
@@ -554,7 +1181,7 @@ class SalesAgent:
                     "message_id": message_id,
                     "reply_markup": {
                         "inline_keyboard": [[
-                            {"text": "✅ SEND", "callback_data": "send"},
+                            {"text": "🗂️ QUEUE", "callback_data": "queue"},
                             {"text": "⏭️ SKIP", "callback_data": "skip"},
                         ]]
                     },
@@ -570,7 +1197,7 @@ class SalesAgent:
         timeout_seconds: int = 60,
         poll_interval: int = 3,
     ) -> ApprovalStatus:
-        """Poll getUpdates for SEND/SKIP as either callback_query or text reply.
+        """Poll getUpdates for QUEUE/SKIP as either callback_query or text reply.
 
         Answers the callback_query immediately so the Telegram spinner clears
         and the action branch runs before the Command Center can respond.
@@ -610,7 +1237,7 @@ class SalesAgent:
                             )
                         except Exception:
                             pass
-                        if any(kw in data for kw in ("send", "yes", "approve")):
+                        if any(kw in data for kw in ("queue", "yes", "approve")):
                             return ApprovalStatus.APPROVED
                         if any(kw in data for kw in ("skip", "no", "pass")):
                             return ApprovalStatus.SKIPPED
@@ -620,7 +1247,7 @@ class SalesAgent:
                 if msg and str(msg.get("chat", {}).get("id", "")) == chat:
                     if message_id and msg.get("message_id", 0) > message_id:
                         text = msg.get("text", "").strip().lower()
-                        if any(kw in text for kw in ("send", "yes", "approve")):
+                        if any(kw in text for kw in ("queue", "yes", "approve")):
                             return ApprovalStatus.APPROVED
                         if any(kw in text for kw in ("skip", "no", "pass")):
                             return ApprovalStatus.SKIPPED
@@ -672,7 +1299,8 @@ class SalesAgent:
         """Read HOT leads with a domain from the Leads tab.
 
         Reads through col P (owner_email). If col P is populated by the Lead
-        Generator, no re-enrichment is needed. If empty, Sales Agent enriches.
+        Generator, the row is eligible for founder review. Missing owner_email
+        rows are rejected later by the incomplete-record filter.
         """
         if not self.sheet_id or not self.service_account_json:
             print("⚠️  Sheets not configured — no leads to process")
@@ -708,7 +1336,7 @@ class SalesAgent:
                     continue
                 # Read owner_email from col P if Lead Generator populated it
                 owner_email = row[COL["owner_email"]].strip() if len(row) > COL["owner_email"] else ""
-                leads.append(Lead(
+                lead = Lead(
                     business=row[COL["name"]].strip() if len(row) > COL["name"] else "Local Business",
                     domain=domain,
                     phone=row[COL["phone"]] if len(row) > COL["phone"] else "",
@@ -718,7 +1346,9 @@ class SalesAgent:
                     yelp_rating=row[COL["yelp_rating"]] if len(row) > COL["yelp_rating"] else "",
                     sheet_row=i + 2,
                     email=owner_email,
-                ))
+                )
+                lead.lead_id = self._build_lead_id(lead)
+                leads.append(lead)
             sheets_email_count = sum(1 for l in leads if l.email)
             print(
                 f"✅ Read {len(leads)} HOT leads with domain from Sheets "
