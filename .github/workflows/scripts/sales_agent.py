@@ -582,6 +582,7 @@ class SalesAgent:
             nonlocal last_update_id
             if not resp.ok:
                 return None
+            print(f"  🔍 process_updates() — updates={len(resp.json().get('result', []))}")
             for update in resp.json().get("result", []):
                 last_update_id = max(last_update_id, update.get("update_id", 0))
 
@@ -589,6 +590,7 @@ class SalesAgent:
                 cq = update.get("callback_query", {})
                 if cq:
                     cq_chat = str(cq.get("message", {}).get("chat", {}).get("id", ""))
+                    print(f"  🔍 cq_chat='{cq_chat}' vs chat='{chat}' match={cq_chat == chat}")
                     if cq_chat == chat:
                         data = cq.get("data", "").strip().lower()
                         # Answer immediately to clear Telegram spinner
