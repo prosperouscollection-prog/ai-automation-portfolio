@@ -27,6 +27,7 @@ jobs:
           pip install requests python-dotenv google-auth google-api-python-client anthropic -q
           cd .github/workflows/scripts
           python3 sales_agent.py
+          find . -name "founder_morning_digest_*.md" 2>/dev/null || echo "NO DIGEST FILE FOUND"
       - name: Upload First-10 Send Feed
         if: always()
         uses: actions/upload-artifact@v4
