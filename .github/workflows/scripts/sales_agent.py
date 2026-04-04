@@ -575,6 +575,7 @@ class SalesAgent:
             return ApprovalStatus.EXPIRED
 
         start = time.time()
+        print(f"  🔍 _wait_for_callback() started — timeout={timeout_seconds}s message_id={message_id}")
         last_update_id = 0
 
         def process_updates(resp: requests.Response) -> ApprovalStatus | None:
@@ -617,6 +618,7 @@ class SalesAgent:
             return None
 
         while time.time() - start < timeout_seconds:
+            print(f"  🔍 poll loop tick — elapsed={time.time()-start:.1f}s")
             try:
                 params = {
                     "timeout": 5,
@@ -650,6 +652,7 @@ class SalesAgent:
         except Exception as exc:
             print(f"  ⚠️  getUpdates error: {exc}")
 
+        print(f"  🔍 _wait_for_callback() returning EXPIRED — elapsed={time.time()-start:.1f}s")
         return ApprovalStatus.EXPIRED
 
     # ------------------------------------------------------------------
