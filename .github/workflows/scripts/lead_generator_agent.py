@@ -421,6 +421,7 @@ class LeadGeneratorAgent:
                     p.get("recommended_product", ""),
                     p.get("yelp_url", ""),
                     p.get("outreach_email", ""),
+                    "",                   # col O: placeholder
                     p.get("email", ""),   # col P: owner_email — enriched contact address
                 ])
             service.spreadsheets().values().append(
