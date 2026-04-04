@@ -561,7 +561,7 @@ class SalesAgent:
         self,
         message_id: int | None,
         timeout_seconds: int = 60,
-        poll_interval: int = 15,
+        poll_interval: int = 3,
     ) -> ApprovalStatus:
         """Poll getUpdates for SEND/SKIP as either callback_query or text reply.
 
@@ -620,7 +620,7 @@ class SalesAgent:
             try:
                 params = {
                     "timeout": 5,
-                    "offset": last_update_id + 1 if last_update_id else -20,
+                    "offset": last_update_id + 1 if last_update_id else 0,
                 }
                 resp = requests.get(
                     f"https://api.telegram.org/bot{token}/getUpdates",
