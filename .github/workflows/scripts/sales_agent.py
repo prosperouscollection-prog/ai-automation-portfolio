@@ -576,6 +576,46 @@ class SalesAgent:
 
         start = time.time()
         last_update_id = 0
+
+        def process_updates(resp: requests.Response) -> ApprovalStatus | None:
+            nonlocal last_update_id
+            if not resp.ok:
+                return None
+            for update in resp.json().get("result", []):
+                last_update_id = max(last_update_id, update.get("update_id", 0))
+
+                # --- inline keyboard callback_query (primary path) ---
+                cq = update.get("callback_query", {})
+                if cq:
+                    cq_chat = str(cq.get("message", {}).get("chat", {}).get("id", ""))
+                    if cq_chat == chat:
+                        data = cq.get("data", "").strip().lower()
+                        # Answer immediately to clear Telegram spinner
+                        # before the action branch runs
+                        try:
+                            requests.post(
+                                f"https://api.telegram.org/bot{token}/answerCallbackQuery",
+                                json={"callback_query_id": cq.get("id", "")},
+                                timeout=5,
+                            )
+                        except Exception:
+                            pass
+                        if any(kw in data for kw in ("send", "yes", "approve")):
+                            return ApprovalStatus.APPROVED
+                        if any(kw in data for kw in ("skip", "no", "pass")):
+                            return ApprovalStatus.SKIPPED
+
+                # --- plain text reply (fallback) ---
+                msg = update.get("message", {})
+                if msg and str(msg.get("chat", {}).get("id", "")) == chat:
+                    if message_id and msg.get("message_id", 0) > message_id:
+                        text = msg.get("text", "").strip().lower()
+                        if any(kw in text for kw in ("send", "yes", "approve")):
+                            return ApprovalStatus.APPROVED
+                        if any(kw in text for kw in ("skip", "no", "pass")):
+                            return ApprovalStatus.SKIPPED
+            return None
+
         while time.time() - start < timeout_seconds:
             try:
                 params = {
@@ -587,44 +627,28 @@ class SalesAgent:
                     params=params,
                     timeout=20,
                 )
-                if resp.ok:
-                    for update in resp.json().get("result", []):
-                        last_update_id = max(last_update_id, update.get("update_id", 0))
-
-                        # --- inline keyboard callback_query (primary path) ---
-                        cq = update.get("callback_query", {})
-                        if cq:
-                            cq_chat = str(cq.get("message", {}).get("chat", {}).get("id", ""))
-                            if cq_chat == chat:
-                                data = cq.get("data", "").strip().lower()
-                                # Answer immediately to clear Telegram spinner
-                                # before the action branch runs
-                                try:
-                                    requests.post(
-                                        f"https://api.telegram.org/bot{token}/answerCallbackQuery",
-                                        json={"callback_query_id": cq.get("id", "")},
-                                        timeout=5,
-                                    )
-                                except Exception:
-                                    pass
-                                if any(kw in data for kw in ("send", "yes", "approve")):
-                                    return ApprovalStatus.APPROVED
-                                if any(kw in data for kw in ("skip", "no", "pass")):
-                                    return ApprovalStatus.SKIPPED
-
-                        # --- plain text reply (fallback) ---
-                        msg = update.get("message", {})
-                        if msg and str(msg.get("chat", {}).get("id", "")) == chat:
-                            if message_id and msg.get("message_id", 0) > message_id:
-                                text = msg.get("text", "").strip().lower()
-                                if any(kw in text for kw in ("send", "yes", "approve")):
-                                    return ApprovalStatus.APPROVED
-                                if any(kw in text for kw in ("skip", "no", "pass")):
-                                    return ApprovalStatus.SKIPPED
+                status = process_updates(resp)
+                if status is not None:
+                    return status
             except Exception as exc:
                 print(f"  ⚠️  getUpdates error: {exc}")
 
             time.sleep(poll_interval)
+
+        try:
+            resp = requests.get(
+                f"https://api.telegram.org/bot{token}/getUpdates",
+                params={
+                    "timeout": 5,
+                    "offset": last_update_id + 1 if last_update_id else -20,
+                },
+                timeout=20,
+            )
+            status = process_updates(resp)
+            if status is not None:
+                return status
+        except Exception as exc:
+            print(f"  ⚠️  getUpdates error: {exc}")
 
         return ApprovalStatus.EXPIRED
 
@@ -732,20 +756,29 @@ class SalesAgent:
             print("  ⚠️  Cannot log outreach — Sheets not connected")
             return
         timestamp = datetime.now(DETROIT).strftime("%Y-%m-%d %H:%M:%S %Z")
-        try:
-            self._sheets_service.spreadsheets().values().append(
-                spreadsheetId=self.sheet_id,
-                range="Outreach Log!A1",
-                valueInputOption="RAW",
-                insertDataOption="INSERT_ROWS",
-                body={"values": [[
-                    timestamp, business_name, email, subject, status,
-                    self.run_id, category, str(draft_variant), pass_type,
-                ]]},
-            ).execute()
-            print(f"  📋 Outreach Log: {business_name} → {status} (variant {draft_variant}, {pass_type})")
-        except Exception as e:
-            print(f"  ⚠️  Outreach Log write failed: {e}")
+        delays = (2, 4, 8)
+        last_exc: Exception | None = None
+        for attempt, delay in enumerate(delays, start=1):
+            try:
+                self._sheets_service.spreadsheets().values().append(
+                    spreadsheetId=self.sheet_id,
+                    range="Outreach Log!A1",
+                    valueInputOption="RAW",
+                    insertDataOption="INSERT_ROWS",
+                    body={"values": [[
+                        timestamp, business_name, email, subject, status,
+                        self.run_id, category, str(draft_variant), pass_type,
+                    ]]},
+                ).execute()
+                print(f"  📋 Outreach Log: {business_name} → {status} (variant {draft_variant}, {pass_type})")
+                return
+            except Exception as exc:
+                last_exc = exc
+                print(f"  ⚠️  Outreach Log write failed (attempt {attempt}/3): {exc}")
+                if attempt < len(delays):
+                    time.sleep(delay)
+
+        raise RuntimeError(f"Outreach Log write failed after 3 attempts: {last_exc}")
 
     def _mark_notified(self, sheet_row: int) -> None:
         """Write Y to column O of the given Leads row."""

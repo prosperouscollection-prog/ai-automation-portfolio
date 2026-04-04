@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -25,6 +26,43 @@ INDUSTRIES_SCHEDULE = {
     5: {"industry": "retail", "keywords": ["boutique", "shop", "store", "retail"], "yelp_categories": "shopping"},
     6: {"industry": "mixed", "keywords": ["local business", "small business"], "yelp_categories": "localservices"},
 }
+
+CHAIN_EXCLUSION_KEYWORDS = [
+    "mcdonald",
+    "subway",
+    "starbucks",
+    "walmart",
+    "target",
+    "cvs",
+    "walgreens",
+    "autozone",
+    "jiffy lube",
+    "great clips",
+    "supercuts",
+    "domino",
+    "pizza hut",
+    "little caesar",
+    "jersey mike",
+    "firehouse",
+    "anytime fitness",
+    "planet fitness",
+    "h&r block",
+    "h&m",
+    "zara",
+    "forever 21",
+    "old navy",
+    "gap",
+    "tj maxx",
+    "marshalls",
+    "ross",
+    "burlington",
+    "the ups store",
+    "ace hardware",
+    "7-eleven",
+    "dollar general",
+    "family dollar",
+    "five guys",
+]
 
 
 class LeadGeneratorAgent:
@@ -291,6 +329,13 @@ class LeadGeneratorAgent:
     def score_prospects(self, prospects: list[dict]) -> list[dict]:
         scored = []
         for prospect in prospects:
+            name = (prospect.get("name", "") or "").lower()
+            if any(keyword in name for keyword in CHAIN_EXCLUSION_KEYWORDS) or re.search(r"\b(?:inc|llc|corp|holdings|enterprises)\b", name):
+                prospect["score"] = 0
+                prospect["reason"] = "Corporate chain or entity excluded"
+                prospect["recommended_product"] = ""
+                scored.append(prospect)
+                continue
             reviews = prospect.get("yelp_reviews", 0) or 0
             rating = prospect.get("yelp_rating", 0) or 0
             employees = prospect.get("estimated_num_employees", 0) or 0
