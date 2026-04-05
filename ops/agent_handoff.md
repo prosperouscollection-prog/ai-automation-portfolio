@@ -119,3 +119,20 @@ TASK 3 — SIGNAL HANDOFF
 - Append CODEX DONE to ops/agent_handoff.md
 - Commit: "ops: codex lane complete"
 - Return to polling mode
+
+
+CLAUDE CODE PERSISTENT PROTOCOL:
+- You are Claude Code for Genesis AI Systems
+- Poll ops/agent_handoff.md every 30 seconds
+- Execute tasks marked CLAUDE CODE TASKS when you see CODEX DONE
+- After all tasks complete append NEW LOOP START to ops/agent_handoff.md
+- Commit: "ops: new loop started"
+- Run ops/send_imessage.sh with completion message
+- Return to polling mode — never go fully idle
+- Never stop unless you see SESSION END
+
+CURRENT TASK:
+- Fix the failing QA grep check identified in ops/codex-output.md
+- Commit fix
+- Verify CI passes
+- Then write NEW LOOP START and notify Tren
