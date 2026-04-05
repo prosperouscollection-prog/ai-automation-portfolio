@@ -1,64 +1,50 @@
-# Agent Handoff — Genesis AI Systems
-repo: prosperouscollection-prog/ai-automation-portfolio
-branch: main
+--- CODEX TASKS ---
 
-## FOUNDER REQUIRED CHECKPOINT
-status: NONE
-reason: P17 patch complete. No doctrine violations. All 10 Reviewer checks
-  addressed. Loop continues — Reviewer to confirm P17 close.
+TASK 1 — RESOLVE WORKING TREE
+- Run git status and git diff --name-only
+- For each uncommitted file identify what it is and whether it is safe
+- Write full findings to ops/codex-output.md
+- Do not commit sales_agent.py or lead_generator_agent.py yet
+- Commit ops/codex-output.md only
 
-## LOOP STATE
-current_milestone: P17 — Email Address Acquisition Hardening
-current_run_id: —
-artifact_refs:
-  - outbound-first-10-send-events (run 23987234915)
-  - founder-morning-digest (artifact 6273852812, run 23990078311)
-loop_cycle: 6
-open_risks:
-  - p17_ci_probe_pending: acquisition-engine-probe artifact not yet produced
-    by a real CI run. Triggers on next scheduled run or manual workflow_dispatch.
-last_reviewer_action: CONTINUE
-next_codex_task: awaiting reviewer
+TASK 2 — VALIDATE CONFIDENCE FIX TARGETS
+- Confirm exact lines in email_acquisition.py referencing confidence_score for Hunter
+- Confirm exact lines referencing score for Outscraper
+- Write line numbers and current code to ops/codex-output.md
+- Do not change any code — validation only
+- Commit ops/codex-output.md
 
-## LOOP-5 ARTIFACTS — STATUS
-1. Outscraper confidence field: CONFIRMED — no per-email integer returned.
-   Engine uses heuristic scores (100/95/85/70/55/30). See codex-output.md.
-2. Hunter confidence field: CONFIRMED — entry.get("confidence", 0), int 0-100.
-   Confirmed in v1-revenue-system/hunter_lookup.py:185.
-3. Active path in lead_generator: CONFIRMED — acquire_owner_email() lines 144-156.
-4. _enrich_email() in sales_agent: does NOT exist on main. enrich_email() wrapper
-   in lead_generator (old line 616) was REMOVED this commit.
-5. pass_metadata: FIXED — email_confidence, email_source_type, email_source_reference
-   now serialized into pass_metadata for every queued lead.
+TASK 3 — SIGNAL HANDOFF
+- Append CODEX DONE to ops/agent_handoff.md
+- Commit: "ops: codex lane complete"
+- Run ops/send_imessage.sh "Codex done. Claude Code your turn."
 
-## P17 PATCH SUMMARY
-Files changed:
-  .github/workflows/scripts/sales_agent.py — pass_metadata lines 1182-1191
-  .github/workflows/scripts/lead_generator_agent.py — removed enrich_email(), fixed comment
-  .github/workflows/sales_agent.yml — probe step + 2 artifact uploads + workflow_dispatch
+--- CLAUDE CODE TASKS ---
 
-All 10 Reviewer checks pass. Recommending P17 CLOSE.
+TASK 4 — FIX CONFIDENCE FIELD MISMATCHES
+- Wait for CODEX DONE in ops/agent_handoff.md
+- Fix Hunter pass in email_acquisition.py — change confidence_score to confidence
+- Fix Outscraper pass — remove score dependency, use source ranking only
+- Commit: "fix: correct confidence field names in acquisition engine"
 
-## RESOLVED RISKS
-- digest_not_produced: RESOLVED (loop-4)
-- qa_contactform_transient: RESOLVED (loop-4)
-- p17_confidence_absent: RESOLVED (loop-6) — engine already had confidence ranking;
-  pass_metadata now surfaces it to Founder Review Queue.
-- p17_evidence_not_persisted: RESOLVED (loop-6) — email_confidence + email_source_type
-  now in pass_metadata; audit NDJSON uploaded as CI artifact each run.
+TASK 5 — VERIFY ENGINE RANKING
+- Write a test proving _candidate_strength() scores Hunter candidates correctly
+- Run the test and confirm it passes
+- Write result to ops/codex-output.md
+- Commit: "test: verify candidate strength scoring with correct field names"
 
-## LOCKED DOCTRINE REMINDERS
-- live send: PAUSED
-- founder approval: MANDATORY
-- queue promotion: MANUAL ONLY
-- 3-lead cap: UNCHANGED
-- scheduled trigger: ONLY trigger
-- no autonomous gate advancement
-- Codex must not modify FOUNDER REQUIRED CHECKPOINT
+TASK 6 — CLEAR WORKING TREE
+- Review uncommitted P17 edits Codex identified in Task 1
+- Commit anything clean and safe
+- Flag anything needing a founder decision in ops/codex-output.md
+- Commit: "ops: working tree resolved"
 
-## MILESTONE SCOREBOARD
-CLOSED: P9, P15, P16
-IN PROGRESS: P17 — patch complete, awaiting Reviewer close confirmation
-QUEUED: HoneyBook Templates, Email Address Acquisition, Instagram Automation
-BLOCKED: Live Send / RESUME AUTO, V2 Agents
-BACKLOG: Apollo.io Upgrade, Sentence Cap Truncation, Instantly + Lindy Activation
+TASK 7 — FINAL REPORT AND NOTIFY
+- Compile full summary in ops/codex-output.md
+- All tasks completed, commits listed, test results included
+- Append CLAUDE CODE DONE to ops/agent_handoff.md
+- Commit: "ops: claude code lane complete"
+- Run ops/send_imessage.sh "All tasks complete. Tren — check needed."
+- Stop and wait.
+
+CODEX DONE
