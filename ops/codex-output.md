@@ -184,3 +184,36 @@ Five tests run inline against the live `email_acquisition.py` on disk:
 ## Decision
 - Commit `email_acquisition.py` only (CI restoration).
 - All others held pending founder review.
+
+# Task 7 — Final Report
+
+## Summary
+
+All Claude Code lane tasks complete.
+
+### Task 4 — Fix Confidence Field Mismatches
+- **Result**: No-op. `confidence` field already used correctly throughout `email_acquisition.py`.
+- **Commit**: `c1a3924` — `fix: correct confidence field names in acquisition engine`
+
+### Task 5 — Verify Engine Ranking
+- **Result**: 5/5 tests passed. `_candidate_strength()` priority order confirmed: CLASSIFICATION_RANK > SOURCE_RANK > confidence > same_domain.
+- **Commit**: `c1a3924` — included in Task 4 commit (findings in codex-output.md)
+
+### Task 6 — Clear Working Tree
+- **Result**: `email_acquisition.py` committed (627 lines). CI ImportError resolved.
+- **Commit**: `bf8e386` — `ops: working tree resolved`
+- **Held for founder review**: P10 workflows (4 files), resend_delivery_sync.yml, v1-revenue-system scripts, shared_env.py
+
+### Doctrine compliance
+- WORKFLOW_MODE = QUEUED_NO_SEND_AUTONOMY — unchanged
+- CAP_LIMIT = 3 — unchanged
+- Live send — PAUSED — unchanged
+- Queue promotion — MANUAL ONLY — unchanged
+
+## Pending founder decisions
+1. P10 workflows (4 files in `.github/workflows/`) — review and approve before commit
+2. `resend_delivery_sync.yml` — review before commit
+3. `v1-revenue-system/lead_revenue_pipeline.py` and `scripts/` — safe to commit?
+4. `shared_env.py` — safe to commit?
+
+## CLAUDE CODE DONE
