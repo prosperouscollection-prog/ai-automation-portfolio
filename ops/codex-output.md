@@ -295,6 +295,57 @@ Evidence summary:
 - Remote branch still exists.
 - The remaining diffs are all in the rejected categories above, so the safest Governor action is archive-first preservation, then branch deletion after the archive tag is confirmed.
 
+## Pre-Pilot Schema And State Audit
+
+### 1) SHEETS_HEADERS constant from `v1-revenue-system/lead_revenue_pipeline.py`
+Current expected column order:
+```python
+SHEETS_HEADERS = [
+    "date/timestamp",
+    "source",
+    "business name",
+    "domain",
+    "owner_email",
+    "phone",
+    "address",
+    "score",
+    "qualification status",
+    "outreach subject",
+    "outreach body",
+    "variant ID",
+    "pipeline stage",
+    "next action",
+    "last updated",
+]
+```
+
+### 2) Qualification filter logic in `v1-revenue-system/scripts/run_prospect_pilot.py`
+Exact qualification filter lines:
+```python
+    for row in rows[1:]:
+        record = _row_to_record(headers, row)
+        if _is_internal_row(record):
+            continue
+        if _normalize_text(record.get("qualification status")).lower() != "qualified":
+            continue
+        if not _normalize_text(record.get("owner_email")):
+            continue
+        fingerprint = _lead_fingerprint(record)
+```
+
+### 3) Current state of `project9-sales-agent/state/`
+Current file inventory and sizes:
+- `email_acquisition_audit.ndjson` - `2420 bytes`
+- `outbound_dedup_hash_log.ndjson` - `0 bytes`
+- `outbound_first_10_send_events.ndjson` - `0 bytes`
+- `outbound_launch_state.json` - `332 bytes`
+- `suppression_list.ndjson` - `0 bytes`
+
+State audit note:
+- The state directory currently contains 5 files.
+- Three files are empty runtime logs/state.
+- `outbound_launch_state.json` is the only non-empty JSON state file in this directory.
+
 ---
 
 ## Resend Webhook Receiver Audit — 2026-04-05
