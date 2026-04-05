@@ -28,6 +28,12 @@ jobs:
           cd .github/workflows/scripts
           python3 sales_agent.py
           find . -name "founder_morning_digest_*.md" 2>/dev/null || echo "NO DIGEST FILE FOUND"
+      - name: Assert acquisition engine passes 2-6 reachable
+        if: always()
+        run: |
+          pip install requests -q
+          cd .github/workflows/scripts
+          python3 test_acquisition_passes.py
       - name: Probe acquisition engine passes 2-6
         if: always()
         run: |
