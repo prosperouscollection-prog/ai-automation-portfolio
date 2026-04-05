@@ -1684,61 +1684,6 @@ class SalesAgent:
             print(f"⚠️  _mark_notified failed for row {sheet_row}: {e}")
 
     # ------------------------------------------------------------------
-    # EMAIL ENRICHMENT — fallback only (Lead Generator is primary owner)
-    # ------------------------------------------------------------------
-
-    def _enrich_email(self, domain: str) -> str:
-        """Return first valid email address for domain.
-
-        Called only when owner_email is not in Sheets col P.
-        Outscraper primary, Hunter fallback.
-        """
-        if self.outscraper_key:
-            try:
-                resp = requests.get(
-                    "https://api.app.outscraper.com/emails-and-contacts",
-                    headers={"X-API-KEY": self.outscraper_key},
-                    params={"query": domain, "async": "false"},
-                    timeout=30,
-                )
-                if resp.ok:
-                    raw = resp.json().get("data", [])
-                    records = raw[0] if raw and isinstance(raw[0], list) else raw
-                    if records and isinstance(records, list):
-                        emails = records[0].get("emails", []) or []
-                        for entry in emails:
-                            val = entry.get("value", "") if isinstance(entry, dict) else entry
-                            if val and "@" in str(val):
-                                print(f"  📧 Outscraper fallback → {domain}: {val}")
-                                return str(val)
-                    print(f"  ℹ️  Outscraper: no email for {domain}")
-                else:
-                    print(f"  ⚠️  Outscraper {resp.status_code} for {domain}")
-            except Exception as exc:
-                print(f"  ⚠️  Outscraper exception for {domain}: {exc}")
-
-        if self.hunter_key:
-            try:
-                resp = requests.get(
-                    "https://api.hunter.io/v2/domain-search",
-                    params={"domain": domain, "api_key": self.hunter_key, "limit": 5},
-                    timeout=15,
-                )
-                if resp.ok:
-                    emails = resp.json().get("data", {}).get("emails", [])
-                    if emails:
-                        val = emails[0].get("value", "")
-                        if val:
-                            print(f"  📧 Hunter fallback → {domain}: {val}")
-                            return val
-                    print(f"  ℹ️  Hunter: no email for {domain}")
-            except Exception as exc:
-                print(f"  ⚠️  Hunter exception for {domain}: {exc}")
-
-        print(f"  ❌ No email found for {domain}")
-        return ""
-
-    # ------------------------------------------------------------------
     # DRAFT — Claude Haiku with controlled variation + quality check
     # ------------------------------------------------------------------
 
