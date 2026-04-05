@@ -130,3 +130,23 @@ Schema notes:
 - `source`: required provenance for the entry.
 - `email` and `domain` can both be present when one record needs to block both the mailbox and its domain.
 - No code was changed in this task.
+
+## Task 3 — Calendly / HubSpot Wiring Audit
+
+What exists:
+- Calendly booking links are wired into the public site config and responses. See `assets/site-config.js:24-27` and `demo-server/server.js:988-993`.
+- Calendly webhook registration exists in `v1-revenue-system/register_webhooks.py:4-10` and `:50-80`. It registers `invitee.created` to `https://n8n.genesisai.systems/webhook/calendly-booked`.
+- HubSpot CRM is wired in the demo server via a real API client and contact write path. See `demo-server/server.js:152-178`.
+- HubSpot deal-stage orchestration exists in `v1-revenue-system/hubspot_pipeline.py:1-90` and `:123-195`. It owns stage IDs, custom properties, deal creation, and stage moves.
+- The secrets inventory already declares the relevant credentials: `SECRETS_REGISTRY.md:14-20`.
+
+What is missing:
+- No Calendly event consumer exists in the main app code path. I found registration setup, but not a handler that ingests booked-event payloads into the product flow.
+- No persistent Calendly booking store or booking-to-lead sync path was found outside the registration script.
+- No app/server route for `calendly-booked` exists in the repo snapshot I searched.
+- HubSpot wiring is real, but I did not find a matching end-to-end test that proves the contact write path or deal pipeline transitions.
+- The public site and demo server expose Calendly as a CTA, but they do not show any booking-state reconciliation back into HubSpot.
+
+Bottom line:
+- Calendly support is currently presentation-layer plus webhook registration only.
+- HubSpot support is the stronger integration here, with direct API usage and a dedicated pipeline manager, but the repo still lacks a proven closed loop from booking or lead capture into the CRM workflow.
