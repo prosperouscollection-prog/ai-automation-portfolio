@@ -208,3 +208,89 @@ Commit: `9143a97` — `test: verify suppression list blocks suppressed leads`
 
 ### Calendly/HubSpot
 Audit only — no implementation. Gap documented above. Flagged for founder decision.
+
+## Lucid-Blackwell Closure Evidence
+
+### Item 1 — Cherry-Picked Commit List
+`git log main --oneline | grep -i "extract"` returned:
+- `1960a6c` `ops: doctrine verification after extraction`
+- `59ab728` `extract: H.O.O.K. copy and phrase hygiene from lucid-blackwell`
+- `2480b03` `extract: homepage copy improvements from lucid-blackwell`
+- `5a44852` `ops: lucid-blackwell safe extraction candidates`
+- `14ca135` `loop-5: P17 review — FAIL, confidence extraction absent`
+
+### Item 2 — Rejected Diff Categories
+`git diff main..claude/lucid-blackwell --name-only` returned 30 files. Primary rejected category by file:
+- `.github/workflows/outbound_dry_run_guard.yml` -> Outbound control-plane deletions
+- `.github/workflows/outbound_first_10_monitor.yml` -> Outbound control-plane deletions
+- `.github/workflows/outbound_launch_state_transition.yml` -> Outbound control-plane deletions
+- `.github/workflows/outbound_resume_gate.yml` -> Outbound control-plane deletions
+- `.github/workflows/qa_agent.yml` -> Auto-send CLAUDE_CODE_START doctrine rewrite
+- `.github/workflows/sales_agent.yml` -> Resend auto-send path
+- `.github/workflows/scripts/email_acquisition.py` -> Resend auto-send path
+- `.github/workflows/scripts/lead_generator_agent.py` -> Resend auto-send path
+- `.github/workflows/scripts/sales_agent.py` -> Resend auto-send path
+- `.github/workflows/scripts/test_acquisition_passes.py` -> Resend auto-send path
+- `CLAUDE_CODE_START.md` -> Auto-send CLAUDE_CODE_START doctrine rewrite
+- `codex-output.md` -> Outbound control-plane deletions
+- `index.html` -> Auto-send CLAUDE_CODE_START doctrine rewrite
+- `ops/REVIEWER_ROLE.md` -> Outbound control-plane deletions
+- `ops/agent_handoff.md` -> Outbound control-plane deletions
+- `ops/codex-output.md` -> Outbound control-plane deletions
+- `ops/codex_loop.sh` -> Outbound control-plane deletions
+- `ops/send_imessage.sh` -> Outbound control-plane deletions
+- `project9-sales-agent/scripts/outbound_dry_run_guard.py` -> Outbound control-plane deletions
+- `project9-sales-agent/scripts/outbound_first_10_monitor.py` -> Outbound control-plane deletions
+- `project9-sales-agent/scripts/outbound_launch_state_transition.py` -> Outbound control-plane deletions
+- `project9-sales-agent/scripts/outbound_resume_gate.py` -> Outbound control-plane deletions
+- `project9-sales-agent/scripts/resend_delivery_sync.py` -> Outbound control-plane deletions
+- `project9-sales-agent/state/outbound_launch_state.json` -> Outbound control-plane deletions
+- `shared_env.py` -> Outbound control-plane deletions
+- `v1-revenue-system/approval_flow.py` -> ApprovalFlow removal
+- `v1-revenue-system/scripts/audit_genesis_env.py` -> Outbound control-plane deletions
+- `v1-revenue-system/scripts/run_founder_inbox_verification.py` -> Outbound control-plane deletions
+- `v1-revenue-system/scripts/run_v1_release_gate.py` -> Outbound control-plane deletions
+- `v1-revenue-system/tests/test_sales_agent_p18.py` -> SEND/SKIP corridor rewrite
+
+### Item 3 — Mainline Doctrine Checksum
+Ran on `main`:
+```text
+grep "WORKFLOW_MODE" .github/workflows/scripts/sales_agent.py
+WORKFLOW_MODE = "QUEUED_NO_SEND_AUTONOMY"
+        self.workflow_mode = WORKFLOW_MODE
+
+grep "CAP_LIMIT" .github/workflows/scripts/sales_agent.py
+CAP_LIMIT = 3
+        print(f"📋 Found {len(leads)} HOT leads with domain — processing up to {CAP_LIMIT}")
+                if summary["leads_touched"] >= CAP_LIMIT:
+                    print(f"ℹ️  Reached {CAP_LIMIT}-lead limit for this run")
+        if summary["cap_status"] == "UNDER_CAP" and summary["leads_touched"] >= CAP_LIMIT:
+        if len(lead_ids_this_run) >= CAP_LIMIT:
+        if summary["leads_touched"] >= CAP_LIMIT:
+
+grep "QUEUE\|SKIP" .github/workflows/scripts/sales_agent.py | head -5
+QUEUE_TAB_NAME = "Founder Review Queue"
+WORKFLOW_MODE = "QUEUED_NO_SEND_AUTONOMY"
+QUEUE_HEADERS = [
+                            "QUEUED_FOR_REVIEW": "total_queued",
+                            "SKIPPED": "total_skipped",
+
+grep "live send" .github/workflows/scripts/sales_agent.py | head -3
+                "- live send still paused",
+```
+Expected values confirmed:
+- `WORKFLOW_MODE` present.
+- `CAP_LIMIT` present.
+- `QUEUE` and `SKIP` references present.
+- `live send` reference present.
+
+### Item 4 — Branch Disposition
+Remote branch check:
+- `git branch -r | grep lucid-blackwell` -> `origin/claude/lucid-blackwell`
+
+Disposition recommendation:
+- `Archive branch (create archive tag, delete branch)`
+
+Evidence summary:
+- Remote branch still exists.
+- The remaining diffs are all in the rejected categories above, so the safest Governor action is archive-first preservation, then branch deletion after the archive tag is confirmed.
