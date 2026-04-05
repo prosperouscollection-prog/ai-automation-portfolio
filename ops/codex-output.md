@@ -95,3 +95,38 @@ Findings by untracked path:
 Notes:
 - `sales_agent.py` and `lead_generator_agent.py` are not present in the current untracked set, so there is nothing to withhold for them in this tree snapshot.
 - The only clearly unsafe file at the root is `.env.local`; the rest are either source/docs that need intent review or generated state that should stay out of commits.
+
+## Task 2 — Suppression List Audit
+
+File check:
+- `project9-sales-agent/state/suppression_list.ndjson` is empty. No suppression records are currently present.
+
+Repo contract check:
+- The only live writer I found is `project9-sales-agent/scripts/resend_delivery_sync.py`, and it currently appends a different payload shape:
+  - `recipient_hash`
+  - `status`
+  - `reason`
+  - `resend_id`
+  - `recorded_at`
+  - `source`
+- That means the repo does not yet have a canonical email/domain suppression schema wired into the current writer.
+
+Requested suppression record schema for this loop:
+```json
+{
+  "email": "lead@example.com",
+  "domain": "example.com",
+  "reason": "opt_out|skip|bounce|complaint|manual_review",
+  "date_added": "2026-04-05T00:00:00Z",
+  "source": "sales_agent|lead_generator_agent|resend_delivery_sync|manual"
+}
+```
+
+Schema notes:
+- `email`: required when the suppression entry is lead-specific.
+- `domain`: required when the suppression entry is domain-wide.
+- `reason`: required and should be the operator or system reason for the suppression.
+- `date_added`: required ISO-8601 timestamp.
+- `source`: required provenance for the entry.
+- `email` and `domain` can both be present when one record needs to block both the mailbox and its domain.
+- No code was changed in this task.
