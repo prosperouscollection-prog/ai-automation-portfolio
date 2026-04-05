@@ -283,6 +283,7 @@ class SalesAgent:
         self.email_audit_path = PROJECT9_STATE_DIR / "email_acquisition_audit.ndjson"
         self._sheets_service = None
         self._flow = ApprovalFlow()
+        self._last_update_id: int = 0
 
     # ------------------------------------------------------------------
     # MAIN ENTRY POINT
@@ -1550,7 +1551,7 @@ class SalesAgent:
 
         start = time.time()
         print(f"  🔍 _wait_for_callback() started — timeout={timeout_seconds}s message_id={message_id}")
-        last_update_id = 0
+        last_update_id = self._last_update_id
 
         def process_updates(resp: requests.Response) -> ApprovalStatus | None:
             nonlocal last_update_id
@@ -1559,6 +1560,7 @@ class SalesAgent:
             print(f"  🔍 process_updates() — updates={len(resp.json().get('result', []))}")
             for update in resp.json().get("result", []):
                 last_update_id = max(last_update_id, update.get("update_id", 0))
+                self._last_update_id = last_update_id
 
                 # --- inline keyboard callback_query (primary path) ---
                 cq = update.get("callback_query", {})
@@ -1566,6 +1568,9 @@ class SalesAgent:
                     cq_chat = str(cq.get("message", {}).get("chat", {}).get("id", ""))
                     print(f"  🔍 cq_chat='{cq_chat}' vs chat='{chat}' match={cq_chat == chat}")
                     if cq_chat == chat:
+                        cq_msg_id = cq.get("message", {}).get("message_id")
+                        if cq_msg_id != message_id:
+                            continue  # not for this lead's prompt — skip
                         data = cq.get("data", "").strip().lower()
                         # Answer immediately to clear Telegram spinner
                         # before the action branch runs
