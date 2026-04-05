@@ -128,58 +128,76 @@ COL = {
 
 # Five opening styles per category — variant = hash(business) % 5
 # Each entry is a brief instruction for how to open the email.
-VARIANT_OPENERS: dict[str, list[str]] = {
+HOOK_VARIANTS: dict[str, list[str]] = {
     "restaurant": [
         "Open with a question about what happens when someone tries to book a table during a busy service and nobody picks up the phone.",
         "Open with a quick observation: most Detroit restaurants lose reservations they never knew they missed.",
-        "Open with a short, specific scenario — someone drives by, decides to call ahead for a table, gets no answer, and goes somewhere else.",
-        "Open direct: tell them what you do in one sentence, then connect it to one problem restaurants specifically deal with.",
-        "Open with a blunt question about whether they have someone covering the phone during rush hours.",
+        "Open with a short scenario — someone drives by, decides to call ahead for a table, gets no answer, and goes somewhere else.",
     ],
     "dental": [
         "Open with a question about what happens when a patient calls to book an appointment after the office closes.",
-        "Open with a short scenario: a new patient searches for a dentist, calls after hours, nobody answers, they call the next one on the list.",
-        "Open direct: one sentence on what you do, then tie it to the specific problem dental offices have with after-hours calls.",
         "Open with an observation about how dental offices lose new patients not because of their work but because of missed calls.",
-        "Open with a question about whether the front desk can realistically catch every incoming call on a busy day.",
+        "Open with a short scenario: a new patient searches for a dentist, calls after hours, nobody answers, they call the next one on the list.",
     ],
     "hvac": [
         "Open with a question about what happens when an emergency call comes in late on a Friday night.",
         "Open with a blunt observation: HVAC contractors miss jobs because they miss calls, not because they lack skill.",
         "Open with a short scenario — a homeowner's heat goes out at 10pm, they call three companies, the first one to respond gets the job.",
-        "Open direct: one sentence on what you do, then connect it to the specific timing problem HVAC work has.",
-        "Open with a question about how many after-hours calls they catch versus how many go to voicemail.",
     ],
     "salon": [
         "Open with a question about how many booking calls they miss when they're in the middle of a cut.",
         "Open with a short observation: most salons still take bookings by phone, which means every unanswered call is a missed appointment.",
         "Open with a scenario — someone tries to book on a Saturday afternoon, calls go unanswered, they book at another salon.",
-        "Open direct: one sentence on what you do, then connect it to the booking problem salons deal with.",
-        "Open with a question about whether clients ever show up for appointments they thought they booked but didn't confirm.",
     ],
     "real_estate": [
         "Open with a question about what happens when a buyer calls at 9pm and nobody follows up until the next morning.",
         "Open with a short observation: in real estate, the first agent to respond usually wins the client.",
         "Open with a scenario — a buyer submits an online inquiry, waits two hours, and signs with whoever called first.",
-        "Open direct: one sentence on what you do, then connect it to lead response time specifically.",
-        "Open with a question about their average time to follow up on a new inquiry.",
     ],
     "retail": [
         "Open with a question about what happens when a customer calls after hours to ask if something's in stock.",
         "Open with an observation about how retail shops lose customers over simple unanswered questions.",
         "Open with a scenario — a customer wants to check hours or availability, can't reach anyone, and orders online instead.",
-        "Open direct: one sentence on what you do, then connect it to after-hours customer inquiries.",
-        "Open with a question about whether they have a way to handle customer questions outside business hours.",
     ],
 }
 
-DEFAULT_OPENERS = [
+DEFAULT_HOOKS = [
     "Open with a question about what happens when a customer tries to reach them and nobody answers.",
     "Open with a short observation about local businesses that lose customers over missed calls.",
     "Open with a brief scenario showing a customer going elsewhere because they couldn't reach them.",
-    "Open direct: one sentence on what you do, then connect it to a specific gap local businesses deal with.",
-    "Open with a question about whether they have anyone covering inquiries outside of business hours.",
 ]
+
+# LEAK — 2 framings (industry-agnostic; prompt provides industry context)
+LEAK_VARIANTS = [
+    "Gently note that most businesses in this industry don't have a reliable way to catch every incoming inquiry, especially outside peak hours. Be observational, never accusatory.",
+    "Observationally note that the leads they lose aren't from bad service — they're from calls and messages that come in when nobody's available to respond.",
+]
+
+# OUTCOME — 2 emphases
+OUTCOME_VARIANTS = [
+    "State one grounded result: responding to every inquiry within minutes means more booked appointments and fewer lost opportunities. No inflated claims.",
+    "State one grounded result: catching after-hours calls and texts means booking jobs that competitors miss entirely. Keep it concrete.",
+]
+
+# PROOF — 2 framings (truthful only — no fabricated case studies or numbers)
+PROOF_VARIANTS = [
+    "Briefly mention that you built this for Detroit local businesses specifically, and it handles the exact type of calls their industry gets. Do not fabricate any statistics or client names.",
+    "Briefly mention that the system runs in the background — it doesn't replace their team, it just catches what their team can't get to. Do not invent case studies or numbers.",
+]
+
+# MICRO-CTA — 2 styles
+CTA_VARIANTS = [
+    "Ask if they'd have 10 minutes for a quick call this week to see if it even makes sense for their business.",
+    "Ask if they'd have 10 minutes to walk through how it works for a business like theirs.",
+]
+
+EMAIL_SIGNATURE = (
+    "Trendell Fordham\n"
+    "Founder | Genesis AI Systems\n"
+    "genesisai.systems\n"
+    "Detroit, MI\n"
+    "(586) 636-9550"
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROJECT9_STATE_DIR = REPO_ROOT / "project9-sales-agent" / "state"
@@ -1763,15 +1781,40 @@ class SalesAgent:
             print(f"⚠️  _mark_notified failed for row {sheet_row}: {e}")
 
     # ------------------------------------------------------------------
-    # DRAFT — Claude Haiku with controlled variation + quality check
+    # DRAFT — H.O.O.K. framework with deterministic multi-axis variants
     # ------------------------------------------------------------------
 
-    def _draft_email(self, lead: Lead, variant: int) -> tuple[str, str, str]:
-        """Draft a short personalized email. Returns (subject, body, pass_type).
+    @staticmethod
+    def _select_framework_variants(business: str, industry: str) -> tuple[dict[str, str], str]:
+        """Select one instruction per framework section, deterministically.
 
-        Uses one of 5 controlled opening patterns per industry so messages
-        don't all read the same. Includes a built-in quality check and rewrite
-        instruction inside the prompt.
+        Returns (instructions_dict, variant_label).
+        Variant label format: H{x}L{y}O{z}P{w}C{v} — traceable and loggable.
+        """
+        hooks = HOOK_VARIANTS.get(industry.lower(), DEFAULT_HOOKS)
+        h = hash(business) % len(hooks)
+        l = hash(business + "leak") % len(LEAK_VARIANTS)
+        o = hash(business + "outcome") % len(OUTCOME_VARIANTS)
+        p = hash(business + "proof") % len(PROOF_VARIANTS)
+        c = hash(business + "cta") % len(CTA_VARIANTS)
+
+        instructions = {
+            "hook": hooks[h],
+            "leak": LEAK_VARIANTS[l],
+            "outcome": OUTCOME_VARIANTS[o],
+            "proof": PROOF_VARIANTS[p],
+            "cta": CTA_VARIANTS[c],
+        }
+        label = f"H{h}L{l}O{o}P{p}C{c}"
+        return instructions, label
+
+    def _draft_email(self, lead: Lead, variant: int) -> tuple[str, str, str]:
+        """Draft a personalized email using the H.O.O.K. framework.
+
+        Returns (subject, body, pass_type).
+        pass_type encodes the framework version and variant trace:
+        "hook_v1:H{x}L{y}O{z}P{w}C{v}" for Claude-generated,
+        "static_fallback" when no API key is available.
         """
         if _anthropic is None or not self.anthropic_key:
             # Static fallback — no API key
@@ -1781,38 +1824,112 @@ class SalesAgent:
                 f"I noticed {lead.business} here in Detroit.\n\n"
                 "I help local businesses set up simple tools that handle calls and bookings "
                 "automatically so owners aren't tied to the phone all day.\n\n"
-                "Have 10 minutes for a quick call this week?\n\n"
-                "Trendell\nGenesis AI Systems\ngenesisai.systems"
+                "Have 10 minutes for a quick call this week?"
             )
-            return subject, body, "static_fallback"
+            return subject, f"{body}\n\n{EMAIL_SIGNATURE}", "static_fallback"
 
-        openers = VARIANT_OPENERS.get(lead.industry.lower(), DEFAULT_OPENERS)
-        opening_instruction = openers[(variant - 1) % len(openers)]
+        fw, label = self._select_framework_variants(lead.business, lead.industry)
 
         prompt = f"""Write a cold outreach email from Trendell Fordham of Genesis AI Systems to the owner of {lead.business}, a {lead.industry} business in Detroit.
 
-Opening instruction (follow this for the first sentence or two):
-{opening_instruction}
+Follow this exact 5-part structure. Each part should be 1 to 2 sentences. The full email body should be 5 to 8 sentences total.
 
-Requirements:
-- 3 to 5 sentences for the body. No more.
+1. HOOK — {fw['hook']}
+
+2. LEAK — {fw['leak']}
+
+3. OUTCOME — {fw['outcome']}
+
+4. PROOF — {fw['proof']}
+
+5. MICRO-CTA — {fw['cta']}
+
+Greeting rule:
+- Always begin the email with exactly: Hi there,
+- Do NOT use the owner's personal name. You do not know it.
+- Do NOT write "Dear [anything]" or "Hello [anything]".
+
+Voice rules:
 - Plain English. Write like one Detroit business owner talking to another.
-- One specific value statement relevant to this exact type of business.
-- Soft CTA: ask for a 10-minute call. Do not pitch a sale.
-- Sign off: Trendell, Genesis AI Systems, genesisai.systems
+- First-person singular only. Always use "I", never "we", "our", or "our team". This email is from one founder, not a company.
+- Natural sentence variation. Mix short and medium sentences.
 - No em dashes.
+- Do NOT include a sign-off or signature. The signature block is appended automatically.
+- Do NOT use section labels or numbers in the email. It should read as one natural flowing message.
+- When referencing the business, use the actual business name "{lead.business}" — never a placeholder.
+
+Hard sentence stop:
+- Maximum 5 sentences before the signature. STOP at sentence 5.
+- Do not add proof or extra reinforcement after sentence 5.
+- An incomplete framework is acceptable. Hook + Leak + CTA are highest priority.
+- If you cannot fit all 5 framework parts in 5 sentences, drop PROOF first, then OUTCOME.
+- Do not add filler, extra explanation, or transition sentences.
+
+Scenario hook constraint:
+- If using a cinematic scene opening (e.g. "A customer's furnace stops working..."), the opening scene must be a maximum of 2 sentences total.
+- Never use 3 or more sentences to set up the scenario.
+- After the scene, move directly into the leak observation, then CTA.
+- The full email must still stop at 5 sentences.
+
+Paragraph format:
+- Write in paragraphs of 2 to 3 sentences each.
+- Never put every sentence on its own line.
+- The email should visually read like a real business email, not a text thread.
+
+Repetition control:
+- Do NOT default to the same "after-hours / heat dies / three companies" scenario every time.
+- Vary your entry point. Use a different angle, question, or observation than you would for the previous business.
+- Each email should feel individually written, not batch-templated.
+
+Placeholder ban:
+- NEVER output square bracket placeholders like [Name], [Owner], [Business], [Phone], [Restaurant Name], [BUSINESS_PHONE_NUMBER], or any other [TOKEN].
+- If you do not know a specific detail, omit it entirely. Do not insert a placeholder.
+
+Phone ban:
+- NEVER include a phone number anywhere in the email body.
+- No callback numbers, no "call me at", no digits resembling a phone number.
+
+Plain language lock:
+- Use only words an HVAC owner or tech would actually say.
+- Prefer: missed calls, booked jobs, after-hours calls, texts that come in at night.
+- Do NOT use: overflow inquiries, qualified leads, missed moments, flagged inquiries, lead flow.
+
+CTA time lock:
+- Always ask for exactly "10 minutes". Never 15, never 20, never "a few minutes".
 
 Hard rules — never use these words or phrases:
-unlock, leverage, revolutionize, streamline, optimize, cutting-edge, game-changer, seamless, robust, end-to-end, solution, workflow, pipeline, platform, ecosystem, tech stack, automation stack, AI agents, digital transformation
+unlock, leverage, revolutionize, streamline, optimize, cutting-edge, game-changer, seamless, robust, end-to-end, solution, workflow, pipeline, platform, ecosystem, tech stack, automation stack, AI agents, digital transformation, I couldn't help but notice, I wanted to reach out, best-in-class, state-of-the-art, next-level, synergy
 
-Before returning your draft, check it against this list:
-1. Does it sound human, not AI-generated?
-2. Is it specific to this lead's business type, not generic?
-3. Does it avoid all the banned phrases above?
-4. Is there one clear value statement?
-5. Is the CTA soft and specific?
+Banned trust-cliche phrases — never use any variation of:
+without changing how you work, without changing how you operate, without forcing you to change, without changing how you run things, without asking you to change anything
+Instead, build trust by being specific about what the system actually does.
 
-If your draft fails any check, rewrite it before returning. Do not mention the quality check in your response.
+Banned filler phrases — never use any variation of:
+slips through the cracks, falls through the cracks, nothing slips through, nothing falls through
+Use plain operational wording instead, like "so you don't miss anything" or "so nothing gets lost".
+
+Quality check — before returning, verify:
+1. Does it sound like a real person wrote it, not AI?
+2. Is it specific to this business type, not generic?
+3. Does it avoid all banned phrases above?
+4. Is the LEAK observational and non-accusatory?
+5. Is the PROOF truthful with no fabricated numbers or case studies?
+6. Is the CTA soft and conversational, not a hard close?
+7. Does the email flow naturally without visible section breaks?
+8. Does it start with "Hi there," and NOT use any personal name?
+9. Are there ZERO square bracket placeholders anywhere in the text?
+10. Is there NO phone number anywhere in the body?
+11. Is it first-person singular only (no "we", "our", "our team")?
+12. Is it 5 sentences or fewer before the signature?
+13. Does the opening feel distinct, not a copy of a batch template?
+14. Does it avoid ALL banned trust-cliche phrases ("without changing how you...")?
+15. Does it use plain spoken language only (no "overflow inquiries", "qualified leads", etc.)?
+16. Does the CTA ask for exactly "10 minutes"?
+17. Does it avoid "slips/falls through the cracks" and all variations?
+18. Is it written in paragraphs (2-3 sentences each), not one-sentence-per-line?
+19. If using a scenario/scene opening, is the scene 2 sentences or fewer?
+
+If any check fails, rewrite before returning. Do not mention the checks.
 
 Return in exactly this format:
 SUBJECT: [subject line here]
@@ -1822,7 +1939,7 @@ BODY:
         client = _anthropic.Anthropic(api_key=self.anthropic_key)
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=450,
+            max_tokens=500,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
@@ -1839,7 +1956,7 @@ BODY:
                 body_lines.append(line)
 
         body = "\n".join(body_lines).strip() or text
-        return subject, body, "first_pass"
+        return subject, f"{body}\n\n{EMAIL_SIGNATURE}", f"hook_v1:{label}"
 
     # ------------------------------------------------------------------
     # HUBSPOT — optional company record update
