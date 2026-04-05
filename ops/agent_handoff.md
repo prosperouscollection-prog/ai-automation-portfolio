@@ -70,3 +70,37 @@ CODEX DONE
 
 
 NEW LOOP START
+
+
+NEW LOOP START
+
+--- CODEX TASKS ---
+
+TASK 1 — DIAGNOSE QA AGENT FAILURE
+- Pull the latest qa_agent.yml CI run log
+- Identify exactly which grep check is failing
+- Write the failing check and exact output to ops/codex-output.md
+- Commit: "ops: QA failure diagnosis"
+
+TASK 2 — WRITE CLAUDE CODE FIX TASK
+Append this to ops/agent_handoff.md under CLAUDE CODE TASKS:
+
+--- CLAUDE CODE TASKS ---
+
+TASK — FIX QA AGENT FAILURE
+Read ops/codex-output.md for the exact failing grep check.
+Fix the failing check in qa_agent.yml.
+Do not touch any other checks.
+Commit: "fix: resolve QA agent failing grep check"
+Confirm fix by checking CI run passes.
+Write result to ops/codex-output.md.
+Commit: "ops: QA fix verification"
+Append NEW LOOP START to ops/agent_handoff.md.
+Commit: "ops: new loop started"
+Run ops/send_imessage.sh "QA agent fixed. Tren — Reviewer check needed."
+Go idle.
+
+TASK 3 — SIGNAL HANDOFF
+- Append CODEX DONE to ops/agent_handoff.md
+- Commit: "ops: codex lane complete"
+- Return to polling mode
