@@ -5,9 +5,9 @@
 - `git diff --name-only`
 
 ## Findings
-- `git diff --name-only` returned nothing. There are no modified tracked files in the worktree right now.
-- The worktree is entirely untracked files plus the handoff file currently being edited.
-- Safe to commit blindly: none. Everything below is either local-only state, generated output, or an in-progress code/doc artifact that should be reviewed first.
+- `git diff --name-only` returned nothing. There are no modified tracked files in the worktree.
+- The worktree contains one modified tracked file already under documentation control: `ops/codex-output.md` itself.
+- Everything else listed by `git status --short` is untracked and should be treated as unsafe to bulk-commit.
 
 ## Uncommitted file audit
 
@@ -96,26 +96,26 @@
 - `v1-revenue-system/tests/` — test additions. **Safe to inspect and commit later if required.**
 
 ## Task 1 decision
-- Commit scope is limited to `ops/codex-output.md` only.
+- Commit scope remains limited to `ops/codex-output.md` only.
 - Nothing else in the untracked tree is safe to scoop into the Task 1 commit.
 
 # Task 2 — Validate Confidence Fix Targets
 
-## Hunter confidence references
+## Hunter field references
 - There are no remaining `confidence_score` references in `.github/workflows/scripts/email_acquisition.py`.
-- Current Hunter-aware ranking now uses `confidence`:
+- Current Hunter-aware ranking uses `confidence`:
   - `.github/workflows/scripts/email_acquisition.py:235-245`
   - `.github/workflows/scripts/email_acquisition.py:400-416`
   - `.github/workflows/scripts/email_acquisition.py:527-533`
   - `.github/workflows/scripts/email_acquisition.py:582-587`
   - `.github/workflows/scripts/email_acquisition.py:607-624`
-- Current code:
+- Current code snippets:
   - `_candidate_strength()` reads `candidate.get("confidence", 0)`.
   - `_normalize_candidate()` stores `candidate["confidence"]`.
   - All six acquisition passes emit `confidence`, not `confidence_score`.
 
 ## Outscraper score references
-- The only remaining `score` references in `.github/workflows/scripts/email_acquisition.py` are the canonical Sheets row fields, not ranking logic:
+- The only remaining `score` references in `.github/workflows/scripts/email_acquisition.py` are canonical Sheets-row fields, not ranking logic:
   - `.github/workflows/scripts/email_acquisition.py:31`
   - `.github/workflows/scripts/email_acquisition.py:148-151`
   - `.github/workflows/scripts/email_acquisition.py:172`
