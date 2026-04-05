@@ -126,3 +126,61 @@
 ## Validation result
 - Validation passed for the current worktree state: Hunter ranking now uses the real `confidence` field, and Outscraper acquisition logic does not depend on a confidence-score field.
 - No code was changed for this validation step.
+
+# Task 4 — Fix Confidence Field Mismatches
+
+## Findings
+- No `confidence_score` references exist anywhere in `.github/workflows/scripts/email_acquisition.py`.
+- All six pass builders already emit `"confidence": 0` (not `confidence_score`).
+- `_normalize_candidate()` at line 415 sets `candidate["confidence"]`.
+- `_candidate_strength()` at line 238 reads `candidate.get("confidence", 0)`.
+- **No code change required.** Field names are already correct throughout the engine.
+
+## Decision
+- Task 4 is a no-op. Commit documents the validated state only.
+
+# Task 5 — Verify Engine Ranking
+
+## Test suite: `_candidate_strength()` scoring
+
+Five tests run inline against the live `email_acquisition.py` on disk:
+
+| # | Test | Result | A tuple | B tuple |
+|---|------|--------|---------|---------|
+| T1 | same_domain_person_match > general_contact | PASS | (400,450,0,1) | (100,150,0,1) |
+| T2 | confidence=75 > confidence=30 (same class+source) | PASS | (400,500,75,1) | (400,500,30,1) |
+| T3 | OWNER_CONFIRMED/general_contact > GENERAL_CONTACT_ONLY/structured_provider | PASS | (500,150,0,0) | (100,600,100,1) |
+| T4 | same_domain=True > same_domain=False | PASS | (400,500,50,1) | (400,500,50,0) |
+| T5 | structured_provider > website_contact_page (same classification) | PASS | (500,600,0,1) | (500,500,0,1) |
+
+**Result: 5/5 PASSED**
+
+## Interpretation
+- Classification rank is the primary sort key — a weak source with strong classification beats a strong source with weak classification (T3).
+- Source rank is secondary — breaks ties between same-classification candidates (T1, T5).
+- Confidence is tertiary — breaks ties between same-classification, same-source candidates (T2).
+- same_domain is the final tiebreaker (T4).
+- Priority order confirmed: CLASSIFICATION_RANK > SOURCE_RANK > confidence > same_domain.
+
+# Task 6 — Clear Working Tree
+
+## Analysis
+- `.github/workflows/scripts/email_acquisition.py` is UNTRACKED but imported by both `sales_agent.py` and `lead_generator_agent.py` (committed in bb4d464).
+- Every CI run is failing with `ImportError` until this file is committed.
+- **CRITICAL: Must commit email_acquisition.py to restore CI.**
+
+## Files held (founder decision required)
+- `.github/workflows/project10_detroit_send_window.yml` — P10 workflow draft. Uncommitted; founder review required before commit.
+- `.github/workflows/project10_forced_pause_rollback.yml` — P10 rollback. Same.
+- `.github/workflows/project10_resume_gate.yml` — P10 resume gate. Same.
+- `.github/workflows/project10_state_transition.yml` — P10 state machine. Same.
+- `.github/workflows/resend_delivery_sync.yml` — Resend sync. Uncommitted; review required.
+- `v1-revenue-system/lead_revenue_pipeline.py` — live pipeline code. Not safe to bulk-commit.
+- `v1-revenue-system/scripts/` — repo scripts. Not safe to bulk-commit.
+- `shared_env.py` — shared env helper. Needs inspection before commit.
+- `.env.local` — secrets. **Do not commit.**
+- `SECRETS_REGISTRY.md`, `SECRET_USAGE_MAPPING.md` — secret inventory. **Do not commit casually.**
+
+## Decision
+- Commit `email_acquisition.py` only (CI restoration).
+- All others held pending founder review.
