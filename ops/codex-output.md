@@ -1,125 +1,75 @@
 # Codex Output
-loop_cycle: lucid-blackwell-audit
+loop_cycle: lucid-blackwell-extraction
 
-## Task 3 — Doctrine Violation Report
+## Task 1 — Safe Extraction Candidates
 
-### Direct locked-doctrine violations
+Only isolated copy/text hunks qualify here. Whole-file cherry-picks are not safe if they carry live-send or control-plane logic with them.
 
-- `.github/workflows/sales_agent.yml` — **REJECT**
-  - Reintroduces live-send wiring and external delivery secrets.
-  - Removes the no-send proof / digest upload path.
-  - Violates: live send doctrine, Telegram gate evidence, no-send integrity.
+### Safe extraction candidates
 
-- `.github/workflows/scripts/sales_agent.py` — **REJECT**
-  - Rewrites the workflow into auto-send mode.
-  - Removes `CAP_LIMIT`, `WORKFLOW_MODE`, `ApprovalFlow`, queue semantics, and founder review behavior.
-  - Violates: live send doctrine, founder approval gate, Telegram command interface requirement, CAP_LIMIT removal, WORKFLOW_MODE removal, ApprovalFlow removal.
+- `index.html`
+  - Homepage copy changes only:
+    - hero headline / hero body rewrite
+    - CTA wording changes
+    - section intro / note wording changes
+    - removed proof-block marketing section
+  - Why safe: marketing copy only; no send architecture, approval flow, or control plane.
 
-- `v1-revenue-system/approval_flow.py` — **REJECT**
-  - Changes the approval keywords and prompt text from `QUEUE/SKIP` to `SEND/SKIP`.
-  - Violates: founder approval gate and Telegram command interface requirement.
+- `.github/workflows/scripts/sales_agent.py` — isolated draft-copy hunks only
+  - Copy improvements only:
+    - H.O.O.K. drafting framework text
+    - phrase hygiene / plain-language guardrails
+    - first-person voice lock
+    - sentence-cap / anti-repetition wording
+    - placeholder / greeting / phone-number bans in the prompt text
+  - Why safe only as isolated hunks: these are prompt and template strings, but the branch tip file also contains auto-send and control-plane rewrites. Do not extract the file wholesale.
 
-- `CLAUDE_CODE_START.md` — **REJECT**
-  - Documents Sales Agent as auto-send with no approval gating.
-  - Violates: live send doctrine and founder approval gate by instruction drift.
+### Not safe as extraction candidates
 
-### Gate-enforcement removals tied to the same doctrine boundary
+- QA self-check additions: none in this branch tip.
+  - The only QA change visible in lucid-blackwell is removal of `echo "checking: ..."` diagnostics from `.github/workflows/qa_agent.yml`.
+  - That is not a safe extraction candidate because it removes visibility rather than adding self-checks.
 
-- `.github/workflows/outbound_dry_run_guard.yml` — **REJECT**
-- `.github/workflows/outbound_first_10_monitor.yml` — **REJECT**
-- `.github/workflows/outbound_launch_state_transition.yml` — **REJECT**
-- `.github/workflows/outbound_resume_gate.yml` — **REJECT**
-- `project9-sales-agent/scripts/outbound_dry_run_guard.py` — **REJECT**
-- `project9-sales-agent/scripts/outbound_first_10_monitor.py` — **REJECT**
-- `project9-sales-agent/scripts/outbound_launch_state_transition.py` — **REJECT**
-- `project9-sales-agent/scripts/outbound_resume_gate.py` — **REJECT**
-- `project9-sales-agent/state/outbound_launch_state.json` — **REJECT**
+## Task 2 — What Stays on the Branch
 
-These deletions remove the dry-run / first-10 / transition / resume control plane that supports the locked launch doctrine. They are not merge-safe as-is.
+Everything below is entangled with send wiring, approval flow, WORKFLOW_MODE/CAP_LIMIT removal, ApprovalFlow changes, or control-plane deletions. These stay on `claude/lucid-blackwell` and should not be extracted.
 
-# New Loop — Task Status
+- `.github/workflows/sales_agent.yml`
+  - Live-send wiring restored
+  - `RESEND_API_KEY`, `OUTSCRAPER_API_KEY`, `HUNTER_API_KEY`, `HUBSPOT_ACCESS_TOKEN`
+  - `resend` install added
+  - no-send proof / digest artifact steps removed
 
-## Task 1 — Confirm Active Email Path
-- **Result**: No-op. `acquire_owner_email()` is the active call at `lead_generator_agent.py:146`.
-- No `enrich_email()` exists anywhere in `lead_generator_agent.py`.
-- No code change required.
+- `.github/workflows/scripts/sales_agent.py`
+  - Auto-send rewrite
+  - `CAP_LIMIT` removal
+  - `WORKFLOW_MODE` removal
+  - `ApprovalFlow` removal
+  - founder review queue / Telegram approval loop removed
+  - Resend delivery and tracking logic added
 
-## Task 2 — Prove Passes 2-6 in CI
+- `v1-revenue-system/approval_flow.py`
+  - `QUEUE/SKIP` semantics changed to `SEND/SKIP`
+  - Telegram command interface changed from queue approval to send approval
 
-### Test file
-`/Users/genesisai/portfolio/.github/workflows/scripts/test_acquisition_passes.py`
+- `CLAUDE_CODE_START.md`
+  - Auto-send documentation added
+  - Approval gating described as removed
+  - Resend tracking / reporting behavior documented
 
-### How it works
-- Runs `EmailAcquisitionEngine.acquire()` with a prospect that has no `owner_email`, `contact_email`, or `staff_email`.
-- Asserts all 6 pass names appear in `passes_ran` (guaranteed by the engine: `passes_ran.append(pass_name)` fires before the pass method is called — `email_acquisition.py:328`).
-- Asserts `pass_1` produced zero candidates (no structured email supplied).
-- Exits with code 1 if any assertion fails.
+- Control-plane deletions that stay on branch
+  - `.github/workflows/outbound_dry_run_guard.yml`
+  - `.github/workflows/outbound_first_10_monitor.yml`
+  - `.github/workflows/outbound_launch_state_transition.yml`
+  - `.github/workflows/outbound_resume_gate.yml`
+  - `project9-sales-agent/scripts/outbound_dry_run_guard.py`
+  - `project9-sales-agent/scripts/outbound_first_10_monitor.py`
+  - `project9-sales-agent/scripts/outbound_launch_state_transition.py`
+  - `project9-sales-agent/scripts/outbound_resume_gate.py`
+  - `project9-sales-agent/state/outbound_launch_state.json`
+  - `ops/REVIEWER_ROLE.md`
+  - `ops/agent_handoff.md`
+  - `ops/codex-output.md`
+  - `ops/send_imessage.sh`
 
-### Local run result
-```
-=== EmailAcquisitionEngine passes 2-6 reachability test ===
-PASS: all six passes present in passes_ran
-PASS: pass_1 produced zero candidates (no structured email supplied)
-PASS: passes 2-6 are reachable and were attempted
-
-RESULT: PASS — 3/3 assertions passed
-```
-
-### CI integration
-Added step "Assert acquisition engine passes 2-6 reachable" to `sales_agent.yml` immediately before the existing probe step. Runs `test_acquisition_passes.py` and fails CI if exit code is non-zero.
-
-## Task 3 — Surface Email Provenance in Queue
-- **Result**: No-op. `pass_metadata` already includes `email_confidence`, `email_source_type`, and `email_source_reference` at `sales_agent.py:1182-1188` (fixed in bb4d464).
-- No code change required.
-
-## Task 4 — Review lead_revenue_pipeline.py
-
-### File
-`v1-revenue-system/lead_revenue_pipeline.py` — 1224 lines
-
-### Hardcoded identifiers found
-
-| Line | Item | Risk |
-|------|------|------|
-| 53 | `DEFAULT_LIVE_GOOGLE_SHEET_ID = "1ORElwpEZN23jzPR9v_-Wu_qVG2g8xKGIkw_g41JoAPw"` | MEDIUM — production Sheet ID in source. Overridable via `--google-sheet-id` or `GOOGLE_SHEETS_SPREADSHEET_ID` env var. |
-| 54–56 | `DEFAULT_LIVE_SERVICE_ACCOUNT_FILE = Path("/Users/genesisai/Downloads/n8n-integration-491503-9e7222cb0016.json")` | HIGH — absolute local path to a credentials file. Filename exposes GCP project number `491503` and a service account credential ID. This path will not resolve in CI. Overridable via `--google-service-account-file` or `GOOGLE_SERVICE_ACCOUNT_JSON` env var. |
-| 815 | `"Trendell Fordham"` — founder name in draft template | LOW — business info, intentional |
-| 816 | `"(313) 400-2575"` — founder phone in draft template | LOW — business info, intentional |
-| 817–818 | `"info@genesisai.systems"`, `"genesisai.systems"` — contact info in draft template | LOW — business info, intentional |
-| 819 | `"calendly.com/genesisai-info-ptmt/free-ai-demo-call"` — Calendly link in draft template | LOW — business info, intentional |
-| 1117–1126 | `_default_sample_payload()` — Northline HVAC test payload with fake phone/email | LOW — sample/test data only, not production |
-
-### Summary
-- Two items warrant attention before committing to a shared repo: the hardcoded Sheet ID (line 53) and the local credentials path (lines 54-56).
-- The credentials path `n8n-integration-491503-9e7222cb0016.json` exposes a GCP project identifier. Safe to commit if the path is understood as a local-only default that is always overridden in CI.
-- All other hardcoded strings are business contact details or test fixtures — intentional and safe.
-- **File NOT committed.** Pending founder review of the two flagged items.
-
-# Task 5 — Final Report
-
-## All commits this loop
-
-| Commit | Message |
-|--------|---------|
-| `4cbd6cd` | test: prove email acquisition passes 2-6 fire in CI (test script) |
-| `75cf9ce` | test: prove email acquisition passes 2-6 fire in CI (workflow step) |
-| `e4cbe57` | ops: lead_revenue_pipeline.py audit findings |
-
-## Task outcomes
-
-| Task | Outcome |
-|------|---------|
-| Task 1 — Confirm active email path | No-op. `acquire_owner_email()` already active. |
-| Task 2 — Prove passes 2-6 in CI | DONE. `test_acquisition_passes.py` wired to `sales_agent.yml`. 3/3 assertions pass. |
-| Task 3 — Surface email provenance in queue | No-op. `pass_metadata` already includes all three fields. |
-| Task 4 — Review lead_revenue_pipeline.py | Audit complete. Two items flagged. File held pending founder review. |
-
-## Pending founder decisions (from Task 4)
-1. `lead_revenue_pipeline.py` line 53 — hardcoded `DEFAULT_LIVE_GOOGLE_SHEET_ID`. Safe to commit if understood as local default; CI always overrides via env.
-2. `lead_revenue_pipeline.py` lines 54-56 — hardcoded `DEFAULT_LIVE_SERVICE_ACCOUNT_FILE` path exposing GCP project number. Recommend scrubbing the path before committing to a shared repo.
-
-## Doctrine compliance — unchanged
-- `WORKFLOW_MODE` = `QUEUED_NO_SEND_AUTONOMY`
-- `CAP_LIMIT` = 3
-- Live send = PAUSED
-- Queue promotion = MANUAL ONLY
+These are all control-plane, governance, or release-gate removals. They are not safe extractions.
