@@ -218,6 +218,47 @@ All Claude Code lane tasks complete.
 
 ## CLAUDE CODE DONE
 
+# Loop Complete — Final Status
+
+## Commits this loop (Claude Code lane)
+
+| Commit | Message | Files |
+|--------|---------|-------|
+| `c1a3924` | fix: correct confidence field names in acquisition engine | ops/codex-output.md |
+| `bf8e386` | ops: working tree resolved | .github/workflows/scripts/email_acquisition.py |
+| `3c2e77a` | ops: claude code lane complete | ops/codex-output.md, ops/agent_handoff.md |
+| `9e56f65` | ops: founder decision review contents | ops/codex-output.md |
+| `482068b` | ops: commit approved v1 revenue system scripts and shared env | shared_env.py, 3× v1-revenue-system/scripts/ |
+
+## Committed — all clear
+
+- `.github/workflows/scripts/email_acquisition.py` — CI ImportError resolved
+- `shared_env.py` — env bootstrap helper, key names only
+- `v1-revenue-system/scripts/audit_genesis_env.py` — env/secret audit runner
+- `v1-revenue-system/scripts/run_founder_inbox_verification.py` — founder inbox live send only
+- `v1-revenue-system/scripts/run_v1_release_gate.py` — draft-only release gate proof runner
+
+## Still untracked — held by founder decision
+
+| File | Reason held |
+|------|-------------|
+| `v1-revenue-system/scripts/run_prospect_pilot.py` | Hold until P17 closed and Governor reviews |
+| `.github/workflows/project10_*.yml` (4 files) | Not active workstream |
+| `.github/workflows/resend_delivery_sync.yml` | Syncing against empty file |
+| `v1-revenue-system/lead_revenue_pipeline.py` | Not yet reviewed |
+| `v1-revenue-system/scripts/__pycache__/` | Build artifacts — do not commit |
+| `.env.local` | Secrets — do not commit |
+| `SECRETS_REGISTRY.md`, `SECRET_USAGE_MAPPING.md` | Sensitive inventory — do not commit |
+
+## Doctrine compliance — unchanged
+
+- `WORKFLOW_MODE` = `QUEUED_NO_SEND_AUTONOMY`
+- `CAP_LIMIT` = 3
+- Live send = PAUSED
+- Queue promotion = MANUAL ONLY
+
+## LOOP COMPLETE
+
 # Founder Decision — v1-revenue-system/scripts file list and purpose
 
 ## Files
