@@ -46,6 +46,26 @@ Each new `_wait_for_callback()` call starts polling Telegram `getUpdates` with `
 
 ---
 
+## Individual Approval Verification — 2026-04-05
+
+### Fix A — `self._last_update_id` instance tracking
+- **Line 286:** `self._last_update_id: int = 0` added to `__init__`
+- **Line 1554:** `last_update_id = self._last_update_id` (reads from instance, not 0)
+- **Line 1563:** `self._last_update_id = last_update_id` (syncs back after every update)
+- Result: Each `_wait_for_callback()` call picks up from where the previous one ended. Stale callbacks from prior leads cannot replay.
+
+### Fix B — message_id binding on callback_query
+- **Line 1571:** `cq_msg_id = cq.get("message", {}).get("message_id")`
+- **Line 1572:** `if cq_msg_id != message_id: continue`
+- Result: A callback_query is only accepted if it originated from the exact Telegram message for the current lead's prompt. No other lead's tap can satisfy this check.
+
+### Confirmation
+- No lead can be queued without explicit QUEUE tap on its own prompt
+- SKIP taps and timeouts are unaffected
+- CAP_LIMIT=3 still caps total leads per run; each is individually gated
+
+---
+
 loop_cycle: qa-diagnosis-2
 
 ## Task 1 — QA Agent Failure Diagnosis
