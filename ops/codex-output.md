@@ -217,3 +217,118 @@ All Claude Code lane tasks complete.
 4. `shared_env.py` — safe to commit?
 
 ## CLAUDE CODE DONE
+
+# Founder Decision — v1-revenue-system/scripts file list and purpose
+
+## Files
+
+### `v1-revenue-system/scripts/audit_genesis_env.py` (184 lines)
+**Purpose:** Fail-fast environment audit. Checks `.env.local` and `.env.local.example` against `EXPECTED_SECRET_KEYS` (defined in `shared_env.py`). Also scans `.github/workflows/*.yml` for `secrets.*` references and flags any that aren't in the registry. Supports `--mode auto/local/github` and `--workflow-file` for per-file audits. Run locally before any workflow step to catch missing secrets. No side effects — read-only.
+
+### `v1-revenue-system/scripts/run_founder_inbox_verification.py` (383 lines)
+**Purpose:** Live founder-inbox-only email verification. Hard-whitelists two recipient addresses (`trnfordham@gmail.com`, `genesisaisystems@outlook.com`). Runs the full `LeadRevenuePipeline` against a fixed Northline HVAC test payload, generates a draft, sends a clean verification email to both founder inboxes via Resend, writes delivery evidence NDJSON and proof artifacts. Has `--fresh-retest` flag to mint a new payload for retest without breaking duplicate protection. **Sends live email to founder inboxes only. Prospect auto-send remains paused.**
+
+### `v1-revenue-system/scripts/run_prospect_pilot.py` (580 lines)
+**Purpose:** Controlled founder-approved micro-batch pilot runner. Reads qualified rows from the production `Leads` tab, filters out internal/test rows, caps batch at 5 leads, requires interactive founder approval (`APPROVE`/`SKIP`) for each lead before sending. Uses `GENESIS_FOUNDERS_PILOT_APPROVAL` env flag guard plus `--founder-pilot` CLI flag. Duplicate protection via SHA-256 fingerprint state file. Writes delivery evidence NDJSON and proof artifacts. **Only sends after explicit founder approval per lead. Auto-send remains paused.**
+
+### `v1-revenue-system/scripts/run_v1_release_gate.py` (596 lines)
+**Purpose:** V1 release-gate proof runner. Draft-only — no live outbound authorized. Proves the full pipeline path: webhook intake, qualification/scoring, Google Sheets persistence, draft generation, duplicate rerun protection, malformed payload/model failure handling. Also handles production `Leads` tab schema migration (`--repair-production-leads-tab` flag: backs up existing tab, replaces with canonical headers). Writes governor summary, migration readiness report, and final release checklist artifacts. **Draft-only. No live sends.**
+
+---
+
+# Founder Decision — shared_env.py full contents
+
+**File:** `shared_env.py` (83 lines, repo root)
+
+**Purpose:** Shared environment bootstrap helper. Loads `.env.local` (then `.env` as fallback) without overriding existing CI/Actions env vars. Exposes `getenv()`, `require_env()`, and `bootstrap_env()` for use by all scripts. Defines `EXPECTED_SECRET_KEYS` — the canonical list of 28 secret keys the entire system depends on.
+
+**Imports from:** `dotenv`, `pathlib`, `functools`, `os`
+
+**Used by:** `audit_genesis_env.py`, `run_prospect_pilot.py`, and any script needing env access without disturbing CI.
+
+**Does NOT contain any secrets.** Only key names (strings), not values.
+
+```python
+from __future__ import annotations
+
+import os
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+from dotenv import load_dotenv
+
+
+REPO_ROOT = Path(__file__).resolve().parent
+LOCAL_ENV_PATH = REPO_ROOT / ".env.local"
+LOCAL_ENV_EXAMPLE_PATH = REPO_ROOT / ".env.local.example"
+EXPECTED_SECRET_KEYS = (
+    "ALERT_PHONE_NUMBER",
+    "ANTHROPIC_API_KEY",
+    "APOLLO_API_KEY",
+    "BUSINESS_MAILING_ADDRESS",
+    "BUSINESS_PHONE_NUMBER",
+    "CALENDLY_ORG_URL",
+    "CALENDLY_TOKEN",
+    "CALENDLY_URL",
+    "DEMO_SERVER_URL",
+    "GOOGLE_SERVICE_ACCOUNT",
+    "GOOGLE_SHEET_ID",
+    "HUBSPOT_ACCESS_TOKEN",
+    "HUNTER_API_KEY",
+    "NOTIFICATION_EMAIL",
+    "OPENAI_ACCOUNT_BALANCE",
+    "OPENAI_API_KEY",
+    "OUTSCRAPER_API_KEY",
+    "PROJECT9_BUSINESS_MAILING_ADDRESS",
+    "RESEND_API_KEY",
+    "SENDGRID_FROM_EMAIL",
+    "SENDGRID_FROM_NAME",
+    "SITE_URL",
+    "STRIPE_DEPOSIT_LINK",
+    "STRIPE_FULLSTACK_LINK",
+    "STRIPE_GROWTH_LINK",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_STARTER_LINK",
+    "STRIPE_WEBHOOK_SECRET",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_CHAT_ID",
+    "VAPI_PUBLIC_KEY",
+    "YELP_API_KEY",
+)
+
+_BOOTSTRAPPED = False
+
+
+def bootstrap_env() -> None:
+    """Load local developer secrets without disturbing CI/Actions env vars."""
+
+    global _BOOTSTRAPPED
+    if _BOOTSTRAPPED:
+        return
+
+    if LOCAL_ENV_PATH.exists():
+        load_dotenv(LOCAL_ENV_PATH, override=False)
+
+    fallback_env = REPO_ROOT / ".env"
+    if fallback_env.exists():
+        load_dotenv(fallback_env, override=False)
+
+    _BOOTSTRAPPED = True
+
+
+@lru_cache(maxsize=None)
+def getenv(key: str, default: Any = "") -> str:
+    bootstrap_env()
+    value = os.getenv(key, default)
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def require_env(key: str) -> str:
+    value = getenv(key)
+    if not value:
+        raise RuntimeError(f"{key} is required")
+    return value
+```
