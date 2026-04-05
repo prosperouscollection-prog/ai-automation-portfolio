@@ -146,3 +146,62 @@ CODEX DONE
 NEW LOOP START
 
 NEW LOOP START
+
+NEW LOOP START
+
+--- CODEX TASKS ---
+
+TASK 1 — SUPPRESSION LIST AUDIT
+- Read suppression_list.ndjson current contents
+- Confirm it is empty
+- Research what fields a suppression record needs:
+  email, domain, reason, date_added, source
+- Write a suppression record schema to ops/codex-output.md
+- Commit: "ops: suppression list schema definition"
+
+TASK 2 — run_prospect_pilot.py AUDIT
+- Read v1-revenue-system/scripts/run_prospect_pilot.py in full
+- Check for:
+  - credential leakage
+  - live send bypass
+  - cap discipline
+  - founder approval path intact
+  - no lucid-blackwell auto-send logic
+- Write full findings to ops/codex-output.md
+- Commit: "ops: run_prospect_pilot audit findings"
+
+TASK 3 — CALENDLY HUBSPOT AUDIT
+- Read any existing Calendly or HubSpot wiring in the repo
+- Identify what exists and what is missing
+- Write findings to ops/codex-output.md
+- Commit: "ops: calendly hubspot wiring audit"
+
+TASK 4 — SIGNAL HANDOFF
+- Append CODEX DONE to ops/agent_handoff.md
+- Commit: "ops: codex lane complete"
+- Return to polling mode
+
+--- CLAUDE CODE TASKS ---
+
+TASK 5 — BUILD SUPPRESSION LIST
+- Wait for CODEX DONE
+- Read ops/codex-output.md for suppression schema
+- Build suppression_list population logic in sales_agent.py:
+  - on SKIP write domain to suppression list
+  - on opt-out write email to suppression list
+  - check suppression list before queuing any lead
+- Commit: "feat: populate suppression list on skip and opt-out"
+
+TASK 6 — VERIFY SUPPRESSION LOGIC
+- Write a test proving suppressed leads are rejected before queuing
+- Run test and confirm it passes
+- Write result to ops/codex-output.md
+- Commit: "test: verify suppression list blocks suppressed leads"
+
+TASK 7 — FINAL REPORT AND NOTIFY
+- Compile full summary in ops/codex-output.md
+- Append NEW LOOP START to ops/agent_handoff.md
+- Commit: "ops: new loop started"
+- Run ops/send_imessage.sh "P18 loop complete. Tren — Reviewer check needed."
+- Return to polling mode
+- Never go idle
