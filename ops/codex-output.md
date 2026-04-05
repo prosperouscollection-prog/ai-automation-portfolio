@@ -94,3 +94,32 @@ Added step "Assert acquisition engine passes 2-6 reachable" to `sales_agent.yml`
 - The credentials path `n8n-integration-491503-9e7222cb0016.json` exposes a GCP project identifier. Safe to commit if the path is understood as a local-only default that is always overridden in CI.
 - All other hardcoded strings are business contact details or test fixtures — intentional and safe.
 - **File NOT committed.** Pending founder review of the two flagged items.
+
+# Task 5 — Final Report
+
+## All commits this loop
+
+| Commit | Message |
+|--------|---------|
+| `4cbd6cd` | test: prove email acquisition passes 2-6 fire in CI (test script) |
+| `75cf9ce` | test: prove email acquisition passes 2-6 fire in CI (workflow step) |
+| `e4cbe57` | ops: lead_revenue_pipeline.py audit findings |
+
+## Task outcomes
+
+| Task | Outcome |
+|------|---------|
+| Task 1 — Confirm active email path | No-op. `acquire_owner_email()` already active. |
+| Task 2 — Prove passes 2-6 in CI | DONE. `test_acquisition_passes.py` wired to `sales_agent.yml`. 3/3 assertions pass. |
+| Task 3 — Surface email provenance in queue | No-op. `pass_metadata` already includes all three fields. |
+| Task 4 — Review lead_revenue_pipeline.py | Audit complete. Two items flagged. File held pending founder review. |
+
+## Pending founder decisions (from Task 4)
+1. `lead_revenue_pipeline.py` line 53 — hardcoded `DEFAULT_LIVE_GOOGLE_SHEET_ID`. Safe to commit if understood as local default; CI always overrides via env.
+2. `lead_revenue_pipeline.py` lines 54-56 — hardcoded `DEFAULT_LIVE_SERVICE_ACCOUNT_FILE` path exposing GCP project number. Recommend scrubbing the path before committing to a shared repo.
+
+## Doctrine compliance — unchanged
+- `WORKFLOW_MODE` = `QUEUED_NO_SEND_AUTONOMY`
+- `CAP_LIMIT` = 3
+- Live send = PAUSED
+- Queue promotion = MANUAL ONLY
