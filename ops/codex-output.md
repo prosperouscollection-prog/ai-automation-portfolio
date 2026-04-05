@@ -73,3 +73,70 @@ Everything below is entangled with send wiring, approval flow, WORKFLOW_MODE/CAP
   - `ops/send_imessage.sh`
 
 These are all control-plane, governance, or release-gate removals. They are not safe extractions.
+
+# lucid-blackwell Extraction Loop
+
+## Task 1 — index.html Copy Extraction
+**Commit:** `2480b03` — `extract: homepage copy improvements from lucid-blackwell`
+
+Copy hunks extracted (marketing copy only):
+- Hero h1: new headline
+- Hero body paragraph: founder-led positioning
+- Hero microcopy: moved below CTA buttons, new text
+- Primary CTA: "See What I'd Build First →" → "Book Your Free 15-Minute Call"
+- Secondary CTA: href `#start-here`, new label
+- start-here section h2 + body + section-note: rewritten
+- examples section: removed dedicated-pages section-note
+- Restaurant/salon/real estate/retail CTAs: `#contact` → Calendly direct booking
+- Demos section CTA: "Book Your Free AI Growth Audit" → "Book a Free Call"
+- Removed proof-blocks section entirely
+- Pricing h2 + p: rewritten
+- About paragraph + outline button: "free founder audit" → "free founder call" framing
+
+Not extracted: form field additions, live activity feed script fallback.
+
+## Task 2 — sales_agent.py Prompt Copy Extraction
+**Commit:** `59ab728` — `extract: H.O.O.K. copy and phrase hygiene from lucid-blackwell`
+
+Copy hunks extracted (prompt/template only):
+- `VARIANT_OPENERS` (5-item) → `HOOK_VARIANTS` (3-item per industry)
+- `DEFAULT_OPENERS` (5) → `DEFAULT_HOOKS` (3)
+- Added: `LEAK_VARIANTS`, `OUTCOME_VARIANTS`, `PROOF_VARIANTS`, `CTA_VARIANTS`, `EMAIL_SIGNATURE`
+- Added: `SalesAgent._select_framework_variants()` — deterministic H.O.O.K. selector
+- `_draft_email` prompt: replaced with full H.O.O.K. 5-part structure
+  - Greeting rule: "Hi there," only, no personal names
+  - Voice: first-person singular only, no "we/our/our team"
+  - Hard sentence stop: 5 sentences max before signature
+  - Scenario hook constraint: 2 sentences max for scene openings
+  - Paragraph format: 2-3 sentences per paragraph, not text-thread style
+  - Repetition control: vary entry points, not batch-templated
+  - Placeholder ban: no `[Token]` placeholders
+  - Phone ban: no phone numbers in body
+  - Plain language lock: no "overflow inquiries", "qualified leads", etc.
+  - CTA time lock: exactly "10 minutes"
+  - Expanded banned phrases: + synergy, I couldn't help but notice, etc.
+  - Banned trust-clichés: "without changing how you..."
+  - Banned filler: "slips/falls through the cracks"
+  - 19-point quality checklist
+- max_tokens: 450 → 500
+- pass_type: "first_pass" → "hook_v1:{label}"
+
+Not extracted: `_enrich_email()` method, HubSpot field name change, any send/Resend/WORKFLOW_MODE changes.
+
+## Task 3 — Doctrine Verification
+
+Verification run after both extractions. All doctrine lines confirmed on main:
+
+| Check | Status | Evidence |
+|-------|--------|---------|
+| `WORKFLOW_MODE = "QUEUED_NO_SEND_AUTONOMY"` | PASS | `sales_agent.py:64` |
+| `CAP_LIMIT = 3` | PASS | `sales_agent.py:63` |
+| `ApprovalFlow` import present | PASS | `sales_agent.py:44` |
+| `ApprovalFlow` instantiated | PASS | `sales_agent.py:285` |
+| QUEUE/SKIP semantics in approval_flow.py | PASS | `v1-revenue-system/approval_flow.py:55,87,190,226-230` |
+| `outbound_dry_run_guard.yml` present | PASS | `.github/workflows/outbound_dry_run_guard.yml` |
+| `outbound_first_10_monitor.yml` present | PASS | `.github/workflows/outbound_first_10_monitor.yml` |
+| `outbound_launch_state_transition.yml` present | PASS | `.github/workflows/outbound_launch_state_transition.yml` |
+| `outbound_resume_gate.yml` present | PASS | `.github/workflows/outbound_resume_gate.yml` |
+
+**Doctrine: INTACT. All 9 checks passed.**
