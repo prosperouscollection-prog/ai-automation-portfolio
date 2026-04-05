@@ -1,154 +1,95 @@
-# Codex Output
-loop_cycle: 6
-status: PAUSED — working tree snapshot. Reviewer clearance required before loop resumes.
+# Task 1 — Resolve Working Tree
 
----
+## Commands Run
+- `git status --short`
+- `git diff --name-only`
 
-## WORKING TREE STATE — 2026-04-04
+## Findings
+- `git diff --name-only` returned nothing. There are no modified tracked files in the worktree right now.
+- The worktree is entirely untracked files and directories. None of them should be bulk-committed blindly.
 
-git status: clean — no staged or unstaged changes.
-Working tree is fully committed and pushed.
-Current HEAD: bb4d464
+## Untracked Files Audit
 
----
+### Local-only / environment-sensitive
+- `.env.local` — local secrets/config file. **Not safe to commit.**
+- `.env.local.example` — example env file. **Safe only if intentionally sanitized; otherwise review before commit.**
+- `shared_env.py` — shared env helper. **Code file; review before commit.**
+- `SECRETS_REGISTRY.md` — secrets inventory. **Sensitive; do not commit casually.**
+- `SECRET_USAGE_MAPPING.md` — maps secrets to usage. **Sensitive; do not commit casually.**
 
-## COMMIT bb4d464 — FULL DIFF SUMMARY
-Message: "p17: pass_metadata provenance + remove dead enrich_email + CI probe"
-Pushed to: main
-Files changed: 5
+### Local editor / agent workspace noise
+- `.claude/worktrees/` — Claude worktree metadata. **Safe to ignore.**
+- `.vscode/` — editor config. **Safe to ignore.**
 
-NOTE: This commit is larger than the 3 targeted changes described in loop-5.
-Prior uncommitted changes were on disk when the session began. All went into
-this commit. Full accounting below.
+### Workflow drafts / CI experiments
+- `.github/workflows/project10_detroit_send_window.yml` — project 10 workflow draft. **Unsafe to commit without review.**
+- `.github/workflows/project10_forced_pause_rollback.yml` — project 10 rollback workflow draft. **Unsafe to commit without review.**
+- `.github/workflows/project10_resume_gate.yml` — project 10 resume workflow draft. **Unsafe to commit without review.**
+- `.github/workflows/project10_state_transition.yml` — project 10 state workflow draft. **Unsafe to commit without review.**
+- `.github/workflows/resend_delivery_sync.yml` — resend sync workflow. **Unsafe to commit without review.**
+- `.github/workflows/scripts/email_acquisition.py` — shared email acquisition helper. **Code file; intentionally in-progress, not safe to commit as part of Task 1.**
 
----
+### Archived / shared content and docs
+- `_archive/` — archive directory. **Safe to ignore unless explicitly needed.**
+- `_shared/` — shared reference docs. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/CALL_ROUTING.md` — phone access routing doc. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/CLAUDE_PHONE_ACCESS_READY.md` — readiness note. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/CLOUDFLARE_TUNNEL.md` — tunnel note. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/TAILSCALE_SETUP.md` — setup note. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/TELEGRAM_DIAGNOSTIC.md` — diagnostic note. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/TELEGRAM_SETUP.md` — setup note. **Safe to ignore unless explicitly needed.**
+- `claude-api-phone-access/TWILIO_FIX.md` — Twilio fix note. **Safe to ignore unless explicitly needed.**
 
-### .github/workflows/scripts/sales_agent.py
+### Generated or project docs/assets
+- `home-services.html` — generated HTML asset. **Safe to ignore unless intentionally part of deliverable.**
+- `law-firm.html` — generated HTML asset. **Safe to ignore unless intentionally part of deliverable.**
+- `med-spa.html` — generated HTML asset. **Safe to ignore unless intentionally part of deliverable.**
+- `project10-marketing-agent/DOCTRINE_REUSE_MAP.md` — project 10 doc. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/LAUNCH_READINESS/` — project 10 launch-readiness docs. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/MIGRATION_FROM_P9_DOCTRINE.md` — migration doc. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/NATIVE_CONTROL_CHECKLIST.md` — checklist doc. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/NATIVE_CONTROL_DOCTRINE_AUDIT.md` — audit doc. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/NATIVE_PAUSE_RESPONSE_PLAYBOOK.md` — playbook doc. **Safe to ignore unless explicitly targeted.**
+- `project10-marketing-agent/scripts/` — project 10 scripts. **Unsafe to bulk-commit without inspection.**
+- `project10-marketing-agent/state/` — project 10 state outputs. **Usually generated; safe to ignore unless specifically required.**
+- `project11-client-success/01_CLIENT_ONBOARDING_INTAKE_FORM.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/02_KICKOFF_SOP.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/03_DEPLOYMENT_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/04_ROLLBACK_SOP.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/05_QA_ACCEPTANCE_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/06_TESTIMONIAL_CAPTURE_WORKFLOW.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/07_14_DAY_UPSELL_TRIGGER_WORKFLOW.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/08_RETENTION_EXPANSION_MONETIZATION/` — retention docs folder. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/CLIENT_ONBOARDING_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/DISCOVERY_CALL_QUESTIONNAIRE.md` — client-success doc. **Safe to ignore unless explicitly targeted.**
+- `project11-client-success/PROJECT_11_COMPLETE_AUDIT.md` — audit doc. **Safe to ignore unless explicitly targeted.**
+- `project12-client-success/` — project 12 content. **Safe to ignore unless explicitly targeted.**
+- `project13-internal-governor-dashboard/` — project 13 content. **Safe to ignore unless explicitly targeted.**
+- `project14-growth-engine/` — project 14 content. **Safe to ignore unless explicitly targeted.**
+- `project15-shared-scale-core/` — project 15 content. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/FOUNDER_LAUNCH_SIGNOFF_RUNBOOK.md` — project 9 runbook. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_CONTROL_CHAIN_WORKFLOW_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_DRY_RUN_GUARD_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_DRY_RUN_GUARD_WORKFLOW_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_FIRST_10_MONITOR_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_LAUNCH_AUTOMATION_PLAN.md` — project 9 plan. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_LAUNCH_CHECKLIST.md` — project 9 checklist. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_LAUNCH_STATE_TRANSITION_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTBOUND_RESUME_GATE_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/OUTREACH_SCRIPTS.md` — project 9 outreach doc. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/prompts/` — prompt assets. **Safe to ignore unless explicitly targeted.**
+- `project9-sales-agent/scripts/resend_delivery_sync.py` — project 9 script. **Unsafe to commit without inspection.**
+- `project9-sales-agent/state/email_acquisition_audit.ndjson` — generated audit log. **Safe to ignore.**
+- `project9-sales-agent/state/outbound_dedup_hash_log.ndjson` — generated audit log. **Safe to ignore.**
+- `project9-sales-agent/state/outbound_first_10_send_events.ndjson` — generated audit log. **Safe to ignore.**
+- `project9-sales-agent/state/suppression_list.ndjson` — generated audit log. **Safe to ignore.**
+- `shared-docs/` — shared docs directory. **Safe to ignore unless explicitly targeted.**
+- `v1-revenue-system/lead_revenue_pipeline.py` — live pipeline code. **Unsafe to commit without inspection.**
+- `v1-revenue-system/proof_artifacts/` — proof artifacts. **Safe to ignore unless explicitly targeted.**
+- `v1-revenue-system/scripts/` — repo scripts. **Unsafe to bulk-commit without inspection.**
+- `v1-revenue-system/state/` — state outputs. **Safe to ignore unless explicitly targeted.**
+- `v1-revenue-system/tests/` — test suite additions. **Safe to inspect and possibly commit later, but not part of Task 1.**
 
-ADDITION: EmailAcquisitionEngine import at top of file
-  + SCRIPT_DIR = Path(__file__).resolve().parent
-  + if str(SCRIPT_DIR) not in sys.path: sys.path.insert(0, str(SCRIPT_DIR))
-  + from email_acquisition import EmailAcquisitionEngine, normalize_owner_email
-
-ADDITION: Lead dataclass refactored
-  - email: str = ""          (single field)
-  + owner_email: str = ""    (canonical field)
-  + email_confidence: str = ""
-  + email_source_type: str = ""
-  + email_source_reference: str = ""
-  + person_match_basis: str = ""
-  + verification_notes: str = ""
-  + rejection_reason: str = ""
-  + @property email -> returns self.owner_email
-  + @email.setter -> sets self.owner_email
-
-ADDITION: SalesAgent.__init__ now instantiates EmailAcquisitionEngine
-  + self.email_engine = EmailAcquisitionEngine()
-  + self.email_audit_path = PROJECT9_STATE_DIR / "email_acquisition_audit.ndjson"
-
-ADDITION: _append_email_audit() method (writes to audit NDJSON)
-
-ADDITION: _recover_owner_email() method (calls engine, persists 6 fields to Lead)
-
-ADDITION: _process_candidate() now calls _recover_owner_email() if owner_email empty
-  + if not normalize_owner_email(lead.owner_email):
-  +     self._recover_owner_email(lead)
-
-CHANGE (targeted): pass_metadata serialization — lines 1182-1191
-  + "email_confidence": lead.email_confidence or "NONE",
-  + "email_source_type": lead.email_source_type or "unknown",
-  + "email_source_reference": lead.email_source_reference or "",
-
-CHANGE: Various lead.email -> lead.owner_email references updated throughout
-  - _build_lead_id, _is_incomplete, request_approval, queue_row,
-    _record_first_10_send_event, get_hot_leads_from_sheets, save_to_hubspot
-
-CHANGE: get_hot_leads_from_sheets now uses normalize_owner_email() on col P value
-  and sets email_source="sheets" and email_confidence="HIGH" when populated from Sheets.
-
----
-
-### .github/workflows/scripts/lead_generator_agent.py
-
-ADDITION: sys, Path imports
-
-ADDITION: email_acquisition module imports
-  + from email_acquisition import (SHEETS_HEADERS, EmailAcquisitionEngine,
-      build_canonical_sheet_row, is_internal_record, normalize_owner_email)
-
-ADDITION: LeadGeneratorAgent.__init__ instantiates EmailAcquisitionEngine + audit path
-
-ADDITION: Internal record filtering in run() before scoring
-
-CHANGE: Email enrichment loop (lines 144-156)
-  Before: if domain and not p.get("email"): p["email"] = self.enrich_email(domain)
-  After:  acquisition = self.acquire_owner_email(p)
-          p["owner_email"] = acquisition["final_email"]
-          + 6 acquisition metadata fields stored on prospect
-
-ADDITION: _is_internal_record(), _build_canonical_sheet_row(), _append_email_audit(),
-          acquire_owner_email() methods
-
-CHANGE (targeted): stale comment at line 201 updated
-  - "enabling enrich_email() to fire"
-  + "used by acquire_owner_email()"
-
-REMOVAL (targeted): enrich_email() method deleted (65 lines)
-  The old Outscraper -> Hunter first-found function with no confidence scoring.
-
-CHANGE: save_to_sheets now writes canonical owner_email to col P using
-  normalize_owner_email() normalization.
-
-CHANGE: Telegram summary updated to use owner_email field.
-
-ADDITION: owner_email: "" field initialized in Maps, Yelp, and Apollo prospect dicts.
-
----
-
-### .github/workflows/sales_agent.yml
-
-ADDITION: workflow_dispatch trigger
-
-ADDITION: "Probe acquisition engine passes 2-6" step
-  Runs EmailAcquisitionEngine.acquire() against genesisai.systems with no
-  pre-populated email. Forces passes 2+ to execute. Logs all pass results.
-  Writes: project9-sales-agent/state/acquisition_engine_probe.json
-
-ADDITION: "Upload acquisition engine probe" artifact step
-
-ADDITION: "Upload email acquisition audit" artifact step
-
----
-
-### ops/agent_handoff.md and ops/codex-output.md
-Updated with loop-6 state and P17 artifact summaries.
-
----
-
-## REVIEWER QUESTIONS FOR CLEARANCE
-
-1. Is the Lead dataclass change (email -> owner_email + property alias) acceptable?
-   The @property alias means all existing lead.email reads still work.
-
-2. Is adding EmailAcquisitionEngine import + _recover_owner_email() to sales_agent.py
-   within P17 scope, or does it require a separate milestone review?
-
-3. Is removing the old enrich_email() (Outscraper -> Hunter, 65 lines) from
-   lead_generator_agent.py a doctrine risk? It was the old first-found path
-   with no confidence scoring. Replaced by acquire_owner_email() -> engine.
-
-4. No send logic was touched. WORKFLOW_MODE = "QUEUED_NO_SEND_AUTONOMY" unchanged.
-   CAP_LIMIT = 3 unchanged. ApprovalFlow unchanged. Queue authority unchanged.
-
----
-
-## git diff --name-only (HEAD vs HEAD~1)
-.github/workflows/sales_agent.yml
-.github/workflows/scripts/lead_generator_agent.py
-.github/workflows/scripts/sales_agent.py
-ops/agent_handoff.md
-ops/codex-output.md
-
-## git status
-On branch main. Up to date with origin/main.
-Nothing to commit, working tree clean.
+## Task 1 Decision
+- Safe to proceed with Task 1 using only `ops/codex-output.md` for the commit.
+- Unsafe to include the active code files or any broad untracked directories in the Task 1 commit.
