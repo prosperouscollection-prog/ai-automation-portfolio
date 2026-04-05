@@ -1,375 +1,55 @@
-# Task 1 — Resolve Working Tree
-
-## Commands run
-- `git status --short`
-- `git diff --name-only`
-
-## Findings
-- `git diff --name-only` returned nothing. There are no modified tracked files in the worktree.
-- The worktree contains one modified tracked file already under documentation control: `ops/codex-output.md` itself.
-- Everything else listed by `git status --short` is untracked and should be treated as unsafe to bulk-commit.
-
-## Uncommitted file audit
-
-### Local-only or sensitive
-- `.env.local` — local secrets/config. **Not safe to commit.**
-- `.env.local.example` — example env file. **Safe only after review/sanitization.**
-- `SECRETS_REGISTRY.md` — secret inventory. **Not safe to commit casually.**
-- `SECRET_USAGE_MAPPING.md` — secret usage map. **Not safe to commit casually.**
-- `shared_env.py` — shared env helper. **Code file; review before commit.**
-- `.claude/worktrees/` — Claude worktree metadata. **Safe to ignore.**
-- `.vscode/` — editor settings. **Safe to ignore.**
-
-### Workflow drafts / CI experiments
-- `.github/workflows/project10_detroit_send_window.yml` — project 10 workflow draft. **Unsafe without review.**
-- `.github/workflows/project10_forced_pause_rollback.yml` — project 10 rollback workflow. **Unsafe without review.**
-- `.github/workflows/project10_resume_gate.yml` — project 10 resume workflow. **Unsafe without review.**
-- `.github/workflows/project10_state_transition.yml` — project 10 state workflow. **Unsafe without review.**
-- `.github/workflows/resend_delivery_sync.yml` — resend sync workflow. **Unsafe without review.**
-- `.github/workflows/scripts/email_acquisition.py` — active shared acquisition helper; current code is in-progress. **Do not treat as safe to commit in Task 1.**
-
-### Archived/shared docs and assets
-- `_archive/` — archive tree. **Safe to ignore unless explicitly needed.**
-- `_shared/` — shared docs tree. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/CALL_ROUTING.md` — phone access doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/CLAUDE_PHONE_ACCESS_READY.md` — phone access readiness doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/CLOUDFLARE_TUNNEL.md` — tunnel doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/TAILSCALE_SETUP.md` — tailscale doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/TELEGRAM_DIAGNOSTIC.md` — Telegram diagnostic doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/TELEGRAM_SETUP.md` — Telegram setup doc. **Safe to ignore unless explicitly needed.**
-- `claude-api-phone-access/TWILIO_FIX.md` — Twilio fix doc. **Safe to ignore unless explicitly needed.**
-- `home-services.html` — generated HTML asset. **Safe to ignore unless explicitly needed.**
-- `law-firm.html` — generated HTML asset. **Safe to ignore unless explicitly needed.**
-- `med-spa.html` — generated HTML asset. **Safe to ignore unless explicitly needed.**
-
-### Project 10 docs / scripts / state
-- `project10-marketing-agent/DOCTRINE_REUSE_MAP.md` — project 10 doctrine doc. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/LAUNCH_READINESS/` — project 10 readiness docs. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/MIGRATION_FROM_P9_DOCTRINE.md` — migration doc. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/NATIVE_CONTROL_CHECKLIST.md` — checklist doc. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/NATIVE_CONTROL_DOCTRINE_AUDIT.md` — audit doc. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/NATIVE_PAUSE_RESPONSE_PLAYBOOK.md` — playbook doc. **Safe to ignore unless explicitly needed.**
-- `project10-marketing-agent/scripts/` — scripts directory. **Unsafe to bulk-commit without inspection.**
-- `project10-marketing-agent/state/` — generated state outputs. **Safe to ignore unless explicitly needed.**
-
-### Project 11+ docs / folders
-- `project11-client-success/01_CLIENT_ONBOARDING_INTAKE_FORM.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/02_KICKOFF_SOP.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/03_DEPLOYMENT_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/04_ROLLBACK_SOP.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/05_QA_ACCEPTANCE_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/06_TESTIMONIAL_CAPTURE_WORKFLOW.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/07_14_DAY_UPSELL_TRIGGER_WORKFLOW.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/08_RETENTION_EXPANSION_MONETIZATION/` — client-success folder. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/CLIENT_ONBOARDING_CHECKLIST.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/DISCOVERY_CALL_QUESTIONNAIRE.md` — client-success doc. **Safe to ignore unless explicitly needed.**
-- `project11-client-success/PROJECT_11_COMPLETE_AUDIT.md` — client-success audit doc. **Safe to ignore unless explicitly needed.**
-- `project12-client-success/` — project 12 folder. **Safe to ignore unless explicitly needed.**
-- `project13-internal-governor-dashboard/` — project 13 folder. **Safe to ignore unless explicitly needed.**
-- `project14-growth-engine/` — project 14 folder. **Safe to ignore unless explicitly needed.**
-- `project15-shared-scale-core/` — project 15 folder. **Safe to ignore unless explicitly needed.**
-
-### Project 9 artifacts / scripts / state
-- `project9-sales-agent/FOUNDER_LAUNCH_SIGNOFF_RUNBOOK.md` — project 9 runbook. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_CONTROL_CHAIN_WORKFLOW_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_DRY_RUN_GUARD_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_DRY_RUN_GUARD_WORKFLOW_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_FIRST_10_MONITOR_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_LAUNCH_AUTOMATION_PLAN.md` — project 9 plan. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_LAUNCH_CHECKLIST.md` — project 9 checklist. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_LAUNCH_STATE_TRANSITION_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTBOUND_RESUME_GATE_SPEC.md` — project 9 spec. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/OUTREACH_SCRIPTS.md` — project 9 outreach doc. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/prompts/` — prompt assets. **Safe to ignore unless explicitly needed.**
-- `project9-sales-agent/scripts/resend_delivery_sync.py` — project 9 script. **Unsafe to commit without inspection.**
-- `project9-sales-agent/state/email_acquisition_audit.ndjson` — generated audit log. **Safe to ignore.**
-- `project9-sales-agent/state/outbound_dedup_hash_log.ndjson` — generated audit log. **Safe to ignore.**
-- `project9-sales-agent/state/outbound_first_10_send_events.ndjson` — generated audit log. **Safe to ignore.**
-- `project9-sales-agent/state/suppression_list.ndjson` — generated audit log. **Safe to ignore.**
-
-### Shared / v1-revenue-system / agent docs
-- `shared-docs/` — shared docs tree. **Safe to ignore unless explicitly needed.**
-- `v1-revenue-system/lead_revenue_pipeline.py` — live pipeline code. **Unsafe to bulk-commit without inspection.**
-- `v1-revenue-system/proof_artifacts/` — proof artifacts. **Safe to ignore unless explicitly needed.**
-- `v1-revenue-system/scripts/` — repo scripts. **Unsafe to bulk-commit without inspection.**
-- `v1-revenue-system/state/` — generated state outputs. **Safe to ignore unless explicitly needed.**
-- `v1-revenue-system/tests/` — test additions. **Safe to inspect and commit later if required.**
-
-## Task 1 decision
-- Commit scope remains limited to `ops/codex-output.md` only.
-- Nothing else in the untracked tree is safe to scoop into the Task 1 commit.
-
-# Task 2 — Validate Confidence Fix Targets
-
-## Hunter field references
-- There are no remaining `confidence_score` references in `.github/workflows/scripts/email_acquisition.py`.
-- Current Hunter-aware ranking uses `confidence`:
-  - `.github/workflows/scripts/email_acquisition.py:235-245`
-  - `.github/workflows/scripts/email_acquisition.py:400-416`
-  - `.github/workflows/scripts/email_acquisition.py:527-533`
-  - `.github/workflows/scripts/email_acquisition.py:582-587`
-  - `.github/workflows/scripts/email_acquisition.py:607-624`
-- Current code snippets:
-  - `_candidate_strength()` reads `candidate.get("confidence", 0)`.
-  - `_normalize_candidate()` stores `candidate["confidence"]`.
-  - All six acquisition passes emit `confidence`, not `confidence_score`.
-
-## Outscraper score references
-- The only remaining `score` references in `.github/workflows/scripts/email_acquisition.py` are canonical Sheets-row fields, not ranking logic:
-  - `.github/workflows/scripts/email_acquisition.py:31`
-  - `.github/workflows/scripts/email_acquisition.py:148-151`
-  - `.github/workflows/scripts/email_acquisition.py:172`
-- Current code:
-  - `build_canonical_sheet_row()` reads `record.get("score")` only to preserve the sheet row.
-  - Acquisition ranking does not use `score` anywhere in `_candidate_strength()` or the email acquisition passes.
-
-## Validation result
-- Validation passed for the current worktree state: Hunter ranking now uses the real `confidence` field, and Outscraper acquisition logic does not depend on a confidence-score field.
-- No code was changed for this validation step.
-
-# Task 4 — Fix Confidence Field Mismatches
-
-## Findings
-- No `confidence_score` references exist anywhere in `.github/workflows/scripts/email_acquisition.py`.
-- All six pass builders already emit `"confidence": 0` (not `confidence_score`).
-- `_normalize_candidate()` at line 415 sets `candidate["confidence"]`.
-- `_candidate_strength()` at line 238 reads `candidate.get("confidence", 0)`.
-- **No code change required.** Field names are already correct throughout the engine.
-
-## Decision
-- Task 4 is a no-op. Commit documents the validated state only.
-
-# Task 5 — Verify Engine Ranking
-
-## Test suite: `_candidate_strength()` scoring
-
-Five tests run inline against the live `email_acquisition.py` on disk:
-
-| # | Test | Result | A tuple | B tuple |
-|---|------|--------|---------|---------|
-| T1 | same_domain_person_match > general_contact | PASS | (400,450,0,1) | (100,150,0,1) |
-| T2 | confidence=75 > confidence=30 (same class+source) | PASS | (400,500,75,1) | (400,500,30,1) |
-| T3 | OWNER_CONFIRMED/general_contact > GENERAL_CONTACT_ONLY/structured_provider | PASS | (500,150,0,0) | (100,600,100,1) |
-| T4 | same_domain=True > same_domain=False | PASS | (400,500,50,1) | (400,500,50,0) |
-| T5 | structured_provider > website_contact_page (same classification) | PASS | (500,600,0,1) | (500,500,0,1) |
-
-**Result: 5/5 PASSED**
-
-## Interpretation
-- Classification rank is the primary sort key — a weak source with strong classification beats a strong source with weak classification (T3).
-- Source rank is secondary — breaks ties between same-classification candidates (T1, T5).
-- Confidence is tertiary — breaks ties between same-classification, same-source candidates (T2).
-- same_domain is the final tiebreaker (T4).
-- Priority order confirmed: CLASSIFICATION_RANK > SOURCE_RANK > confidence > same_domain.
-
-# Task 6 — Clear Working Tree
-
-## Analysis
-- `.github/workflows/scripts/email_acquisition.py` is UNTRACKED but imported by both `sales_agent.py` and `lead_generator_agent.py` (committed in bb4d464).
-- Every CI run is failing with `ImportError` until this file is committed.
-- **CRITICAL: Must commit email_acquisition.py to restore CI.**
-
-## Files held (founder decision required)
-- `.github/workflows/project10_detroit_send_window.yml` — P10 workflow draft. Uncommitted; founder review required before commit.
-- `.github/workflows/project10_forced_pause_rollback.yml` — P10 rollback. Same.
-- `.github/workflows/project10_resume_gate.yml` — P10 resume gate. Same.
-- `.github/workflows/project10_state_transition.yml` — P10 state machine. Same.
-- `.github/workflows/resend_delivery_sync.yml` — Resend sync. Uncommitted; review required.
-- `v1-revenue-system/lead_revenue_pipeline.py` — live pipeline code. Not safe to bulk-commit.
-- `v1-revenue-system/scripts/` — repo scripts. Not safe to bulk-commit.
-- `shared_env.py` — shared env helper. Needs inspection before commit.
-- `.env.local` — secrets. **Do not commit.**
-- `SECRETS_REGISTRY.md`, `SECRET_USAGE_MAPPING.md` — secret inventory. **Do not commit casually.**
-
-## Decision
-- Commit `email_acquisition.py` only (CI restoration).
-- All others held pending founder review.
+# Codex Output
+loop_cycle: lucid-blackwell-audit
 
-# Task 7 — Final Report
+## Task 1 — Full Branch Inventory
 
-## Summary
+Working tree note:
+- `git status --short` shows many unrelated untracked files in the repo root and other project folders.
+- `git diff main..claude/lucid-blackwell --name-only` is empty for the working tree itself; the audit below is against the branch tip only.
+- No implementation files were modified for this audit.
 
-All Claude Code lane tasks complete.
+Branch commits on `claude/lucid-blackwell` not in `main`:
 
-### Task 4 — Fix Confidence Field Mismatches
-- **Result**: No-op. `confidence` field already used correctly throughout `email_acquisition.py`.
-- **Commit**: `c1a3924` — `fix: correct confidence field names in acquisition engine`
+1. `45b7d17d6be9bd733af08400ea52de2f9d8d324a` | `2026-04-01` | `fix: constrain H2 scenario hook to 2-sentence max`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
 
-### Task 5 — Verify Engine Ranking
-- **Result**: 5/5 tests passed. `_candidate_strength()` priority order confirmed: CLASSIFICATION_RANK > SOURCE_RANK > confidence > same_domain.
-- **Commit**: `c1a3924` — included in Task 4 commit (findings in codex-output.md)
+2. `f97d68194b0f36c4472bbc2295df31c7510d6b49` | `2026-04-01` | `fix: ban cracks phrase, paragraph format lock, hard stop at sentence 5`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
 
-### Task 6 — Clear Working Tree
-- **Result**: `email_acquisition.py` committed (627 lines). CI ImportError resolved.
-- **Commit**: `bf8e386` — `ops: working tree resolved`
-- **Held for founder review**: P10 workflows (4 files), resend_delivery_sync.yml, v1-revenue-system scripts, shared_env.py
+3. `b53c9c19d3d6c8e782017b95e5c296dc47b1a902` | `2026-04-01` | `fix: phrase hygiene, plain language lock, CTA time lock, Riley number in signature`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
 
-### Doctrine compliance
-- WORKFLOW_MODE = QUEUED_NO_SEND_AUTONOMY — unchanged
-- CAP_LIMIT = 3 — unchanged
-- Live send — PAUSED — unchanged
-- Queue promotion — MANUAL ONLY — unchanged
+4. `fe22cca2dff1c108ba0e0b8386d638ba6dd0858c` | `2026-04-01` | `fix: tighten founder voice — first-person lock, 5-sentence cap, anti-repetition`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
 
-## Pending founder decisions
-1. P10 workflows (4 files in `.github/workflows/`) — review and approve before commit
-2. `resend_delivery_sync.yml` — review before commit
-3. `v1-revenue-system/lead_revenue_pipeline.py` and `scripts/` — safe to commit?
-4. `shared_env.py` — safe to commit?
-
-## CLAUDE CODE DONE
-
-# Loop Complete — Final Status
-
-## Commits this loop (Claude Code lane)
-
-| Commit | Message | Files |
-|--------|---------|-------|
-| `c1a3924` | fix: correct confidence field names in acquisition engine | ops/codex-output.md |
-| `bf8e386` | ops: working tree resolved | .github/workflows/scripts/email_acquisition.py |
-| `3c2e77a` | ops: claude code lane complete | ops/codex-output.md, ops/agent_handoff.md |
-| `9e56f65` | ops: founder decision review contents | ops/codex-output.md |
-| `482068b` | ops: commit approved v1 revenue system scripts and shared env | shared_env.py, 3× v1-revenue-system/scripts/ |
-
-## Committed — all clear
-
-- `.github/workflows/scripts/email_acquisition.py` — CI ImportError resolved
-- `shared_env.py` — env bootstrap helper, key names only
-- `v1-revenue-system/scripts/audit_genesis_env.py` — env/secret audit runner
-- `v1-revenue-system/scripts/run_founder_inbox_verification.py` — founder inbox live send only
-- `v1-revenue-system/scripts/run_v1_release_gate.py` — draft-only release gate proof runner
-
-## Still untracked — held by founder decision
-
-| File | Reason held |
-|------|-------------|
-| `v1-revenue-system/scripts/run_prospect_pilot.py` | Hold until P17 closed and Governor reviews |
-| `.github/workflows/project10_*.yml` (4 files) | Not active workstream |
-| `.github/workflows/resend_delivery_sync.yml` | Syncing against empty file |
-| `v1-revenue-system/lead_revenue_pipeline.py` | Not yet reviewed |
-| `v1-revenue-system/scripts/__pycache__/` | Build artifacts — do not commit |
-| `.env.local` | Secrets — do not commit |
-| `SECRETS_REGISTRY.md`, `SECRET_USAGE_MAPPING.md` | Sensitive inventory — do not commit |
-
-## Doctrine compliance — unchanged
-
-- `WORKFLOW_MODE` = `QUEUED_NO_SEND_AUTONOMY`
-- `CAP_LIMIT` = 3
-- Live send = PAUSED
-- Queue promotion = MANUAL ONLY
-
-## LOOP COMPLETE
-
-# Founder Decision — v1-revenue-system/scripts file list and purpose
-
-## Files
-
-### `v1-revenue-system/scripts/audit_genesis_env.py` (184 lines)
-**Purpose:** Fail-fast environment audit. Checks `.env.local` and `.env.local.example` against `EXPECTED_SECRET_KEYS` (defined in `shared_env.py`). Also scans `.github/workflows/*.yml` for `secrets.*` references and flags any that aren't in the registry. Supports `--mode auto/local/github` and `--workflow-file` for per-file audits. Run locally before any workflow step to catch missing secrets. No side effects — read-only.
-
-### `v1-revenue-system/scripts/run_founder_inbox_verification.py` (383 lines)
-**Purpose:** Live founder-inbox-only email verification. Hard-whitelists two recipient addresses (`trnfordham@gmail.com`, `genesisaisystems@outlook.com`). Runs the full `LeadRevenuePipeline` against a fixed Northline HVAC test payload, generates a draft, sends a clean verification email to both founder inboxes via Resend, writes delivery evidence NDJSON and proof artifacts. Has `--fresh-retest` flag to mint a new payload for retest without breaking duplicate protection. **Sends live email to founder inboxes only. Prospect auto-send remains paused.**
-
-### `v1-revenue-system/scripts/run_prospect_pilot.py` (580 lines)
-**Purpose:** Controlled founder-approved micro-batch pilot runner. Reads qualified rows from the production `Leads` tab, filters out internal/test rows, caps batch at 5 leads, requires interactive founder approval (`APPROVE`/`SKIP`) for each lead before sending. Uses `GENESIS_FOUNDERS_PILOT_APPROVAL` env flag guard plus `--founder-pilot` CLI flag. Duplicate protection via SHA-256 fingerprint state file. Writes delivery evidence NDJSON and proof artifacts. **Only sends after explicit founder approval per lead. Auto-send remains paused.**
-
-### `v1-revenue-system/scripts/run_v1_release_gate.py` (596 lines)
-**Purpose:** V1 release-gate proof runner. Draft-only — no live outbound authorized. Proves the full pipeline path: webhook intake, qualification/scoring, Google Sheets persistence, draft generation, duplicate rerun protection, malformed payload/model failure handling. Also handles production `Leads` tab schema migration (`--repair-production-leads-tab` flag: backs up existing tab, replaces with canonical headers). Writes governor summary, migration readiness report, and final release checklist artifacts. **Draft-only. No live sends.**
-
----
-
-# Founder Decision — shared_env.py full contents
-
-**File:** `shared_env.py` (83 lines, repo root)
-
-**Purpose:** Shared environment bootstrap helper. Loads `.env.local` (then `.env` as fallback) without overriding existing CI/Actions env vars. Exposes `getenv()`, `require_env()`, and `bootstrap_env()` for use by all scripts. Defines `EXPECTED_SECRET_KEYS` — the canonical list of 28 secret keys the entire system depends on.
-
-**Imports from:** `dotenv`, `pathlib`, `functools`, `os`
-
-**Used by:** `audit_genesis_env.py`, `run_prospect_pilot.py`, and any script needing env access without disturbing CI.
-
-**Does NOT contain any secrets.** Only key names (strings), not values.
-
-```python
-from __future__ import annotations
-
-import os
-from functools import lru_cache
-from pathlib import Path
-from typing import Any
-
-from dotenv import load_dotenv
-
-
-REPO_ROOT = Path(__file__).resolve().parent
-LOCAL_ENV_PATH = REPO_ROOT / ".env.local"
-LOCAL_ENV_EXAMPLE_PATH = REPO_ROOT / ".env.local.example"
-EXPECTED_SECRET_KEYS = (
-    "ALERT_PHONE_NUMBER",
-    "ANTHROPIC_API_KEY",
-    "APOLLO_API_KEY",
-    "BUSINESS_MAILING_ADDRESS",
-    "BUSINESS_PHONE_NUMBER",
-    "CALENDLY_ORG_URL",
-    "CALENDLY_TOKEN",
-    "CALENDLY_URL",
-    "DEMO_SERVER_URL",
-    "GOOGLE_SERVICE_ACCOUNT",
-    "GOOGLE_SHEET_ID",
-    "HUBSPOT_ACCESS_TOKEN",
-    "HUNTER_API_KEY",
-    "NOTIFICATION_EMAIL",
-    "OPENAI_ACCOUNT_BALANCE",
-    "OPENAI_API_KEY",
-    "OUTSCRAPER_API_KEY",
-    "PROJECT9_BUSINESS_MAILING_ADDRESS",
-    "RESEND_API_KEY",
-    "SENDGRID_FROM_EMAIL",
-    "SENDGRID_FROM_NAME",
-    "SITE_URL",
-    "STRIPE_DEPOSIT_LINK",
-    "STRIPE_FULLSTACK_LINK",
-    "STRIPE_GROWTH_LINK",
-    "STRIPE_SECRET_KEY",
-    "STRIPE_STARTER_LINK",
-    "STRIPE_WEBHOOK_SECRET",
-    "TELEGRAM_BOT_TOKEN",
-    "TELEGRAM_CHAT_ID",
-    "VAPI_PUBLIC_KEY",
-    "YELP_API_KEY",
-)
-
-_BOOTSTRAPPED = False
-
-
-def bootstrap_env() -> None:
-    """Load local developer secrets without disturbing CI/Actions env vars."""
-
-    global _BOOTSTRAPPED
-    if _BOOTSTRAPPED:
-        return
-
-    if LOCAL_ENV_PATH.exists():
-        load_dotenv(LOCAL_ENV_PATH, override=False)
-
-    fallback_env = REPO_ROOT / ".env"
-    if fallback_env.exists():
-        load_dotenv(fallback_env, override=False)
-
-    _BOOTSTRAPPED = True
-
-
-@lru_cache(maxsize=None)
-def getenv(key: str, default: Any = "") -> str:
-    bootstrap_env()
-    value = os.getenv(key, default)
-    if value is None:
-        return ""
-    return str(value).strip()
-
-
-def require_env(key: str) -> str:
-    value = getenv(key)
-    if not value:
-        raise RuntimeError(f"{key} is required")
-    return value
-```
+5. `325d526d44e845095564974a3176b402608680fa` | `2026-04-01` | `fix: ban placeholders, lock greeting, ban phone numbers in draft prompt`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
+
+6. `f1049c1b5b76f1945e808ab43e9fcfef4abe6ffe` | `2026-04-01` | `feat: H.O.O.K. drafting framework + DRY_RUN governor gate`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
+
+7. `c36847e62127e647e8fbdec6033ee0b7aeb668b4` | `2026-04-01` | `feat: canonical email signature block on all outbound sends`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
+
+8. `72fac07d5b74c65cb931a1c208664da13f8fea37` | `2026-04-01` | `feat: Sent Content QA tab — log full email body on successful sends`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
+
+9. `ff3e96ea394d83c9280ebc1b070a29097f501256` | `2026-04-01` | `fix: revert sender to root domain — Resend subdomain is DNS only`
+   - Touched: `.github/workflows/scripts/notify.py`
+   - Touched: `.github/workflows/scripts/prompt_deployer.py`
+   - Touched: `.github/workflows/scripts/sales_agent.py`
+
+10. `49e77e72e0a1c13fb730bfcd472ba1aa959fa2e9` | `2026-04-01` | `fix: failed sends should not block lead retry`
+    - Touched: `.github/workflows/scripts/sales_agent.py`
+
+11. `ac7019743b18423e630afe2ccad3dfd2579e78d8` | `2026-04-01` | `fix: use verified send subdomain for Resend sender address`
+    - Touched: `.github/workflows/scripts/notify.py`
+    - Touched: `.github/workflows/scripts/prompt_deployer.py`
+    - Touched: `.github/workflows/scripts/sales_agent.py`
+
+12. `02c31b5beacb99888e288c99ba281d679b5fcea5` | `2026-04-01` | `fix: truthful Telegram summary — drop misleading "tracked" counter`
+    - Touched: `.github/workflows/scripts/sales_agent.py`
+
+13. `c6d481ccfb2a828e4d0194ec4da7a16572151347` | `2026-04-01` | `feat: Sales Agent auto-send + Resend engagement tracking`
+    - Touched: `.github/workflows/scripts/sales_agent.py`
+    - Touched: `CLAUDE_CODE_START.md`
