@@ -140,3 +140,22 @@ Verification run after both extractions. All doctrine lines confirmed on main:
 | `outbound_resume_gate.yml` present | PASS | `.github/workflows/outbound_resume_gate.yml` |
 
 **Doctrine: INTACT. All 9 checks passed.**
+
+## Task 4 — Final Report
+
+### All commits this loop
+
+| Commit | Message |
+|--------|---------|
+| `2480b03` | extract: homepage copy improvements from lucid-blackwell |
+| `59ab728` | extract: H.O.O.K. copy and phrase hygiene from lucid-blackwell |
+| `1960a6c` | ops: doctrine verification after extraction |
+
+### Extraction scope summary
+
+| File | Extracted | Held |
+|------|-----------|------|
+| `index.html` | Hero copy, CTAs, section heads, section notes, proof-blocks removal, pricing copy, about copy | Form field additions, live activity feed script |
+| `sales_agent.py` | HOOK_VARIANTS, DEFAULT_HOOKS, LEAK/OUTCOME/PROOF/CTA/EMAIL_SIGNATURE constants, _select_framework_variants, full H.O.O.K. prompt | _enrich_email, HubSpot field rename, WORKFLOW_MODE/CAP_LIMIT/send logic |
+
+### Doctrine: INTACT
