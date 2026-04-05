@@ -294,3 +294,29 @@ Disposition recommendation:
 Evidence summary:
 - Remote branch still exists.
 - The remaining diffs are all in the rejected categories above, so the safest Governor action is archive-first preservation, then branch deletion after the archive tag is confirmed.
+
+---
+
+## Resend Webhook Receiver Audit — 2026-04-05
+
+### WEBHOOK RECEIVER NOT FOUND — needs to be built.
+
+### Search scope
+- `demo-server/server.js` — all `app.post` / `app.get` routes
+- `v1-revenue-system/register_webhooks.py` — webhook registration script
+- `.github/workflows/resend_delivery_sync.yml` — Resend sync workflow
+- All `.py` and `.js` mainline files grepped for: `resend webhook`, `/webhooks/resend`, `email.bounced`, `email.complained`, `email.delivered`
+
+### What exists
+- `resend_delivery_sync.py` + `resend_delivery_sync.yml`: a **polling** approach — a cron job (2× daily, Mon–Fri) that calls `GET /emails/{id}` on the Resend API for each known send event and writes bounce/complaint signals to `suppression_list.ndjson`.
+- `demo-server/server.js`: uses `new Resend(key)` for outbound email only (line 230). No inbound webhook route.
+- `register_webhooks.py`: registers Calendly and verifies Stripe webhooks. No Resend registration.
+- `demo-server/server.js` routes present: `/demo/*`, `/stats/*`, `/submit/contact`, `/voice/incoming`, `/sms/incoming`, `/vapi/end-of-call`, `/telegram/webhook`. No `/webhooks/resend`.
+
+### What is missing
+- No HTTP route that receives Resend push events (`email.bounced`, `email.complained`, `email.delivered`)
+- No Resend webhook secret validation (e.g. `svix-signature` header check)
+- No registration of a Resend webhook endpoint in `register_webhooks.py`
+
+### Architecture note
+Current design is poll-first. The cron fills the gap for now, but push webhooks would give real-time bounce/complaint suppression instead of up-to-a-day lag. Whether to build a receiver is a **Reviewer/founder decision** — flagged here, not implemented.
