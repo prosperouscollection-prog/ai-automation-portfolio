@@ -1,6 +1,7 @@
 {
   "launch_mode": "DRY_RUN",
-  "launch_status": "READY",
+  "launch_status": "PAUSED",
+  "authorized": false,
   "verified_by": "hosted-validation",
   "verified_at": "2026-04-02T08:00:00Z",
   "correlation_id": "hosted-enforce-20260402",
