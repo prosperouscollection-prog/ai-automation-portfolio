@@ -47,6 +47,21 @@ TASK 7 — FINAL REPORT AND NOTIFY
 - Run ops/send_imessage.sh "All tasks complete. Tren — check needed."
 - Stop and wait.
 
+--- CLAUDE CODE TASKS ---
+
+TASK — FIX QA AGENT FAILURE
+Read ops/codex-output.md for the exact failing grep check.
+Fix the failing check in qa_agent.yml.
+Do not touch any other checks.
+Commit: "fix: resolve QA agent failing grep check"
+Confirm fix by checking CI run passes.
+Write result to ops/codex-output.md.
+Commit: "ops: QA fix verification"
+Append NEW LOOP START to ops/agent_handoff.md.
+Commit: "ops: new loop started"
+Run ops/send_imessage.sh "QA agent fixed. Tren — Reviewer check needed."
+Go idle.
+
 CODEX DONE
 
 CODEX DONE
