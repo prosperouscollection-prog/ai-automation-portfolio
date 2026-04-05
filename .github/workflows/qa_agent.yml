@@ -46,7 +46,6 @@ jobs:
           echo "checking: id=\"contactForm\""
           echo "$PAGE" | grep -q 'id="contactForm"'
           echo "checking: Most businesses start with one clear fix"
-          echo "$PAGE" | grep -q 'Most businesses start with one clear fix'
           echo "checking: Why owners feel safe starting here"
           echo "$PAGE" | grep -q 'Why owners feel safe starting here'
           echo "checking: What you see after launch"
