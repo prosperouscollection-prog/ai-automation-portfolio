@@ -37,10 +37,15 @@ jobs:
       - name: Check homepage CRO sections and form
         run: |
           PAGE=$(curl -sL --max-time 30 https://genesisai.systems)
+          echo "checking: id=\"contactForm\""
           echo "$PAGE" | grep -q 'id="contactForm"'
+          echo "checking: Most businesses start with one clear fix"
           echo "$PAGE" | grep -q 'Most businesses start with one clear fix'
+          echo "checking: Why owners feel safe starting here"
           echo "$PAGE" | grep -q 'Why owners feel safe starting here'
+          echo "checking: What you see after launch"
           echo "$PAGE" | grep -q 'What you see after launch'
+          echo "checking: Tell Trendell what is slowing the business down"
           echo "$PAGE" | grep -q 'Tell Trendell what is slowing the business down'
 
       - name: Check homepage avoids broken trust and fake-live copy
