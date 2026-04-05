@@ -2,6 +2,7 @@ name: Sales Agent — Genesis AI Systems
 on:
   schedule:
     - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -27,6 +28,62 @@ jobs:
           cd .github/workflows/scripts
           python3 sales_agent.py
           find . -name "founder_morning_digest_*.md" 2>/dev/null || echo "NO DIGEST FILE FOUND"
+      - name: Probe acquisition engine passes 2-6
+        if: always()
+        run: |
+          pip install requests -q
+          python3 - << 'PYEOF'
+          import sys, json, pathlib, datetime
+          sys.path.insert(0, '.github/workflows/scripts')
+          from email_acquisition import EmailAcquisitionEngine
+
+          engine = EmailAcquisitionEngine()
+          # No owner_email in prospect — forces passes 2-6 to run
+          probe = {"primary_domain": "genesisai.systems", "name": "Genesis AI Systems"}
+          result = engine.acquire(probe).to_dict()
+
+          print("=== ACQUISITION ENGINE PROBE ===")
+          print(f"passes_ran:          {result['passes_ran']}")
+          print(f"email_classification: {result['email_classification']}")
+          print(f"email_confidence:     {result['email_confidence']}")
+          print(f"email_source_type:    {result['email_source_type']}")
+          print(f"final_email_found:    {bool(result['final_email'])}")
+          print(f"candidates_seen:      {len(result['candidate_history'])}")
+          passes_beyond_1 = [p for p in result['passes_ran'] if p != 'pass_1']
+          if passes_beyond_1:
+              print(f"passes 2+ ran:        {passes_beyond_1}")
+          else:
+              print("WARNING: only pass_1 ran")
+
+          outdir = pathlib.Path("project9-sales-agent/state")
+          outdir.mkdir(parents=True, exist_ok=True)
+          probe_out = outdir / "acquisition_engine_probe.json"
+          probe_out.write_text(json.dumps({
+              "probe_domain": "genesisai.systems",
+              "passes_ran": result['passes_ran'],
+              "email_classification": result['email_classification'],
+              "email_confidence": result['email_confidence'],
+              "email_source_type": result['email_source_type'],
+              "final_email_found": bool(result['final_email']),
+              "candidates_seen": len(result['candidate_history']),
+              "run_at": datetime.datetime.utcnow().isoformat() + "Z",
+          }, indent=2))
+          print(f"Probe result written to {probe_out}")
+          PYEOF
+      - name: Upload acquisition engine probe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acquisition-engine-probe
+          path: project9-sales-agent/state/acquisition_engine_probe.json
+          if-no-files-found: warn
+      - name: Upload email acquisition audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: email-acquisition-audit
+          path: project9-sales-agent/state/email_acquisition_audit.ndjson
+          if-no-files-found: warn
       - name: Upload First-10 Send Feed
         if: always()
         uses: actions/upload-artifact@v4

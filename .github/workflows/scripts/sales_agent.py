@@ -34,6 +34,11 @@ load_dotenv()
 from notify import telegram_notify
 from lead_generator_agent import CHAIN_EXCLUSION_KEYWORDS
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+from email_acquisition import EmailAcquisitionEngine, normalize_owner_email  # noqa: E402
+
 # Outreach approval gate
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "v1-revenue-system"))
 from approval_flow import ApprovalFlow, ApprovalStatus, ActionType
@@ -202,9 +207,23 @@ class Lead:
     score: str
     yelp_rating: str
     sheet_row: int
-    email: str = ""          # populated from col P if available
+    owner_email: str = ""    # canonical owner_email from col P if available
     email_source: str = ""   # "sheets" when provided by the Lead Generator
     lead_id: str = ""
+    email_confidence: str = ""
+    email_source_type: str = ""
+    email_source_reference: str = ""
+    person_match_basis: str = ""
+    verification_notes: str = ""
+    rejection_reason: str = ""
+
+    @property
+    def email(self) -> str:
+        return self.owner_email
+
+    @email.setter
+    def email(self, value: str) -> None:
+        self.owner_email = value
 
 
 class SalesAgent:
@@ -242,6 +261,8 @@ class SalesAgent:
             )
         )
         self.morning_digest_path = PROJECT9_STATE_DIR / f"{DIGEST_FILENAME_PREFIX}{self.run_id}.md"
+        self.email_engine = EmailAcquisitionEngine()
+        self.email_audit_path = PROJECT9_STATE_DIR / "email_acquisition_audit.ndjson"
         self._sheets_service = None
         self._flow = ApprovalFlow()
 
@@ -602,7 +623,7 @@ class SalesAgent:
             [
                 (lead.business or "").strip().lower(),
                 (lead.domain or "").strip().lower(),
-                (lead.email or "").strip().lower(),
+                (lead.owner_email or "").strip().lower(),
                 (lead.phone or "").strip(),
             ]
         )
@@ -627,10 +648,58 @@ class SalesAgent:
         return not all(
             [
                 (lead.business or "").strip(),
-                (lead.email or "").strip(),
+                (lead.owner_email or "").strip(),
                 (lead.phone or "").strip(),
             ]
         )
+
+    def _append_email_audit(self, payload: dict[str, Any]) -> None:
+        try:
+            self.email_audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.email_audit_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(payload, sort_keys=True, ensure_ascii=True) + "\n")
+        except Exception as exc:
+            print(f"  ⚠️  Email acquisition audit write failed: {exc}")
+
+    def _recover_owner_email(self, lead: Lead) -> dict[str, Any]:
+        prospect = {
+            "business_name": lead.business,
+            "name": lead.business,
+            "primary_domain": lead.domain,
+            "domain": lead.domain,
+            "website": lead.domain,
+            "owner_email": lead.owner_email,
+            "email": lead.owner_email,
+            "contact_name": "",
+            "title": "",
+            "source": "sales_agent_reprocess",
+        }
+        acquisition = self.email_engine.acquire(prospect).to_dict()
+        canonical_email = normalize_owner_email(
+            acquisition.get("final_email") or lead.owner_email or lead.email
+        ) or ""
+        if canonical_email:
+            lead.owner_email = canonical_email
+            lead.lead_id = self._build_lead_id(lead)
+        lead.email_confidence = acquisition.get("email_confidence", "")
+        lead.email_source_type = acquisition.get("email_source_type", "")
+        lead.email_source_reference = acquisition.get("email_source_reference", "")
+        lead.person_match_basis = acquisition.get("person_match_basis", "")
+        lead.verification_notes = acquisition.get("verification_notes", "")
+        lead.rejection_reason = acquisition.get("rejection_reason", "")
+        lead.email_source = "acquisition_reprocess" if canonical_email else lead.email_source
+        acquisition["final_email"] = canonical_email
+        acquisition["owner_email"] = canonical_email
+        self._append_email_audit(
+            {
+                "run_id": self.run_id,
+                "business_name": lead.business,
+                "lead_id": lead.lead_id,
+                "reprocess": True,
+                **acquisition,
+            }
+        )
+        return acquisition
 
     def _assign_priority(self, lead: Lead) -> str:
         industry = (lead.industry or "").strip().lower()
@@ -682,7 +751,7 @@ class SalesAgent:
             "business_name": lead.business,
             "priority": result.get("priority", ""),
             "reason_selected": result.get("reason_selected", ""),
-            "owner_email": lead.email,
+            "owner_email": lead.owner_email,
             "recommended_draft_preview": self._preview_recommended_draft(
                 str(result.get("recommended_draft", ""))
             ),
@@ -917,6 +986,9 @@ class SalesAgent:
         lead_ids_this_run: dict[str, str],
     ) -> dict[str, Any]:
         lead_name = (lead.business or "").strip().lower()
+        if not normalize_owner_email(lead.owner_email):
+            self._recover_owner_email(lead)
+
         lead_id = self._build_lead_id(lead)
         lead.lead_id = lead_id
 
@@ -1031,7 +1103,7 @@ class SalesAgent:
             request = self._flow.request_approval(
                 action_type=ActionType.OUTREACH,
                 target_name=lead.business,
-                target_email=lead.email,
+                target_email=lead.owner_email,
                 preview=f"Subject: {subject}\n\n{body[:280]}",
             )
             if not request.message_id:
@@ -1111,6 +1183,9 @@ class SalesAgent:
             {
                 "pass_type": locals().get("pass_type", "first_pass"),
                 "lead_id": lead_id,
+                "email_confidence": lead.email_confidence or "NONE",
+                "email_source_type": lead.email_source_type or "unknown",
+                "email_source_reference": lead.email_source_reference or "",
             }
         )
         queue_row = [
@@ -1118,7 +1193,7 @@ class SalesAgent:
             queued_at,
             lead_id,
             lead.business,
-            lead.email,
+            lead.owner_email,
             priority,
             reason_selected,
             recommended_draft,
@@ -1256,7 +1331,7 @@ class SalesAgent:
         ) + (1 if delivery_ok else 0)
         attempt_number = len(existing_records) + 1
         provider_message_id = (
-            f"queue-{self.run_id}-{attempt_number}-{self._hash_text(lead.email.lower())[:12]}"
+            f"queue-{self.run_id}-{attempt_number}-{self._hash_text(lead.owner_email.lower())[:12]}"
             if delivery_ok
             else None
         )
@@ -1269,7 +1344,7 @@ class SalesAgent:
             "attempt_number": attempt_number,
             "send_number": attempt_number,
             "accepted_send_number": accepted_send_number if delivery_ok else None,
-            "recipient_hash": self._hash_text(lead.email.strip().lower()),
+            "recipient_hash": self._hash_text(lead.owner_email.strip().lower()),
             "message_hash": self._hash_text(f"{subject}\n\n{body}"),
             "provider_message_id": provider_message_id,
             "provider_accepted": bool(delivery_ok),
@@ -1582,7 +1657,9 @@ class SalesAgent:
                 if not domain:
                     continue
                 # Read owner_email from col P if Lead Generator populated it
-                owner_email = row[COL["owner_email"]].strip() if len(row) > COL["owner_email"] else ""
+                owner_email = normalize_owner_email(
+                    row[COL["owner_email"]].strip() if len(row) > COL["owner_email"] else ""
+                ) or ""
                 lead = Lead(
                     business=row[COL["name"]].strip() if len(row) > COL["name"] else "Local Business",
                     domain=domain,
@@ -1592,11 +1669,13 @@ class SalesAgent:
                     score=score,
                     yelp_rating=row[COL["yelp_rating"]] if len(row) > COL["yelp_rating"] else "",
                     sheet_row=i + 2,
-                    email=owner_email,
+                    owner_email=owner_email,
+                    email_source="sheets" if owner_email else "",
+                    email_confidence="HIGH" if owner_email else "NONE",
                 )
                 lead.lead_id = self._build_lead_id(lead)
                 leads.append(lead)
-            sheets_email_count = sum(1 for l in leads if l.email)
+            sheets_email_count = sum(1 for l in leads if l.owner_email)
             print(
                 f"✅ Read {len(leads)} HOT leads with domain from Sheets "
                 f"({sheets_email_count} already have owner_email in col P)"
@@ -1785,7 +1864,7 @@ BODY:
                     "description": (
                         f"Score: {lead.score}\n"
                         f"Domain: {lead.domain}\n"
-                        f"Email: {lead.email}\n"
+                        f"Email: {lead.owner_email}\n"
                         f"Address: {lead.address}\n"
                         f"Yelp: {lead.yelp_rating} stars"
                     ),

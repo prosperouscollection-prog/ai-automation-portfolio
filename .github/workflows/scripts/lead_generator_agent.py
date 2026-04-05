@@ -6,7 +6,9 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 DETROIT = ZoneInfo("America/Detroit")
@@ -16,6 +18,22 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+
+SCRIPT_DIR = os.path.dirname(__file__)
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
+from email_acquisition import (  # noqa: E402
+    SHEETS_HEADERS as CANONICAL_SHEETS_HEADERS,
+    EmailAcquisitionEngine,
+    build_canonical_sheet_row as _build_canonical_sheet_row,
+    is_internal_record as _is_internal_record,
+    normalize_owner_email as _normalize_owner_email,
+)
+
+normalize_owner_email = _normalize_owner_email
+build_canonical_sheet_row = _build_canonical_sheet_row
+is_internal_record = _is_internal_record
 
 INDUSTRIES_SCHEDULE = {
     0: {"industry": "restaurant", "keywords": ["restaurant", "cafe", "diner", "bistro"], "yelp_categories": "restaurants"},
@@ -81,6 +99,9 @@ CHAIN_EXCLUSION_KEYWORDS = [
 ]
 
 
+SHEETS_HEADERS = CANONICAL_SHEETS_HEADERS
+
+
 class LeadGeneratorAgent:
     """Find local businesses, score them, and push hot leads to HubSpot + Sheets."""
 
@@ -92,6 +113,8 @@ class LeadGeneratorAgent:
         self.service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT", "").strip()
         self.outscraper_key = os.getenv("OUTSCRAPER_API_KEY", "").strip()
         self.hunter_key = os.getenv("HUNTER_API_KEY", "").strip()
+        self.email_engine = EmailAcquisitionEngine()
+        self.email_audit_path = Path(__file__).resolve().parents[3] / "project9-sales-agent" / "state" / "email_acquisition_audit.ndjson"
 
     def run(self) -> None:
         day = datetime.now(DETROIT).weekday()
@@ -110,14 +133,27 @@ class LeadGeneratorAgent:
             print("⚠️  No results from any source — falling back to mock data for testing")
             prospects = self.get_mock_prospects(industry)
 
+        prospects = [p for p in prospects if not self._is_internal_record(p)]
+        if not prospects:
+            print("ℹ️  Internal/test records filtered out — nothing to process")
+            return
+
         scored = self.score_prospects(prospects)
         hot = [p for p in scored if p["score"] == "HOT"]
 
         # --- Email enrichment for HOT leads with a known domain ---
         for p in hot:
-            domain = p.get("primary_domain", "").strip()
-            if domain and not p.get("email"):
-                p["email"] = self.enrich_email(domain)
+            acquisition = self.acquire_owner_email(p)
+            p["owner_email"] = acquisition["final_email"]
+            p["email"] = acquisition["final_email"]
+            p["email_confidence"] = acquisition["email_confidence"]
+            p["email_source_type"] = acquisition["email_source_type"]
+            p["email_source_reference"] = acquisition["email_source_reference"]
+            p["person_match_basis"] = acquisition["person_match_basis"]
+            p["verification_notes"] = acquisition["verification_notes"]
+            p["rejection_reason"] = acquisition["rejection_reason"]
+            p["email_classification"] = acquisition["email_classification"]
+            self._append_email_audit(acquisition)
 
         self.generate_outreach(hot[:5], industry)  # must run before save_to_sheets
         self.save_to_sheets(scored, industry)
@@ -162,7 +198,7 @@ class LeadGeneratorAgent:
         """Search Outscraper Maps for Detroit businesses in today's niche.
 
         Maps each result into the standard lead dict with primary_domain
-        populated from the `website` field — enabling enrich_email() to fire.
+        populated from the `website` field — used by acquire_owner_email().
         """
         query = self.MAPS_QUERY.get(industry, f"{industry} Detroit MI")
         print(f"  Maps query: {query!r}")
@@ -189,6 +225,7 @@ class LeadGeneratorAgent:
                     "primary_domain": domain,
                     "phone": biz.get("phone", ""),
                     "email": "",
+                    "owner_email": "",
                     "contact_name": "",
                     "title": "",
                     "estimated_num_employees": 0,
@@ -236,6 +273,7 @@ class LeadGeneratorAgent:
                     "primary_domain": "",
                     "phone": biz.get("display_phone", biz.get("phone", "")),
                     "email": "",
+                    "owner_email": "",
                     "contact_name": "",
                     "title": "",
                     "estimated_num_employees": 0,  # Yelp doesn't provide this — 0 so scoring uses reviews only
@@ -310,6 +348,7 @@ class LeadGeneratorAgent:
                         if person.get("phone_numbers") else ""
                     ),
                     "email": person.get("email", ""),
+                    "owner_email": person.get("email", ""),
                     "contact_name": person.get("name", ""),
                     "title": person.get("title", ""),
                     "estimated_num_employees": org.get("estimated_num_employees", 0),
@@ -373,6 +412,35 @@ class LeadGeneratorAgent:
             scored.append(prospect)
         return scored
 
+    def _is_internal_record(self, prospect: dict) -> bool:
+        return _is_internal_record(prospect)
+
+    def _build_canonical_sheet_row(self, record: dict[str, Any], industry: str | None = None) -> list[str]:
+        canonical_row = _build_canonical_sheet_row(record, industry)
+        # Keep the live 16-column row shape untouched for the production Leads tab.
+        return canonical_row
+
+    def _append_email_audit(self, acquisition: dict[str, Any]) -> None:
+        try:
+            self.email_audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with self.email_audit_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(acquisition, sort_keys=True, ensure_ascii=True) + "\n")
+        except Exception as exc:
+            print(f"  ⚠️  Email acquisition audit write failed: {exc}")
+
+    def acquire_owner_email(self, prospect: dict[str, Any]) -> dict[str, Any]:
+        acquisition = self.email_engine.acquire(prospect).to_dict()
+        canonical_email = _normalize_owner_email(
+            acquisition.get("final_email")
+            or prospect.get("owner_email")
+            or prospect.get("email")
+        ) or ""
+        acquisition["final_email"] = canonical_email
+        acquisition["owner_email"] = canonical_email
+        if canonical_email and not acquisition.get("email_source_type"):
+            acquisition["email_source_type"] = "structured_provider"
+        return acquisition
+
     # HubSpot requires specific enum values for the industry field
     HUBSPOT_INDUSTRY_MAP = {
         "restaurant": "FOOD_BEVERAGES",
@@ -421,7 +489,7 @@ class LeadGeneratorAgent:
                             f"Address: {prospect.get('address','')}\n"
                             f"Yelp: {prospect.get('yelp_rating','')} stars, {prospect.get('yelp_reviews','')} reviews\n"
                             f"Contact: {prospect.get('contact_name','')}, {prospect.get('title','')}\n"
-                            f"Email: {prospect.get('email','')}\n"
+                            f"Email: {prospect.get('owner_email') or prospect.get('email','')}\n"
                             f"LinkedIn: {prospect.get('linkedin_url','')}"
                         ),
                         "hs_lead_status": "NEW",
@@ -467,6 +535,8 @@ class LeadGeneratorAgent:
             today = datetime.now(DETROIT).strftime("%Y-%m-%d")
             rows = []
             for p in prospects:
+                owner_email = _normalize_owner_email(p.get("owner_email") or p.get("email")) or ""
+                outreach_template = p.get("outreach_email_template") or p.get("outreach_email", "")
                 rows.append([
                     today,
                     industry,
@@ -481,9 +551,9 @@ class LeadGeneratorAgent:
                     p.get("reason", ""),
                     p.get("recommended_product", ""),
                     p.get("yelp_url", ""),
-                    p.get("outreach_email", ""),
+                    outreach_template,
                     "",                   # col O: placeholder
-                    p.get("email", ""),   # col P: owner_email — enriched contact address
+                    owner_email,          # col P: canonical owner_email — enriched contact address
                 ])
             service.spreadsheets().values().append(
                 spreadsheetId=self.sheet_id,
@@ -512,7 +582,7 @@ class LeadGeneratorAgent:
             "=" * 28,
         ]
         for i, p in enumerate(hot_prospects, 1):
-            email_line = f"\n   📧 {p['email']}" if p.get("email") else ""
+            email_line = f"\n   📧 {p.get('owner_email') or p.get('email', '')}" if (p.get("owner_email") or p.get("email")) else ""
             lines.append(
                 f"{i}. {p.get('name', 'Unknown')}\n"
                 f"   {p.get('phone', 'No phone listed')}"
@@ -542,65 +612,6 @@ class LeadGeneratorAgent:
         else:
             print("⚠️  Telegram not configured — TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID missing")
             print(f"   HOT leads today:\n{message}")
-
-    def enrich_email(self, domain: str) -> str:
-        """Return first valid email for domain. Outscraper primary, Hunter fallback.
-
-        Logs result clearly. Never raises — returns '' on any failure so the
-        caller can continue processing the rest of the batch.
-        """
-        # 1. Outscraper /emails-and-contacts
-        if self.outscraper_key:
-            try:
-                resp = requests.get(
-                    "https://api.app.outscraper.com/emails-and-contacts",
-                    headers={"X-API-KEY": self.outscraper_key},
-                    params={"query": domain, "async": "false"},
-                    timeout=30,
-                )
-                if resp.ok:
-                    raw = resp.json().get("data", [])
-                    records = raw[0] if raw and isinstance(raw[0], list) else raw
-                    if records and isinstance(records, list):
-                        emails = records[0].get("emails", []) or []
-                        for entry in emails:
-                            val = entry.get("value", "") if isinstance(entry, dict) else entry
-                            if val and "@" in str(val):
-                                print(f"  📧 Outscraper → {domain}: {val}")
-                                return str(val)
-                    print(f"  ℹ️  Outscraper: no email for {domain}")
-                else:
-                    print(f"  ⚠️  Outscraper {resp.status_code} for {domain} — trying Hunter")
-            except Exception as exc:
-                print(f"  ⚠️  Outscraper exception for {domain}: {exc} — trying Hunter")
-        else:
-            print("  ℹ️  OUTSCRAPER_API_KEY not set — skipping Outscraper enrichment")
-
-        # 2. Hunter fallback
-        if self.hunter_key:
-            try:
-                resp = requests.get(
-                    "https://api.hunter.io/v2/domain-search",
-                    params={"domain": domain, "api_key": self.hunter_key, "limit": 5},
-                    timeout=15,
-                )
-                if resp.ok:
-                    emails = resp.json().get("data", {}).get("emails", [])
-                    if emails:
-                        val = emails[0].get("value", "")
-                        if val:
-                            print(f"  📧 Hunter fallback → {domain}: {val}")
-                            return val
-                    print(f"  ℹ️  Hunter: no email for {domain}")
-                else:
-                    print(f"  ⚠️  Hunter {resp.status_code} for {domain}")
-            except Exception as exc:
-                print(f"  ⚠️  Hunter exception for {domain}: {exc}")
-        else:
-            print("  ℹ️  HUNTER_API_KEY not set — Hunter fallback skipped")
-
-        print(f"  ❌ No email found for {domain}")
-        return ""
 
     def generate_outreach(self, prospects: list[dict], industry: str) -> list[dict]:
         templates = {
@@ -642,11 +653,13 @@ class LeadGeneratorAgent:
         template = templates.get(industry, templates["restaurant"])
         for prospect in prospects:
             name = prospect.get("name", "there")
-            prospect["outreach_email"] = (
+            outreach_email = (
                 template
                 .replace("[NAME]", name)
                 .replace("[BUSINESS]", name)
             )
+            prospect["outreach_email_template"] = outreach_email
+            prospect["outreach_email"] = outreach_email
         return prospects
 
 
