@@ -213,6 +213,7 @@ FIRST_10_EVENT_FEED_PATH = (
 LAUNCH_STATE_RUNTIME_PATH = (
     REPO_ROOT / "project9-sales-agent" / "state" / "outbound_launch_state_runtime.json"
 )
+SUPPRESSION_FILE = PROJECT9_STATE_DIR / "suppression_list.ndjson"
 
 
 @dataclass
@@ -506,6 +507,7 @@ class SalesAgent:
             "total_filtered_out_corporate": 0,
             "total_filtered_out_duplicate": 0,
             "total_filtered_out_incomplete": 0,
+            "total_filtered_out_suppressed": 0,
             "total_queued": 0,
             "total_skipped": 0,
             "total_timeout_unresolved": 0,
@@ -627,6 +629,63 @@ class SalesAgent:
         except Exception:
             return set()
         return {str(row[0]).strip() for row in rows if row and str(row[0]).strip()}
+
+    def _load_suppression_index(self) -> tuple[set[str], set[str]]:
+        """Return (hashes, domains) of all active suppression entries."""
+        hashes: set[str] = set()
+        domains: set[str] = set()
+        if not SUPPRESSION_FILE.exists():
+            return hashes, domains
+        try:
+            for line in SUPPRESSION_FILE.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                h = entry.get("recipient_hash", "").strip()
+                d = entry.get("domain", "").strip().lower()
+                if h:
+                    hashes.add(h)
+                if d:
+                    domains.add(d)
+        except Exception:
+            pass
+        return hashes, domains
+
+    def _is_lead_suppressed(self, lead: "Lead", hashes: set[str], domains: set[str]) -> bool:
+        """Return True if the lead's email hash or domain is in the suppression list."""
+        if lead.domain and lead.domain.strip().lower() in domains:
+            return True
+        if lead.owner_email:
+            h = hashlib.sha256(lead.owner_email.strip().lower().encode("utf-8")).hexdigest()
+            if h in hashes:
+                return True
+        return False
+
+    def _record_skip_suppression(self, lead: "Lead") -> None:
+        """Write a canonical suppression record when a lead is skipped by the founder."""
+        try:
+            SUPPRESSION_FILE.parent.mkdir(parents=True, exist_ok=True)
+            entry: dict[str, Any] = {
+                "recipient_hash": hashlib.sha256(
+                    (lead.owner_email or "").strip().lower().encode("utf-8")
+                ).hexdigest(),
+                "domain": (lead.domain or "").strip().lower(),
+                "status": "skip",
+                "reason": "founder_skipped",
+                "date_added": datetime.now(DETROIT).isoformat(),
+                "source": "sales_agent",
+            }
+            if lead.owner_email:
+                entry["email"] = lead.owner_email.strip().lower()
+            with SUPPRESSION_FILE.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            print(f"  📋 Suppression entry written: domain={entry['domain']} status=skip")
+        except Exception as exc:
+            print(f"  ⚠️  Failed to write suppression entry: {exc}")
 
     def _outreach_log_has_key(self, idempotency_key: str) -> bool:
         if not self.sheet_id:
@@ -1040,6 +1099,16 @@ class SalesAgent:
                 "lead_id": lead_id,
             }
 
+        suppression_hashes, suppression_domains = self._load_suppression_index()
+        if self._is_lead_suppressed(lead, suppression_hashes, suppression_domains):
+            print(f"  ⛔ Lead suppressed: {lead.business} domain={lead.domain}")
+            return {
+                "selected": False,
+                "filter_summary_key": "total_filtered_out_suppressed",
+                "terminal_state": "FILTERED_OUT_SUPPRESSED",
+                "lead_id": lead_id,
+            }
+
         if lead_id in lead_ids_this_run and lead_ids_this_run[lead_id] != "QUEUED_FOR_REVIEW":
             print(
                 f"⛔ QUEUE_CORRUPTION_DETECTED lead_id={lead_id} "
@@ -1137,6 +1206,7 @@ class SalesAgent:
                 terminal_state = "SKIPPED"
                 queue_result = "SKIPPED"
                 confirmation = f"⏭️ Skipped by founder: {lead.business}. No email was sent."
+                self._record_skip_suppression(lead)
             elif status == ApprovalStatus.EXPIRED:
                 terminal_state = "TIMEOUT_UNRESOLVED"
                 queue_result = "TIMEOUT_UNRESOLVED"
