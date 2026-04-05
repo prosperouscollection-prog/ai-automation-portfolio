@@ -1,55 +1,128 @@
 # Codex Output
 loop_cycle: lucid-blackwell-audit
 
-## Task 1 — Full Branch Inventory
+## Task 2 — Diff Against `main`
 
-Working tree note:
-- `git status --short` shows many unrelated untracked files in the repo root and other project folders.
-- `git diff main..claude/lucid-blackwell --name-only` is empty for the working tree itself; the audit below is against the branch tip only.
-- No implementation files were modified for this audit.
+`git diff main..claude/lucid-blackwell --name-only` reports 26 differing paths.
 
-Branch commits on `claude/lucid-blackwell` not in `main`:
+### Merge-safe or low-risk changes
 
-1. `45b7d17d6be9bd733af08400ea52de2f9d8d324a` | `2026-04-01` | `fix: constrain H2 scenario hook to 2-sentence max`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `.github/workflows/qa_agent.yml`
+  - Removed diagnostic `echo "checking: ..."` lines before `grep -q` checks.
+  - Doctrine conflict: none.
+  - Verdict: **MERGE SAFE**.
 
-2. `f97d68194b0f36c4472bbc2295df31c7510d6b49` | `2026-04-01` | `fix: ban cracks phrase, paragraph format lock, hard stop at sentence 5`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `index.html`
+  - Marketing/hero copy, CTA wording, and section layout changed.
+  - Doctrine conflict: none with live send / approval / CAP / WORKFLOW_MODE / ApprovalFlow.
+  - Verdict: **MERGE SAFE** from doctrine perspective.
 
-3. `b53c9c19d3d6c8e782017b95e5c296dc47b1a902` | `2026-04-01` | `fix: phrase hygiene, plain language lock, CTA time lock, Riley number in signature`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+### Changes that need modification before merge
 
-4. `fe22cca2dff1c108ba0e0b8386d638ba6dd0858c` | `2026-04-01` | `fix: tighten founder voice — first-person lock, 5-sentence cap, anti-repetition`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `.github/workflows/scripts/lead_generator_agent.py`
+  - Removes the canonical email-acquisition helper import, the internal-record filter, and the shared `CHAIN_EXCLUSION_KEYWORDS` block.
+  - Swaps away from the hardened `owner_email` acquisition pipeline and falls back to direct email handling.
+  - Conflicts with canonical owner-email handling and the hardened lead-quality path.
+  - Verdict: **NEEDS MODIFICATION**.
 
-5. `325d526d44e845095564974a3176b402608680fa` | `2026-04-01` | `fix: ban placeholders, lock greeting, ban phone numbers in draft prompt`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `.github/workflows/scripts/email_acquisition.py`
+  - Deleted the entire canonical acquisition engine.
+  - This removes the multi-pass email recovery / classification layer that downstream scripts depend on.
+  - Not a direct live-send violation, but it breaks the email-hardening architecture.
+  - Verdict: **NEEDS MODIFICATION**.
 
-6. `f1049c1b5b76f1945e808ab43e9fcfef4abe6ffe` | `2026-04-01` | `feat: H.O.O.K. drafting framework + DRY_RUN governor gate`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `shared_env.py`
+  - Deleted the shared environment bootstrap/helper.
+  - This is infrastructure churn, not a direct doctrine breach, but it is broad and likely to break multiple scripts if merged as-is.
+  - Verdict: **NEEDS MODIFICATION**.
 
-7. `c36847e62127e647e8fbdec6033ee0b7aeb668b4` | `2026-04-01` | `feat: canonical email signature block on all outbound sends`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `codex-output.md`
+  - Deleted a repo-root audit artifact.
+  - No locked-doctrine violation by itself, but it removes evidence/history and is not safe as a random deletion.
+  - Verdict: **NEEDS MODIFICATION**.
 
-8. `72fac07d5b74c65cb931a1c208664da13f8fea37` | `2026-04-01` | `feat: Sent Content QA tab — log full email body on successful sends`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+### Changes that must be rejected
 
-9. `ff3e96ea394d83c9280ebc1b070a29097f501256` | `2026-04-01` | `fix: revert sender to root domain — Resend subdomain is DNS only`
-   - Touched: `.github/workflows/scripts/notify.py`
-   - Touched: `.github/workflows/scripts/prompt_deployer.py`
-   - Touched: `.github/workflows/scripts/sales_agent.py`
+- `.github/workflows/sales_agent.yml`
+  - Reintroduces live-send wiring: `OUTSCRAPER_API_KEY`, `HUNTER_API_KEY`, `RESEND_API_KEY`, and `HUBSPOT_ACCESS_TOKEN`.
+  - Switches the job back to `resend` installation and removes the no-send digest / proof artifact steps.
+  - Doctrine conflict: live send, Telegram gate, no-send integrity, gate evidence.
+  - Verdict: **REJECT**.
 
-10. `49e77e72e0a1c13fb730bfcd472ba1aa959fa2e9` | `2026-04-01` | `fix: failed sends should not block lead retry`
-    - Touched: `.github/workflows/scripts/sales_agent.py`
+- `.github/workflows/scripts/sales_agent.py`
+  - Rewrites the workflow from queued no-send autonomy into auto-send mode.
+  - Removes the approval flow, founder queue semantics, `CAP_LIMIT`, `WORKFLOW_MODE`, and the no-send / digest / queue protections.
+  - Reintroduces Resend delivery and live outreach behavior.
+  - Doctrine conflict: live send, founder approval gate, Telegram command interface, CAP_LIMIT removal, WORKFLOW_MODE removal, ApprovalFlow removal.
+  - Verdict: **REJECT**.
 
-11. `ac7019743b18423e630afe2ccad3dfd2579e78d8` | `2026-04-01` | `fix: use verified send subdomain for Resend sender address`
-    - Touched: `.github/workflows/scripts/notify.py`
-    - Touched: `.github/workflows/scripts/prompt_deployer.py`
-    - Touched: `.github/workflows/scripts/sales_agent.py`
+- `v1-revenue-system/approval_flow.py`
+  - Changes approval semantics from `QUEUE/SKIP` to `SEND/SKIP`.
+  - Changes Telegram keywords and prompt language to send-outreach behavior.
+  - Doctrine conflict: founder approval gate and Telegram command interface requirement.
+  - Verdict: **REJECT**.
 
-12. `02c31b5beacb99888e288c99ba281d679b5fcea5` | `2026-04-01` | `fix: truthful Telegram summary — drop misleading "tracked" counter`
-    - Touched: `.github/workflows/scripts/sales_agent.py`
+- `CLAUDE_CODE_START.md`
+  - Updates the master build document to describe Sales Agent auto-send, removal of approval gating, and Resend tracking.
+  - Doctrine conflict: it documents the same live-send / gate removal that the code changes implement.
+  - Verdict: **REJECT**.
 
-13. `c6d481ccfb2a828e4d0194ec4da7a16572151347` | `2026-04-01` | `feat: Sales Agent auto-send + Resend engagement tracking`
-    - Touched: `.github/workflows/scripts/sales_agent.py`
-    - Touched: `CLAUDE_CODE_START.md`
+- `ops/REVIEWER_ROLE.md`
+  - Deleted the reviewer protocol / checkpoint file.
+  - This does not directly flip live-send code, but it removes the governance role the loop relies on.
+  - Verdict: **REJECT**.
+
+- `ops/agent_handoff.md`
+  - Deleted the handoff file that carries the task list and loop state.
+  - This removes the control-plane used to enforce the loop.
+  - Verdict: **REJECT**.
+
+- `ops/codex-output.md`
+  - Deleted the ops output trail from the repo.
+  - This is not a runtime doctrine violation, but it removes audit history and loop continuity.
+  - Verdict: **REJECT**.
+
+- `ops/send_imessage.sh`
+  - Deleted the notification helper used by the loop protocol.
+  - This is a governance/control-plane removal, not a safe cleanup.
+  - Verdict: **REJECT**.
+
+- `project9-sales-agent/scripts/outbound_dry_run_guard.py`
+  - Deleted the dry-run gate verifier.
+  - Doctrine conflict: gate enforcement and launch-state control.
+  - Verdict: **REJECT**.
+
+- `project9-sales-agent/scripts/outbound_first_10_monitor.py`
+  - Deleted the first-10 outbound monitor / evidence collector.
+  - Doctrine conflict: gate evidence and controlled launch monitoring.
+  - Verdict: **REJECT**.
+
+- `project9-sales-agent/scripts/outbound_launch_state_transition.py`
+  - Deleted the controlled launch-state transition controller.
+  - Doctrine conflict: launch-state governance and gate control.
+  - Verdict: **REJECT**.
+
+- `project9-sales-agent/scripts/outbound_resume_gate.py`
+  - Deleted the founder-only resume gate.
+  - Doctrine conflict: founder approval / gate control / resume authority.
+  - Verdict: **REJECT**.
+
+- `project9-sales-agent/state/outbound_launch_state.json`
+  - Deleted the sample launch-state JSON used for dry-run validation.
+  - Doctrine conflict: launch-state control path.
+  - Verdict: **REJECT**.
+
+- `v1-revenue-system/scripts/audit_genesis_env.py`
+  - Deleted the environment audit script.
+  - Not a direct live-send toggle, but it removes a preflight safety check.
+  - Verdict: **REJECT**.
+
+- `v1-revenue-system/scripts/run_founder_inbox_verification.py`
+  - Deleted the founder inbox verification runner.
+  - This removes a controlled proof path and widens the gap between docs and runtime.
+  - Verdict: **REJECT**.
+
+- `v1-revenue-system/scripts/run_v1_release_gate.py`
+  - Deleted the V1 release-gate proof runner.
+  - This is a control / validation path removal.
+  - Verdict: **REJECT**.
