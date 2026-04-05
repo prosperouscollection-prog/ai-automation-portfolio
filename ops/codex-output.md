@@ -150,3 +150,61 @@ What is missing:
 Bottom line:
 - Calendly support is currently presentation-layer plus webhook registration only.
 - HubSpot support is the stronger integration here, with direct API usage and a dedicated pipeline manager, but the repo still lacks a proven closed loop from booking or lead capture into the CRM workflow.
+- Calendly/HubSpot gap flagged for founder decision. No integration code was written.
+
+---
+
+## P18 Claude Code Lane — Final Report (2026-04-05)
+
+### Schema Reconciliation
+Two conflicting suppression shapes were identified:
+- `resend_delivery_sync.py` wrote: `recipient_hash`, `status`, `reason`, `resend_id`, `recorded_at`, `source`
+- P18 spec wanted: `email`, `domain`, `reason`, `date_added`, `source`
+
+**Canonical schema adopted:**
+```json
+{
+  "recipient_hash": "sha256-of-lowercase-email",
+  "email": "(optional — when available)",
+  "domain": "example.com",
+  "status": "hard_bounce|complaint|skip|opt_out",
+  "reason": "detail string",
+  "resend_id": "(optional — resend_delivery_sync only)",
+  "date_added": "ISO-8601",
+  "source": "sales_agent|resend_delivery_sync|manual"
+}
+```
+
+`recorded_at` renamed to `date_added` in `resend_delivery_sync.py`. No second incompatible format created.
+
+### Task 5 — Suppression List Population
+Changes to `.github/workflows/scripts/sales_agent.py`:
+- `SUPPRESSION_FILE` constant added (line ~217)
+- `total_filtered_out_suppressed` counter added to run summary
+- `_load_suppression_index()` — reads file, returns `(hashes, domains)`
+- `_is_lead_suppressed()` — checks hash and domain before queuing
+- `_record_skip_suppression()` — writes canonical record on founder SKIP
+- Suppression check inserted in `_process_candidate()` after duplicate check, before cap check
+- `_record_skip_suppression()` called immediately on `ApprovalStatus.SKIPPED`
+
+Changes to `project9-sales-agent/scripts/resend_delivery_sync.py`:
+- `_append_suppression_entry()`: `recorded_at` → `date_added`
+
+Commits:
+- `9a145bd` — `feat: populate suppression list on skip and opt-out`
+
+### Task 6 — Test Results
+8 tests, all passing (`v1-revenue-system/tests/test_sales_agent_p18.py`):
+- `test_load_suppression_index_empty_file` ✓
+- `test_load_suppression_index_populates_hash_and_domain` ✓
+- `test_suppressed_by_domain_blocks_lead` ✓
+- `test_suppressed_by_email_hash_blocks_lead` ✓
+- `test_unsuppressed_lead_passes` ✓
+- `test_suppressed_lead_rejected_in_process_candidate` ✓ (approval never called)
+- `test_skip_writes_canonical_suppression_record` ✓ (all canonical fields verified)
+- `test_resend_canonical_schema_uses_date_added` ✓ (no `recorded_at` in output)
+
+Commit: `9143a97` — `test: verify suppression list blocks suppressed leads`
+
+### Calendly/HubSpot
+Audit only — no implementation. Gap documented above. Flagged for founder decision.
