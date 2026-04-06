@@ -462,7 +462,7 @@ async function handleTelegramStart(chatId) {
     chatId,
     '<b>🚀 Genesis AI Systems</b>\n' +
       'Command Center\n\n' +
-      'Welcome back Trendell! 👋\n\n' +
+      'Welcome back! 👋\n\n' +
       'What do you want to do?',
     getMainKeyboard()
   );
@@ -705,7 +705,7 @@ app.post('/demo/lead-capture', async (req, res) => {
 app.post('/demo/rag-chatbot', async (req, res) => {
   const question = String(req.body.question || req.body.message || '');
   const claudeAnswer = await callClaude(
-    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer this customer question in 2-3 sentences. Plain English only — no jargon. Facts: we build AI phone helpers, website chat helpers, lead capture systems, and social content tools for local businesses. Starter package is $500 setup + $150/month. Answer the question: "${question}"`
+    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by our founder. Answer this customer question in 2-3 sentences. Plain English only — no jargon. Facts: we build AI phone helpers, website chat helpers, lead capture systems, and social content tools for local businesses. Starter package is $500 setup + $150/month. Answer the question: "${question}"`
   );
   let answer = claudeAnswer;
   if (!answer) {
@@ -752,7 +752,7 @@ app.post('/demo/video-automation', async (req, res) => {
 app.post('/demo/faq-bot', async (req, res) => {
   const question = String(req.body.question || req.body.message || '');
   const claudeAnswer = await callClaude(
-    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer this customer question in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat helpers, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Question: "${question}"`
+    `You are the AI assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by our founder. Answer this customer question in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat helpers, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Question: "${question}"`
   );
   const answer = claudeAnswer || 'We help local businesses answer calls, capture leads, and book appointments automatically. Ask us anything about pricing, what we build, or how it works.';
   memory.demos += 1;
@@ -782,7 +782,7 @@ app.post('/demo/workflow', async (req, res) => {
 app.post('/demo/follow-up', async (req, res) => {
   const context = req.body.message || req.body.context || 'A lead expressed interest in AI automation for their restaurant';
   const claudeFollowUp = await callClaude(
-    `Write a short, friendly follow-up message (3-4 sentences) from Trendell Fordham at Genesis AI Systems to a potential client. Context: "${context}". Plain English, warm tone, ends with a clear next step like booking a call.`
+    `Write a short, friendly follow-up message (3-4 sentences) from our founder at Genesis AI Systems to a potential client. Context: "${context}". Plain English, warm tone, ends with a clear next step like booking a call.`
   );
   const followUp = claudeFollowUp || 'Hi, thanks for reaching out. I wanted to follow up and see if you had any questions about how we can help your business. I would love to jump on a quick 15-minute call to walk you through what this looks like. You can book a time at genesisai.systems.';
   saveActivity('📧 Follow-up message generated');
@@ -792,7 +792,7 @@ app.post('/demo/follow-up', async (req, res) => {
 app.post('/demo/chat', async (req, res) => {
   const message = String(req.body.message || req.body.question || '');
   const claudeReply = await callClaude(
-    `You are the AI chat assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by Trendell Fordham. Answer in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Message: "${message}"`
+    `You are the AI chat assistant for Genesis AI Systems, a done-for-you AI automation agency in Detroit run by our founder. Answer in 2-3 sentences. Plain English only. Facts: we build AI phone helpers, website chat, lead capture, and content tools for local businesses. Starter is $500 setup + $150/month. Message: "${message}"`
   );
   const reply = claudeReply || 'We help local businesses answer calls, capture leads, and book appointments even while you sleep. What would you like to know?';
   memory.demos += 1;
