@@ -290,40 +290,40 @@ Return JSON: {"score":"HIGH","reason":"brief"}`
 function getPersonalizedResponse(businessType, score) {
   const responses = {
     Restaurant: {
-      HIGH: 'Perfect timing. We help restaurants answer calls and book reservations all day and night. Trendell will call you within 2 hours.',
-      MEDIUM: 'We help restaurants capture more customers after hours. Trendell will reach out within 24 hours.',
+      HIGH: 'Perfect timing. We help restaurants answer calls and book reservations all day and night. our founder will follow up within 2 hours.',
+      MEDIUM: 'We help restaurants capture more customers after hours. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See how we help restaurants at genesisai.systems/demos.html'
     },
     'Dental Office': {
-      HIGH: 'After-hours appointment booking is our specialty for dental offices. Trendell will call within 2 hours.',
-      MEDIUM: 'We help dental offices capture patients they would otherwise miss. Trendell will reach out within 24 hours.',
+      HIGH: 'After-hours appointment booking is our specialty for dental offices. our founder will follow up within 2 hours.',
+      MEDIUM: 'We help dental offices capture patients they would otherwise miss. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See our dental demos at genesisai.systems/demos.html'
     },
     HVAC: {
-      HIGH: 'Emergency after-hours leads are where we shine for HVAC. Trendell will call within 2 hours.',
-      MEDIUM: 'HVAC companies capture more emergency jobs with our system. Trendell will reach out within 24 hours.',
+      HIGH: 'Emergency after-hours leads are where we shine for HVAC. our founder will follow up within 2 hours.',
+      MEDIUM: 'HVAC companies capture more emergency jobs with our system. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See how we help HVAC at genesisai.systems/demos.html'
     },
     Salon: {
-      HIGH: 'Salons see more after-hours bookings with Riley. Trendell will call within 2 hours.',
-      MEDIUM: 'We help salons fill schedules automatically. Trendell will reach out within 24 hours.',
+      HIGH: 'Salons see more after-hours bookings with Riley. our founder will follow up within 2 hours.',
+      MEDIUM: 'We help salons fill schedules automatically. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See salon demos at genesisai.systems/demos.html'
     },
     'Real Estate': {
-      HIGH: 'Responding faster closes more deals. Trendell will call within 2 hours.',
-      MEDIUM: 'We help agents capture leads others miss. Trendell will reach out within 24 hours.',
+      HIGH: 'Responding faster closes more deals. our founder will follow up within 2 hours.',
+      MEDIUM: 'We help agents capture leads others miss. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See real estate demos at genesisai.systems/demos.html'
     },
     Retail: {
-      HIGH: 'Retail stores cut service work with our AI. Trendell will call within 2 hours.',
-      MEDIUM: 'We help retail answer questions all day and night. Trendell will reach out within 24 hours.',
+      HIGH: 'Retail stores cut service work with our AI. our founder will follow up within 2 hours.',
+      MEDIUM: 'We help retail answer questions all day and night. our founder will follow up within 24 hours.',
       LOW: 'Thanks. See retail demos at genesisai.systems/demos.html'
     }
   };
 
   const defaults = {
-    HIGH: 'This sounds like a great fit. Trendell will call within 2 hours.',
-    MEDIUM: 'Thanks. Trendell will reach out within 24 hours.',
+    HIGH: 'This sounds like a great fit. our founder will follow up within 2 hours.',
+    MEDIUM: 'Thanks. our founder will follow up within 24 hours.',
     LOW: 'Thanks. Explore our demos at genesisai.systems/demos.html'
   };
 
@@ -995,7 +995,7 @@ app.post('/submit/contact', async (req, res) => {
     console.error('Contact form error:', error.message);
     res.status(500).json(standardResponse({
       success: false,
-      message: 'Please email info@genesisai.systems or call [BUSINESS_PHONE_NUMBER]'
+      message: 'Please email info@genesisai.systems or call (586) 636-9550'
     }));
   }
 });

@@ -1,40 +1,32 @@
 # Codex Output
-loop_cycle: pilot-email-draft-prompt-fix
+loop_cycle: site-nav-and-response-fix
 
 ## Task
-Updated the prospect pilot draft prompt so the AI now gets the business context and cold outreach rules needed to write a tighter email for Detroit small business owners.
+Fixed the demo response copy in `demo-server/server.js`, verified the demo page already loads the shared site shell assets, and documented the result.
 
 ## Files Changed
-- `v1-revenue-system/scripts/run_prospect_pilot.py`
-- `v1-revenue-system/lead_revenue_pipeline.py`
+- `demo-server/server.js`
 - `ops/codex-output.md`
 
 ## What Changed
-- In `main()` inside `run_prospect_pilot.py`, replaced the old draft payload with:
-  - `business_name: record.get("business name")`
-  - `owner_email: record.get("owner_email")`
-  - `industry: record.get("source") or "retail"`
-  - `domain: record.get("domain")`
-  - `system_prompt: <new cold outreach instruction block>`
-- In `OpenAIDraftClient.generate()` inside `lead_revenue_pipeline.py`, added support for a custom `system_prompt` so the pilot can actually use the richer instructions.
-- Kept the existing fallback prompt path for other callers that do not pass `system_prompt`.
+- Replaced the broken placeholder in the contact error handler:
+  - from `Please email info@genesisai.systems or call [BUSINESS_PHONE_NUMBER]`
+  - to `Please email info@genesisai.systems or call (586) 636-9550`
+- Replaced every `Trendell will call` and `Trendell will reach out` string inside `getPersonalizedResponse()` with:
+  - `our founder will follow up`
+- Left `Trendell Fordham` footer and signature references untouched.
 
-## Prompt Intent
-The new pilot prompt tells the model to:
-- write a short cold email for Genesis AI Systems
-- sound like a real person
-- keep the subject under 8 words
-- open with a real business pain point
-- keep the body to 2 to 3 short sentences
-- ask for 10 minutes this week
-- sign off with Trendell Fordham and Genesis AI Systems
-- avoid Calendly, placeholders, and buzzwords
-- return one email only as JSON
+## Demo Nav Check
+- `demos.html` already includes:
+  - `<link rel="stylesheet" href="/assets/site.css">`
+  - `<script src="/assets/site.js"></script>`
+- `assets/site.js` already contains the nav shell injection flow through `window.GenesisSite.mountShell(...)`, so the demo page is already wired to render the shared navbar.
+- No `demos.html` edit was needed because the required asset hooks were already present.
 
 ## Verification
-- Confirmed the updated pilot call site now passes the richer payload.
-- Confirmed the shared draft client reads and uses `system_prompt` when present.
-- No runtime send was triggered.
+- Confirmed the nav injection logic exists in `assets/site.js`.
+- Confirmed `demos.html` already loads the shared stylesheet and script.
+- Confirmed the server placeholder string and founder-name response strings were updated.
 
 ## Commit Message
-`fix(pilot): richer draft prompt for email copy quality`
+`fix(site): demos nav, server placeholder, founder name in auto-responses`
